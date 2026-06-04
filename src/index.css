@@ -1,0 +1,640 @@
+/* Roblox uiBlox & Studio Premium Gaming Design System */
+
+:root {
+  /* Roblox Light Mode Theme Palette - Pale Light Blue */
+  --bg-deep: 210 50% 96%;      /* Pale blue #ebf4fc */
+  --bg-card: 0 0% 100%;        /* White #ffffff */
+  --border-cozy: 210 20% 90%;  /* Light blue-grey #e2e8f0 */
+  
+  /* Roblox Character Attributes (uiBlox Neon Accents) */
+  --color-wisdom: 200 100% 40%;       
+  --color-responsibility: 145 80% 35%; 
+  --color-courage: 355 85% 45%;        
+  --color-empathy: 325 80% 55%;        
+  --color-creativity: 275 75% 50%;     
+  
+  /* Item Rarity Colors (Roblox Catalog Standard) */
+  --rarity-common: 215 12% 45%;       
+  --rarity-rare: 210 90% 45%;        
+  --rarity-epic: 270 80% 50%;         
+  --rarity-legendary: 35 95% 45%;    
+  --rarity-mythic: 355 90% 50%;       
+  
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  background-color: #EBF4FC; /* Light pale blue background */
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(54, 97, 255, 0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(0, 230, 118, 0.05) 0px, transparent 50%);
+  background-attachment: fixed;
+  font-family: 'Outfit', 'Noto Sans TC', system-ui, -apple-system, sans-serif;
+  color: #1E293B; /* Dark slate text */
+  overflow-x: hidden;
+}
+
+/* Roblox Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #111216;
+}
+::-webkit-scrollbar-thumb {
+  background: #35363a;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4a4b50;
+}
+
+/* Roblox uiBlox Slate Panels */
+.glass-panel {
+  background: #1B1B1D; /* Roblox dark background */
+  border: 1px solid #35363A;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  border-radius: 8px; /* Clean blocky edges */
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glass-panel-glow {
+  background: #1B1B1D;
+  border: 1.5px solid #3661FF; /* Roblox Blue accent border */
+  box-shadow: 0 6px 20px rgba(54, 97, 255, 0.2);
+  border-radius: 8px;
+}
+
+/* Rarity highlights (clean borders, Roblox item style) */
+.glow-wisdom { border-color: rgba(0, 162, 255, 0.4); }
+.glow-responsibility { border-color: rgba(0, 230, 118, 0.4); }
+.glow-courage { border-color: rgba(242, 78, 36, 0.4); }
+.glow-empathy { border-color: rgba(244, 114, 182, 0.4); }
+.glow-creativity { border-color: rgba(167, 139, 250, 0.4); }
+
+/* Animation Keyframes */
+@keyframes chest-shake {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  15% { transform: rotate(-4deg) scale(1.05); }
+  30% { transform: rotate(3deg) scale(1.05); }
+  45% { transform: rotate(-3deg) scale(1.05); }
+  60% { transform: rotate(2deg) scale(1.05); }
+  75% { transform: rotate(-2deg) scale(1.05); }
+  90% { transform: rotate(1deg) scale(1.05); }
+}
+
+@keyframes chest-open {
+  0% { transform: scale(1) translateY(0); filter: brightness(1); }
+  50% { transform: scale(1.15) translateY(-10px); filter: brightness(1.2) drop-shadow(0 0 30px rgba(54, 97, 255, 0.8)); }
+  100% { transform: scale(0) translateY(-60px); filter: opacity(0); }
+}
+
+@keyframes card-intro {
+  0% { transform: scale(0.3) rotateY(180deg) rotate(15deg); opacity: 0; }
+  60% { transform: scale(1.05) rotateY(0deg) rotate(-4deg); opacity: 1; }
+  80% { transform: scale(0.98) rotate(1deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes success-pop {
+  0% { transform: scale(0.92); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes slide-in {
+  0% { transform: translateX(100px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+/* Applying Animations */
+.animate-chest-shake {
+  animation: chest-shake 0.8s ease-in-out infinite;
+}
+
+.animate-chest-open {
+  animation: chest-open 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.animate-card-draw {
+  animation: card-intro 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-success {
+  animation: success-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Roblox Catalog Card Styling */
+.card-common { border-color: rgba(138, 141, 147, 0.25); background: #252529; }
+.card-rare { border-color: rgba(0, 132, 255, 0.4); background: linear-gradient(to bottom, #202124, #12213a); }
+.card-epic { border-color: rgba(181, 89, 255, 0.45); background: linear-gradient(to bottom, #202124, #211536); }
+.card-legendary { border-color: rgba(255, 159, 28, 0.5); background: linear-gradient(to bottom, #202124, #2e1e0a); }
+.card-mythic { 
+  border-color: rgba(255, 71, 71, 0.6); 
+  background: linear-gradient(to bottom, #202124, #331010);
+  box-shadow: 0 0 15px rgba(255, 71, 71, 0.2);
+}
+
+/* Rarity Badges (Roblox Tag style) */
+.badge-common { background: #35363a; color: #b5b7bc; border: 1px solid #484a50; }
+.badge-rare { background: rgba(54, 97, 255, 0.15); color: #60a5fa; border: 1px solid rgba(54, 97, 255, 0.3); }
+.badge-epic { background: rgba(181, 89, 255, 0.15); color: #c084fc; border: 1px solid rgba(181, 89, 255, 0.3); }
+.badge-legendary { background: rgba(255, 159, 28, 0.15); color: #fbbf24; border: 1px solid rgba(255, 159, 28, 0.3); }
+.badge-mythic { background: rgba(255, 71, 71, 0.15); color: #f87171; border: 1px solid rgba(255, 71, 71, 0.3); }
+
+/* Radar Chart Gaming Palette */
+.radar-bg {
+  fill: #1e1f22;
+  stroke: #35363a;
+  stroke-width: 1px;
+}
+.radar-grid {
+  fill: none;
+  stroke: #2e2f33;
+  stroke-width: 1px;
+}
+.radar-polygon {
+  fill: rgba(54, 97, 255, 0.15);
+  stroke: #3661FF;
+  stroke-width: 2px;
+}
+
+/* Grid & Layout Utilities */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: 280px 1fr;
+  }
+}
+
+/* Switch Portal Button (Roblox Blue Theme) */
+.portal-switch-btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  background: #3661FF !important; /* Roblox brand blue */
+  border-radius: 4px !important;
+}
+.portal-switch-btn:hover {
+  background: #4e75ff !important;
+  transform: translateY(-1px);
+}
+
+/* PWA Toast Notifications - Roblox Slate Dark Alert style */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  top: auto;
+  z-index: 100;
+  display: flex;
+  flex-direction: column-reverse; /* Stacks new toasts upwards from bottom-right */
+  gap: 10px;
+  max-width: 320px;
+  width: 100%;
+  pointer-events: none; /* Clicks pass through the container */
+}
+
+.toast-notification {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 6px;
+  background: #1B1B1D;
+  border: 1px solid #35363A;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  animation: slide-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  transition: all 0.2s ease;
+  pointer-events: auto; /* Let notifications capture clicks */
+  cursor: pointer;
+  color: #FFFFFF !important;
+}
+.toast-notification:hover {
+  opacity: 0.9;
+  transform: scale(1.02);
+}
+.toast-notification:active {
+  transform: scale(0.98);
+}
+
+.toast-success { border-left: 4px solid #00E676; color: #ffffff; }
+.toast-error { border-left: 4px solid #FF4747; color: #ffffff; }
+.toast-warning { border-left: 4px solid #FF9F1C; color: #ffffff; }
+.toast-info { border-left: 4px solid #3661FF; color: #ffffff; }
+
+/* Roblox Empty State Container */
+.empty-state-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  border: 2px dashed #35363A !important;
+  background: #1B1B1D !important;
+  border-radius: 8px;
+}
+
+.empty-state-icon {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Roblox Custom Loading Spinners */
+.spinner-inline {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  border-top-color: #3661FF;
+  animation: spin 0.8s linear infinite;
+}
+
+.spinner-overlay {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  border-top-color: #3661FF;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-blocker {
+  position: absolute;
+  inset: 0;
+  background: rgba(17, 18, 22, 0.8);
+  backdrop-filter: blur(1px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+  border-radius: inherit;
+  animation: fade-in 0.2s ease-out;
+}
+
+/* custom select and inputs for Roblox styling */
+input, select, textarea {
+  background-color: #252529 !important;
+  border: 1px solid #35363A !important;
+  color: #FFFFFF !important;
+  border-radius: 4px !important;
+  outline: none !important;
+  transition: border-color 0.2s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: #3661FF !important;
+  box-shadow: 0 0 0 1px #3661FF;
+}
+
+/* Custom Backpack animations */
+@keyframes backpack-shake {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  20% { transform: rotate(-8deg) scale(1.08); }
+  40% { transform: rotate(6deg) scale(1.08); }
+  60% { transform: rotate(-4deg) scale(1.08); }
+  80% { transform: rotate(3deg) scale(1.08); }
+}
+
+.backpack-container {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.backpack-container:hover {
+  background: rgba(54, 97, 255, 0.05);
+  border-color: rgba(54, 97, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.backpack-icon-wrapper {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+
+.backpack-icon {
+  font-size: 4.5rem;
+  display: block;
+  user-select: none;
+  animation: float 3s ease-in-out infinite;
+  transition: transform 0.2s ease;
+}
+
+.backpack-container:hover .backpack-icon {
+  animation: backpack-shake 0.8s ease-in-out infinite;
+}
+
+/* Staggered pop-out animation for items */
+@keyframes item-pop-out {
+  0% {
+    opacity: 0;
+    transform: translateY(50px) scale(0.6) rotate(-8deg);
+    filter: blur(4px);
+  }
+  60% {
+    transform: translateY(-10px) scale(1.04) rotate(3deg);
+    filter: none;
+  }
+  85% {
+    transform: translateY(2px) scale(0.98) rotate(-1deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+    filter: none;
+  }
+}
+
+.animate-backpack-item {
+  opacity: 0;
+  animation: item-pop-out 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Redeemed item fading visual effect */
+.item-redeeming {
+  pointer-events: none;
+  animation: item-fly-away 0.6s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
+}
+
+@keyframes item-fly-away {
+  0% { transform: scale(1) translateY(0); opacity: 1; filter: brightness(1); }
+  50% { transform: scale(1.1) translateY(-20px); opacity: 0.8; filter: brightness(1.5) drop-shadow(0 0 15px rgba(54, 97, 255, 0.8)); }
+  100% { transform: scale(0.3) translateY(-100px); opacity: 0; filter: blur(5px); }
+}
+
+/* --- Light Mode Themes & Overrides --- */
+
+/* React main outer container override */
+div[class*="bg-[#111216]"] {
+  background-color: #EBF4FC !important;
+  color: #1E293B !important;
+}
+
+/* Glass panel light overrides */
+.glass-panel {
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  box-shadow: 0 4px 12px rgba(54, 97, 255, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+  color: #1E293B !important;
+}
+
+.glass-panel-glow {
+  background: #FFFFFF !important;
+  border: 1.5px solid #3661FF !important;
+  box-shadow: 0 6px 20px rgba(54, 97, 255, 0.1) !important;
+  color: #1E293B !important;
+}
+
+/* Header overrides */
+header[class*="bg-[#1B1B1D]"] {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02) !important;
+}
+
+header h1, header span {
+  color: #1E293B !important;
+}
+
+header div[class*="bg-[#1B1B1D]"] {
+  background-color: #FFFFFF !important;
+}
+
+/* Tab button overrides */
+button[class*="bg-[#252529]"], div[class*="bg-[#252529]"] {
+  background-color: #F1F5F9 !important;
+  color: #1E293B !important;
+}
+
+button[class*="text-[#b5b7bc]"], span[class*="text-[#b5b7bc]"] {
+  color: #64748B !important;
+}
+
+button[class*="text-[#b5b7bc]"]:hover {
+  color: #1E293B !important;
+  background-color: #F8FAFC !important;
+}
+
+button[class*="text-white"][class*="bg-[#252529]"] {
+  color: #1E293B !important;
+  background-color: #E2E8F0 !important;
+}
+
+/* Child switcher active indicator overrides */
+div[class*="bg-[#252529]"][class*="border-[#35363A]"] {
+  background-color: #F1F5F9 !important;
+  border-color: #E2E8F0 !important;
+}
+
+button[class*="border-transparent"].opacity-60 {
+  opacity: 0.5 !important;
+}
+
+/* Inputs, selects, and textareas */
+input, select, textarea {
+  background-color: #FFFFFF !important;
+  border: 1px solid #CBD5E1 !important;
+  color: #1E293B !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: #3661FF !important;
+  box-shadow: 0 0 0 1px #3661FF !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #94A3B8 !important;
+}
+
+/* Empty states */
+.empty-state-card {
+  border: 2px dashed #CBD5E1 !important;
+  background: #F8FAFC !important;
+}
+
+.empty-state-card h4 {
+  color: #334155 !important;
+}
+
+.empty-state-card p {
+  color: #64748B !important;
+}
+
+/* Text readability fixes (global overrides for light background) */
+.text-slate-100, [class*="text-slate-100"] { color: #0F172A !important; }
+.text-slate-200, [class*="text-slate-200"] { color: #1E293B !important; }
+.text-slate-300, [class*="text-slate-300"] { color: #334155 !important; }
+.text-slate-400, [class*="text-slate-400"] { color: #475569 !important; }
+.text-slate-500, [class*="text-slate-500"] { color: #5A6A85 !important; }
+.text-slate-600, [class*="text-slate-600"] { color: #334155 !important; }
+p[class*="text-slate-400"], p.text-slate-400 { color: #475569 !important; }
+p[class*="text-slate-500"], p.text-slate-500 { color: #5A6A85 !important; }
+p { color: #1E293B !important; }
+
+
+/* Subtitle in header */
+header span[class*="text-slate-400"] {
+  color: #475569 !important;
+}
+
+/* Sandbox panel */
+div[class*="bg-slate-950/80"] {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(99, 102, 241, 0.2) !important;
+}
+
+div[class*="text-slate-400"] span[class*="text-amber-400"] {
+  color: #D97706 !important; /* Reset amber for light background */
+}
+
+/* Backpack container */
+.backpack-container {
+  background: rgba(54, 97, 255, 0.04) !important;
+  border: 1px solid rgba(54, 97, 255, 0.1) !important;
+}
+
+.backpack-container:hover {
+  background: rgba(54, 97, 255, 0.08) !important;
+  border-color: rgba(54, 97, 255, 0.3) !important;
+}
+
+.backpack-container h3 {
+  color: #1E293B !important;
+}
+
+.backpack-container p {
+  color: #475569 !important;
+}
+
+/* Item card rarity overrides */
+.card-common { border-color: #E2E8F0 !important; background: #FFFFFF !important; }
+.card-rare { border-color: rgba(54, 97, 255, 0.3) !important; background: linear-gradient(to bottom, #FFFFFF, #F0F4FF) !important; }
+.card-epic { border-color: rgba(181, 89, 255, 0.35) !important; background: linear-gradient(to bottom, #FFFFFF, #FAF5FF) !important; }
+.card-legendary { border-color: rgba(255, 159, 28, 0.4) !important; background: linear-gradient(to bottom, #FFFFFF, #FFFBEB) !important; }
+.card-mythic { 
+  border-color: rgba(255, 71, 71, 0.45) !important; 
+  background: linear-gradient(to bottom, #FFFFFF, #FFF5F5) !important;
+  box-shadow: 0 4px 12px rgba(255, 71, 71, 0.08) !important;
+}
+
+/* Progress bar backgrounds */
+div[class*="bg-slate-900"] {
+  background-color: #E2E8F0 !important;
+}
+
+div[class*="bg-slate-950"] {
+  background-color: #F1F5F9 !important;
+}
+
+/* Weekly tournament text overrides */
+div[class*="text-slate-400"] {
+  color: #475569 !important;
+}
+
+div[class*="text-slate-200"] {
+  color: #1E293B !important;
+}
+
+/* Banner gradient override for Weekly Tournament */
+div[class*="via-slate-900"] {
+  background-image: linear-gradient(to right, rgba(245, 158, 11, 0.08), rgba(255, 255, 255, 0.8), rgba(99, 102, 241, 0.08)) !important;
+}
+
+/* Radar chart light adjustments */
+.radar-bg {
+  fill: #F8FAFC !important;
+  stroke: #E2E8F0 !important;
+}
+.radar-grid {
+  stroke: #F1F5F9 !important;
+}
+.radar-polygon {
+  fill: rgba(54, 97, 255, 0.08) !important;
+  stroke: #3661FF !important;
+}
+
+/* Modals */
+div[class*="bg-black/80"] {
+  background-color: rgba(15, 23, 42, 0.5) !important; /* semi-transparent backdrop */
+}
+
+div[class*="bg-[#17181c]"] {
+  background-color: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+}
+
+/* border dividers */
+div[class*="border-[#35363A]"] {
+  border-color: #E2E8F0 !important;
+}
+
+/* FCM Notification Drawer */
+div[class*="bg-slate-950/90"] {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(99, 102, 241, 0.2) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+}
+
+div[class*="bg-white/5"] {
+  background-color: #F8FAFC !important;
+  border-color: #E2E8F0 !important;
+}
+
+/* Table view rows */
+tr[class*="text-slate-300"] {
+  color: #334155 !important;
+}
+
+tr[class*="hover:bg-white/5"]:hover {
+  background-color: #F1F5F9 !important;
+}
+
+th[class*="bg-white/5"] {
+  background-color: #F8FAFC !important;
+}

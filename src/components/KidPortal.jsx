@@ -1,0 +1,1510 @@
+import React, { useState } from 'react';
+import { GACHA_POOL, TASK_TEMPLATES } from '../utils/mockData';
+import { useLanguage } from './LanguageContext';
+import { 
+  Sparkles, Award, Compass, Shield, BookOpen, Heart, 
+  Wallet, Trophy, Send, User, ChevronRight, Package, 
+  CheckCircle2, Clock, Ban, Eye, AlertTriangle, Bell, Trash2,
+  Camera, Upload
+} from 'lucide-react';
+
+const compressImage = (base64Str, maxWidth = 400, maxHeight = 400) => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.src = base64Str;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+
+      if (width > height) {
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxHeight) {
+          width = Math.round((width * maxHeight) / height);
+          height = maxHeight;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.6));
+      } else {
+        resolve(base64Str);
+      }
+    };
+    img.onerror = () => {
+      resolve(base64Str);
+    };
+  });
+};
+
+function KidPortal({ 
+  stats, 
+  tasks, 
+  inventory, 
+  wishlist, 
+  familyScore,
+  onSubmitTask, 
+  onDrawCard, 
+  onRequestRedeem, 
+  onConfirmRedeem, 
+  balancedIndex,
+  onClaimWishlistItem,
+  simulatedDate,
+  drawnTaskIds = [],
+  onUpdateDrawnTasks,
+  onUpdateChildProfile,
+  currentUser,
+  onLinkGoogleAccount,
+  onAddTask,
+  isReadOnly = false
+}) {
+  const { t, language } = useLanguage();
+  const [activeSubTab, setActiveSubTab] = useState('wishlist');
+  const [submittingTaskId, setSubmittingTaskId] = useState(null);
+  const [submissionNotes, setSubmissionNotes] = useState('');
+  const [submissionPhoto, setSubmissionPhoto] = useState('');
+  const [photoError, setPhotoError] = useState('');
+  
+  // V2 Button disabled / loading states
+  const [isSubmittingApi, setIsSubmittingApi] = useState(false);
+  const [isDrawingGacha, setIsDrawingGacha] = useState(false);
+
+  // Gacha animation states
+  const [gachaState, setGachaState] = useState('idle'); // idle, shaking, revealing, shown
+  const [drawnCard, setDrawnCard] = useState(null);
+
+  // Mock Notification Drawer
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  // Avatar select states
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState(stats.avatar || 'boy');
+  const [avatarUploadError, setAvatarUploadError] = useState('');
+
+  // Backpack item taking out animation state & click handler
+  const [redeemingId, setRedeemingId] = useState(null);
+  const handleRedeemClick = (inventoryId, isClaim = false) => {
+    setRedeemingId(inventoryId);
+    setTimeout(() => {
+      if (isClaim) {
+        onConfirmRedeem(inventoryId);
+      } else {
+        onRequestRedeem(inventoryId);
+      }
+      setRedeemingId(null);
+    }, 600);
+  };
+
+  const renderAvatar = (avatarValue) => {
+    if (avatarValue === 'girl') {
+      return <span className="text-4xl">👧</span>;
+    }
+    if (avatarValue && (avatarValue.startsWith('http') || avatarValue.startsWith('data:'))) {
+      return <img src={avatarValue} alt="Avatar" className="w-full h-full object-cover rounded-full" />;
+    }
+    return <span className="text-4xl">👦</span>; // default
+  };
+
+  const handleAvatarFileChange = (e) => {
+    const file = e.target.files[0];
+    setAvatarUploadError('');
+    if (!file) return;
+
+    if (file.type !== 'image/png' && file.type !== 'image/jpeg') {
+      setAvatarUploadError(language === 'zh' ? '❌ 僅支援 PNG 或 JPEG 圖片格式！' : '❌ Only PNG or JPEG image formats are supported!');
+      return;
+    }
+
+    const maxSize = 2 * 1024 * 1024; // 2MB limit
+    if (file.size > maxSize) {
+      setAvatarUploadError(language === 'zh' ? '❌ 圖片大小不能超過 2MB！' : '❌ Image size cannot exceed 2MB!');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      compressImage(reader.result, 200, 200).then(compressedBase64 => {
+        setSelectedAvatar(compressedBase64); // Set compressed avatar
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveAvatar = () => {
+    if (onUpdateChildProfile) {
+      onUpdateChildProfile({ avatar: selectedAvatar });
+    }
+    setShowAvatarModal(false);
+  };
+
+  const translatePeriod = (period) => {
+    if (period === '每日') return t('taskPeriodDaily');
+    if (period === '每週') return t('taskPeriodWeekly');
+    return period;
+  };
+
+  const translateDifficulty = (diff) => {
+    if (diff === '簡單') return t('difficultyEasy');
+    if (diff === '中等') return t('difficultyMedium');
+    if (diff === '較難') return t('difficultyHard');
+    if (diff === '終極') return t('difficultyUltimate');
+    return diff;
+  };
+
+  const translateType = (type) => {
+    if (type === '智') return t('attrWisdom');
+    if (type === '德') return t('attrResponsibility');
+    if (type === '體') return t('attrCourage');
+    if (type === '群') return t('attrEmpathy');
+    if (type === '美') return t('attrCreativity');
+    return type;
+  };
+
+  const translateStatus = (status) => {
+    if (status === '進行中') return t('taskStatusActive');
+    if (status === '待覆核') return t('taskStatusPending');
+    if (status === '已完成') return t('taskStatusCompleted');
+    if (status === '需修正') return t('taskStatusRejected');
+    return status;
+  };
+
+  // Random Draw & Re-roll Logic
+  const shuffleArray = (array) => {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[j], arr[j]] = [arr[j], arr[i]]; // wait, let's write simple swap
+    }
+    return arr;
+  };
+
+  const handleDrawOrRefresh = () => {
+    // Filter tasks assigned to this child (or unassigned)
+    const childTasks = tasks.filter(t => !t.assignedTo || t.assignedTo === stats.id);
+
+    // 1. Identify tasks that are currently drawn and locked (keep all non-completed drawn tasks so they stay visible)
+    const currentDrawnTasks = childTasks.filter(t => t.status !== '已完成' && drawnTaskIds.includes(t.id));
+    const lockedTaskIds = currentDrawnTasks.map(t => t.id);
+    
+    // 2. Identify active drawn tasks to count slot usage (in progress or needs correction; under review '待覆核' doesn't count)
+    const activeDrawnTasks = currentDrawnTasks.filter(t => t.status === '進行中' || t.status === '需修正');
+    
+    // 3. Identify the pool of available tasks to fill the remaining slots (only tasks with status '進行中' and not already drawn)
+    const candidatePool = childTasks.filter(t => t.status === '進行中' && !drawnTaskIds.includes(t.id));
+    
+    // 4. Shuffle candidate pool
+    const shuffledCandidates = [...candidatePool].sort(() => Math.random() - 0.5);
+    
+    // 5. Take the number of tasks needed to fill up to 5 slots
+    const slotsNeeded = Math.max(0, 5 - activeDrawnTasks.length);
+    const chosenCandidates = shuffledCandidates.slice(0, slotsNeeded).map(t => t.id);
+    
+    // 6. Combine locked tasks and chosen candidates
+    const newDrawnTaskIds = [...lockedTaskIds, ...chosenCandidates];
+    
+    onUpdateDrawnTasks(newDrawnTaskIds);
+  };
+
+  // Self draw 5 quests, one from each category (德, 智, 體, 群, 美)
+  const handleSelfDrawQuests = () => {
+    if (isReadOnly) return;
+    const categories = ['德', '智', '體', '群', '美'];
+    const newTasks = [];
+    const newDrawnIds = [...drawnTaskIds];
+
+    categories.forEach((cat, index) => {
+      const catTemplates = TASK_TEMPLATES.filter(t => t.type === cat);
+      if (catTemplates.length > 0) {
+        const randomTpl = catTemplates[Math.floor(Math.random() * catTemplates.length)];
+        const newId = `task-tpl-self-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 5)}-${stats.id}`;
+        newTasks.push({
+          id: newId,
+          name: randomTpl.name,
+          description: randomTpl.description,
+          type: randomTpl.type,
+          difficulty: randomTpl.difficulty,
+          expReward: randomTpl.expReward,
+          goldReward: randomTpl.goldReward,
+          ticketReward: randomTpl.ticketReward,
+          attributeReward: randomTpl.attributeReward,
+          period: randomTpl.period,
+          status: '進行中',
+          assignedTo: stats.id,
+          dateCreated: simulatedDate || new Date().toISOString().split('T')[0]
+        });
+        newDrawnIds.push(newId);
+      }
+    });
+
+    if (newTasks.length > 0) {
+      if (onAddTask) {
+        onAddTask(newTasks);
+      }
+      if (onUpdateDrawnTasks) {
+        onUpdateDrawnTasks(newDrawnIds);
+      }
+    }
+  };
+
+  // Reroll a single task - swap it for a random different available task
+  const handleRerollTask = (taskIdToSwap) => {
+    // Can only reroll tasks that are '進行中' (not pending/needs correction)
+    const childTasks = tasks.filter(t => !t.assignedTo || t.assignedTo === stats.id);
+    const currentDrawn = drawnTaskIds.filter(id => {
+      const task = childTasks.find(t => t.id === id);
+      return task && task.status !== '已完成';
+    });
+
+    // Pool: available tasks not currently drawn
+    const candidatePool = childTasks.filter(t =>
+      t.status === '進行中' &&
+      !currentDrawn.includes(t.id)
+    );
+
+    if (candidatePool.length === 0) return; // no candidates to swap with
+
+    const shuffled = [...candidatePool].sort(() => Math.random() - 0.5);
+    const newTask = shuffled[0];
+
+    const newDrawnTaskIds = currentDrawn.map(id => id === taskIdToSwap ? newTask.id : id);
+    onUpdateDrawnTasks(newDrawnTaskIds);
+  };
+  
+  // SVG Radar calculations
+  const getRadarPoints = () => {
+    const center = 100;
+    const maxVal = 40;
+    const radius = 65;
+    
+    const attributes = [
+      { val: stats.attributes.Wisdom, name: "Wisdom" },
+      { val: stats.attributes.Responsibility, name: "Responsibility" },
+      { val: stats.attributes.Empathy, name: "Empathy" },
+      { val: stats.attributes.Creativity, name: "Creativity" },
+      { val: stats.attributes.Courage, name: "Courage" }
+    ];
+
+    const points = attributes.map((attr, i) => {
+      const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
+      const valRatio = Math.min(maxVal, Math.max(5, attr.val)) / maxVal;
+      const x = center + radius * valRatio * Math.cos(angle);
+      const y = center + radius * valRatio * Math.sin(angle);
+      return `${x},${y}`;
+    });
+
+    return points.join(' ');
+  };
+
+  const getGridPentagons = () => {
+    const center = 100;
+    const radius = 65;
+    const levels = [0.2, 0.4, 0.6, 0.8, 1.0];
+    
+    return levels.map(level => {
+      const r = radius * level;
+      const pts = [];
+      for (let i = 0; i < 5; i++) {
+        const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
+        pts.push(`${center + r * Math.cos(angle)},${center + r * Math.sin(angle)}`);
+      }
+      return pts.join(' ');
+    });
+  };
+
+  // Client-side photo upload constraints
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files[0];
+    setPhotoError('');
+    if (!file) return;
+
+    // Validate format (PNG/JPEG)
+    if (file.type !== 'image/png' && file.type !== 'image/jpeg') {
+      setPhotoError(language === 'zh' ? '❌ 檔案格式不支援！請上傳 PNG 或 JPEG 圖片格式。' : '❌ File format not supported! Please upload a PNG or JPEG image.');
+      e.target.value = '';
+      setSubmissionPhoto('');
+      return;
+    }
+
+    // Validate size (< 5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setPhotoError(language === 'zh' ? '❌ 檔案容量過大！照片容量必須限制在 5MB 以內。' : '❌ File size too large! The photo size must be limited to 5MB.');
+      e.target.value = '';
+      setSubmissionPhoto('');
+      return;
+    }
+
+    // Convert to mock base64 for local storage viewing
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      compressImage(reader.result, 400, 400).then(compressedBase64 => {
+        setSubmissionPhoto(compressedBase64); // Compress to prevent localStorage quota crash
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const getAttributeIcon = (name) => {
+    switch (name) {
+      case 'Wisdom': return <BookOpen className="h-4 w-4 text-[#0284c7]" />;
+      case 'Responsibility': return <Shield className="h-4 w-4 text-[#16a34a]" />;
+      case 'Courage': return <Compass className="h-4 w-4 text-[#ea580c]" />;
+      case 'Empathy': return <Heart className="h-4 w-4 text-[#db2777]" />;
+      case 'Creativity': return <Sparkles className="h-4 w-4 text-[#7c3aed]" />;
+      default: return null;
+    }
+  };
+
+  const getAttributeColor = (name) => {
+    switch (name) {
+      case 'Wisdom': return 'text-[#0284c7]';
+      case 'Responsibility': return 'text-[#16a34a]';
+      case 'Courage': return 'text-[#ea580c]';
+      case 'Empathy': return 'text-[#db2777]';
+      case 'Creativity': return 'text-[#7c3aed]';
+      default: return 'text-slate-500';
+    }
+  };
+
+  const getTypeBadgeColor = (type) => {
+    switch (type) {
+      case '智': return 'text-[#0284c7] border-[#0284c7]/20 bg-[#0284c7]/5';
+      case '德': return 'text-[#16a34a] border-[#16a34a]/20 bg-[#16a34a]/5';
+      case '體': return 'text-[#ea580c] border-[#ea580c]/20 bg-[#ea580c]/5';
+      case '群': return 'text-[#db2777] border-[#db2777]/20 bg-[#db2777]/5';
+      case '美': return 'text-[#7c3aed] border-[#7c3aed]/20 bg-[#7c3aed]/5';
+      default: return 'text-slate-500 border-slate-300/10 bg-slate-300/5';
+    }
+  };
+
+  const getRarityClass = (rarity) => {
+    switch (rarity) {
+      case 'Common': return 'card-common text-slate-400';
+      case 'Rare': return 'card-rare text-blue-400';
+      case 'Epic': return 'card-epic text-purple-400';
+      case 'Legendary': return 'card-legendary text-amber-400';
+      case 'Mythic': return 'card-mythic text-rose-500';
+      default: return 'border-white/10';
+    }
+  };
+
+  const getRarityBadge = (rarity) => {
+    switch (rarity) {
+      case 'Common': return 'badge-common';
+      case 'Rare': return 'badge-rare';
+      case 'Epic': return 'badge-epic';
+      case 'Legendary': return 'badge-legendary';
+      case 'Mythic': return 'badge-mythic';
+      default: return 'bg-slate-500/20';
+    }
+  };
+
+  // Run card drawing sequence with debounce and locked states
+  const startDrawCard = () => {
+    if (stats.tickets < 1) return;
+    if (isDrawingGacha) return;
+
+    setIsDrawingGacha(true);
+    setGachaState('shaking');
+    
+    // Random select rarity based on PRD v2 weights
+    const rand = Math.random();
+    let raritySelected = 'Common';
+    if (rand < 0.01) raritySelected = 'Mythic';
+    else if (rand < 0.05) raritySelected = 'Legendary';
+    else if (rand < 0.15) raritySelected = 'Epic';
+    else if (rand < 0.40) raritySelected = 'Rare';
+    
+    const pool = GACHA_POOL[raritySelected].cards;
+    const cardSelected = pool[Math.floor(Math.random() * pool.length)];
+
+    setTimeout(() => {
+      setGachaState('revealing');
+      setDrawnCard(cardSelected);
+      
+      setTimeout(() => {
+        setGachaState('shown');
+        onDrawCard(cardSelected, 1);
+        setIsDrawingGacha(false); // unlock drawing state
+      }, 800);
+    }, 1200);
+  };
+
+  // Submit task with simulated network latency to test disabled spinner states
+  const handleTaskSubmit = (taskId) => {
+    if (isSubmittingApi) return;
+    setIsSubmittingApi(true);
+
+    // Simulate API delay
+    setTimeout(() => {
+      onSubmitTask(taskId, {
+        notes: submissionNotes || "我已經完成此任務了！請爸媽核准！",
+        photo: submissionPhoto || "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&q=80"
+      });
+      setIsSubmittingApi(false);
+      setSubmittingTaskId(null);
+      setSubmissionNotes('');
+      setSubmissionPhoto('');
+      setPhotoError('');
+    }, 850);
+  };
+
+  // Filter out completed tasks and only show drawn tasks for child list
+  const activeTasksList = tasks.filter(t => t.status !== '已完成' && drawnTaskIds.includes(t.id) && (!t.assignedTo || t.assignedTo === stats.id));
+
+  // Push notifications generator (mocking FCM messages)
+  const getFCMNotifications = () => {
+    const list = [];
+    tasks.forEach(t => {
+      if ((!t.assignedTo || t.assignedTo === stats.id) && t.rejectionReason) {
+        list.push({
+          id: `fcm-reject-${t.id}`,
+          title: language === 'zh' ? "❌ 任務被退回修正" : "❌ Quest Returned",
+          body: language === 'zh' ? `「${t.name}」已被退回。家長理由：${t.rejectionReason}` : `"${t.name}" has been returned. Reason: ${t.rejectionReason}`,
+          time: language === 'zh' ? "剛剛" : "Just now"
+        });
+      }
+    });
+    inventory.forEach(i => {
+      if (i.status === '已過期') {
+        list.push({
+          id: `fcm-expire-${i.inventoryId}`,
+          title: language === 'zh' ? "⏳ 道具卡已失效" : "⏳ Item Expired",
+          body: language === 'zh' ? `「${i.name}〝已超過使用期限。` : `"${i.name}" has expired.`,
+          time: language === 'zh' ? "剛剛" : "Just now"
+        });
+      }
+    });
+    return list;
+  };
+
+  const fcmNotifications = getFCMNotifications();
+
+  return (
+    <div className="space-y-6 relative">
+      
+      {/* Read-only mode banner */}
+      {isReadOnly && (
+        <div className="bg-amber-500/10 border border-amber-500/25 p-3.5 rounded-xl flex items-center justify-between text-xs text-amber-700 font-bold shadow-sm animate-success">
+          <span className="flex items-center gap-2">
+            <Eye className="h-4.5 w-4.5 text-amber-600 shrink-0" />
+            <span>{t('readOnlyBanner', { name: stats.name })}</span>
+          </span>
+          <span className="bg-amber-600 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded shadow-sm">
+            {t('readOnlyTag')}
+          </span>
+        </div>
+      )}
+
+      {/* V2 Simulated FCM push notifications bell */}
+      <div className="flex justify-between items-center bg-white/5 border border-white/5 p-3 rounded-xl">
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <button 
+              onClick={() => setShowNotifications(prev => !prev)}
+              className="p-2 bg-indigo-650/20 text-indigo-400 hover:bg-indigo-650/30 rounded-lg border border-indigo-500/20 transition-all flex items-center justify-center"
+            >
+              <Bell className="h-5 w-5 animate-pulse" />
+            </button>
+            {fcmNotifications.length > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-rose-500 text-slate-100 px-1.5 py-0.5 rounded-full text-[9px] font-black border border-slate-900">
+                {fcmNotifications.length}
+              </span>
+            )}
+          </div>
+          <div className="text-xs text-slate-400">
+            <span>{t('pwaNotificationCenter')}</span>
+            <span className="text-slate-300 font-semibold">
+              {fcmNotifications.length > 0 ? t('newActivities', { count: fcmNotifications.length }) : t('noNewActivities')}
+            </span>
+          </div>
+        </div>
+
+        <span className="text-xs text-slate-500 font-medium">{t('simulatedDateLabel')} {simulatedDate}</span>
+      </div>
+
+      {/* FCM Notifications Panel */}
+      {showNotifications && (
+        <div className="glass-panel p-4 border-indigo-500/30 bg-slate-950/90 space-y-3 max-w-md animate-success">
+          <div className="flex justify-between items-center border-b border-white/10 pb-2">
+            <h4 className="text-xs font-black text-indigo-300 uppercase tracking-widest flex items-center gap-1.5">
+              <Bell className="h-4 w-4" />
+              {t('pushNotificationLogsTitle')}
+            </h4>
+            <button onClick={() => setShowNotifications(false)} className="text-slate-500 hover:text-slate-300 text-xs font-bold">{t('close')}</button>
+          </div>
+          {fcmNotifications.length === 0 ? (
+            <p className="text-xs text-slate-500 text-center py-4">{t('noNotifications')}</p>
+          ) : (
+            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+              {fcmNotifications.map(n => (
+                <div key={n.id} className="p-2.5 rounded-lg bg-white/5 border border-white/5 space-y-0.5">
+                  <div className="flex justify-between text-[11px] font-bold">
+                    <span className="text-slate-200">{n.title}</span>
+                    <span className="text-slate-500">{n.time}</span>
+                  </div>
+                  <p className="text-[10px] text-slate-400 leading-normal">{n.body}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tab Navigation */}
+      <div className="flex border-b border-[#35363A] gap-1 pb-px overflow-x-auto">
+        <button
+          onClick={() => setActiveSubTab('character')}
+          className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
+            activeSubTab === 'character' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
+          }`}
+        >
+          <User className="h-4 w-4 text-[#3661FF]" />
+          {t('tabChar')}
+        </button>
+        <button
+          onClick={() => setActiveSubTab('tasks')}
+          className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
+            activeSubTab === 'tasks' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
+          }`}
+        >
+          <Award className="h-4 w-4 text-[#3661FF]" />
+          {t('tabQuests')}
+          {activeTasksList.length > 0 && (
+            <span className="bg-[#FF4747] text-white px-1.5 py-0.5 rounded text-[10px] font-black">
+              {activeTasksList.length}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveSubTab('gacha')}
+          className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
+            activeSubTab === 'gacha' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
+          }`}
+        >
+          <Sparkles className="h-4 w-4 text-[#FF9F1C]" />
+          {t('tabSummon')}
+          {stats.tickets > 0 && (
+            <span className="bg-[#FF9F1C] text-[#111216] px-1.5 py-0.5 rounded text-[10px] font-black animate-pulse">
+              {stats.tickets}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveSubTab('backpack')}
+          className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
+            activeSubTab === 'backpack' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
+          }`}
+        >
+          <Package className="h-4 w-4 text-[#3661FF]" />
+          {t('tabBackpack')}
+          {inventory.filter(i => i.status === '未使用').length > 0 && (
+            <span className="bg-[#35363A] text-white px-1.5 py-0.5 rounded text-[10px]">
+              {inventory.filter(i => i.status === '未使用').length}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveSubTab('wishlist')}
+          className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
+            activeSubTab === 'wishlist' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
+          }`}
+        >
+          <Trophy className="h-4 w-4 text-[#FF9F1C]" />
+          {t('tabKidWishlist')}
+        </button>
+      </div>
+
+      {/* --- Tab 1: Character Sheet --- */}
+      {activeSubTab === 'character' && (
+        <div className="dashboard-grid animate-success">
+          <div className="glass-panel p-6 flex flex-col items-center justify-between text-center gap-6">
+            <div className="space-y-2 w-full">
+              <div className="relative w-20 h-20 mx-auto group">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-violet-600 to-cyan-400 flex items-center justify-center shadow-xl shadow-violet-500/20 border border-white/20 overflow-hidden">
+                  {renderAvatar(stats.avatar)}
+                </div>
+                {!isReadOnly && (
+                  <button 
+                    onClick={() => {
+                      setSelectedAvatar(stats.avatar || 'boy');
+                      setShowAvatarModal(true);
+                    }}
+                    className="absolute -bottom-1 -right-1 p-1.5 bg-[#3661FF] hover:bg-[#4e75ff] text-white rounded-full shadow-md transition-all border border-white/10"
+                    title={t('editAvatar')}
+                  >
+                    <Camera className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+              <h3 className="text-xl font-black">{stats.name}</h3>
+              <div className="text-sm font-bold text-violet-400">{stats.jobClass}</div>
+              <div className="flex justify-center gap-2 text-xs font-semibold text-slate-400 mt-1">
+                <span>{t('ageLabel', { age: stats.age || '--' })}</span>
+                <span>•</span>
+                <span>{t('birthdayLabel', { birthday: stats.birthday || '--' })}</span>
+              </div>
+            </div>
+
+            <div className="w-full space-y-2">
+              <div className="flex justify-between items-end text-xs font-bold px-1">
+                <span className="text-sm text-amber-300">Level {stats.level}</span>
+                <span className="text-slate-400">{stats.exp} / {stats.expNeeded} EXP</span>
+              </div>
+              <div className="h-3 w-full bg-slate-900 rounded-full border border-white/5 overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-violet-500 to-cyan-400 rounded-full transition-all duration-500"
+                  style={{ width: `${(stats.exp / stats.expNeeded) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 w-full">
+              <div className="glass-panel p-3 border-white/5 bg-white/5">
+                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{t('goldLabel')}</div>
+                <div className="text-lg font-black text-amber-400 mt-1">🪙 {stats.gold}</div>
+              </div>
+              <div className="glass-panel p-3 border-white/5 bg-white/5">
+                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{t('ticketsLabel')}</div>
+                <div className="text-lg font-black text-cyan-400 mt-1">🎫 {stats.tickets}</div>
+              </div>
+            </div>
+
+            {/* Account Security & Google Linking */}
+            <div className="w-full p-4 border border-indigo-500/20 bg-white/5 rounded-2xl space-y-3 text-left">
+              <h4 className="text-xs font-bold text-indigo-400 flex items-center gap-1.5 uppercase tracking-wider">
+                🛡️ {t('accountSecurityAndGoogle')}
+              </h4>
+              <div className="text-[10px] text-slate-500 leading-relaxed">
+                {t('currentLogin')}：<span className="text-slate-350 font-bold">{currentUser?.email}</span> ({currentUser?.googleId ? t('googleLinkedType') : t('passwordAccountType')})
+              </div>
+              {currentUser?.googleId ? (
+                <div className="text-[10px] text-emerald-400 font-bold">
+                  ✓ {t('googleLinkedSuccessText')}
+                </div>
+              ) : isReadOnly ? (
+                <div className="text-[10px] text-slate-500 italic">
+                  {t('readOnlyGoogleBlock')}
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    const email = prompt(t('enterGoogleEmailPrompt'), "kid@gmail.com");
+                    if (email) {
+                      const googleId = "google-mock-" + email.replace(/[^a-zA-Z0-9]/g, "");
+                      onLinkGoogleAccount(googleId, email);
+                    }
+                  }}
+                  type="button"
+                  className="w-full py-1.5 bg-indigo-600/20 hover:bg-indigo-650/35 text-indigo-400 text-[10px] font-black rounded-lg border border-indigo-500/30 transition-all text-center"
+                >
+                  {t('googleLinkLabel')}
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="glass-panel p-6 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+            <div className="flex justify-center">
+              <svg width="200" height="200" viewBox="0 0 200 200" className="w-48 h-48 md:w-56 md:h-56">
+                {getGridPentagons().map((pts, i) => (
+                  <polygon key={i} points={pts} className="radar-grid" />
+                ))}
+                {[0, 1, 2, 3, 4].map(i => {
+                  const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
+                  const x = 100 + 65 * Math.cos(angle);
+                  const y = 100 + 65 * Math.sin(angle);
+                  return (
+                    <line key={i} x1="100" y1="100" x2={x} y2={y} className="radar-grid" />
+                  );
+                })}
+                <polygon points={getRadarPoints()} className="radar-polygon" />
+                {(() => {
+                  const scores = [
+                    stats.attributes.Wisdom,
+                    stats.attributes.Responsibility,
+                    stats.attributes.Empathy,
+                    stats.attributes.Creativity,
+                    stats.attributes.Courage
+                  ];
+                  const colors = [
+                    "#0284c7", // 智 (Wisdom - Cyan)
+                    "#16a34a", // 德 (Responsibility - Green)
+                    "#db2777", // 群 (Empathy - Pink)
+                    "#7c3aed", // 美 (Creativity - Purple)
+                    "#ea580c"  // 體 (Courage - Orange)
+                  ];
+                  return ['智', '德', '群', '美', '體'].map((label, i) => {
+                    const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
+                    const x = 100 + 80 * Math.cos(angle);
+                    const y = 100 + 80 * Math.sin(angle);
+                    return (
+                      <text 
+                        key={i} 
+                        x={x} 
+                        y={y} 
+                        fill={colors[i]} 
+                        fontSize="11" 
+                        fontWeight="900" 
+                        textAnchor="middle" 
+                        dominantBaseline="middle"
+                      >
+                        {translateType(label)}({scores[i]})
+                      </text>
+                    );
+                  });
+                })()}
+              </svg>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="text-sm font-extrabold uppercase tracking-widest text-slate-400 border-b border-white/5 pb-2">
+                {t('rpgAttributes')}
+              </h4>
+              <div className="space-y-3">
+                {[
+                  { name: "Wisdom", nameFull: t('attrWisdomFull'), val: stats.attributes.Wisdom, desc: t('attrWisdomDesc') },
+                  { name: "Responsibility", nameFull: t('attrResponsibilityFull'), val: stats.attributes.Responsibility, desc: t('attrResponsibilityDesc') },
+                  { name: "Courage", nameFull: t('attrCourageFull'), val: stats.attributes.Courage, desc: t('attrCourageDesc') },
+                  { name: "Empathy", nameFull: t('attrEmpathyFull'), val: stats.attributes.Empathy, desc: t('attrEmpathyDesc') },
+                  { name: "Creativity", nameFull: t('attrCreativityFull'), val: stats.attributes.Creativity, desc: t('attrCreativityDesc') }
+                ].map((attr) => (
+                  <div key={attr.name} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {getAttributeIcon(attr.name)}
+                      <div>
+                        <div className="text-sm font-bold text-slate-200">{attr.nameFull}</div>
+                        <div className="text-[10px] text-slate-500">{attr.desc}</div>
+                      </div>
+                    </div>
+                    <div className={`text-md font-black ${getAttributeColor(attr.name)}`}>
+                      {attr.val}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- Tab 2: Adventure Tasks Board (Empty states & validation added) --- */}
+      {activeSubTab === 'tasks' && (() => {
+        const totalAvailableTasks = tasks.filter(t => t.status !== '已完成' && (!t.assignedTo || t.assignedTo === stats.id)).length;
+
+        if (totalAvailableTasks === 0) {
+          return (
+            <div className="space-y-4 animate-success">
+              <div className="flex items-center justify-between border-b border-[#35363A] pb-3">
+                <div className="flex items-center gap-2">
+                  <Compass className="h-5 w-5 text-[#3661FF]" />
+                  <h3 className="text-md font-black text-slate-850">{t('questBoard')} ({t('activeSlots')}: 0/5)</h3>
+                </div>
+                <span className="text-xs text-slate-400 font-bold">
+                  {t('weeklyBalanceIndex')}：<span className="text-[#00E676]">{balancedIndex} 分</span>
+                </span>
+              </div>
+              <div className="empty-state-card glass-panel text-center p-12 space-y-4">
+                <div className="text-6xl animate-float">🗺️</div>
+                <h4 className="text-lg font-black text-slate-200">{t('selfDrawQuestsTitle')}</h4>
+                <p className="text-xs text-slate-400 max-w-md mx-auto leading-normal">
+                  {t('selfDrawQuestsDesc')}
+                </p>
+                <div className="flex justify-center gap-3 my-4 flex-wrap">
+                  <span className="px-2.5 py-1 rounded-full text-xs font-black border border-[#16a34a]/30 bg-[#16a34a]/10 text-[#16a34a] shadow-[0_0_10px_rgba(22,163,74,0.1)]">德 (Responsibility)</span>
+                  <span className="px-2.5 py-1 rounded-full text-xs font-black border border-[#0284c7]/30 bg-[#0284c7]/10 text-[#0284c7] shadow-[0_0_10px_rgba(2,132,199,0.1)]">智 (Wisdom)</span>
+                  <span className="px-2.5 py-1 rounded-full text-xs font-black border border-[#ea580c]/30 bg-[#ea580c]/10 text-[#ea580c] shadow-[0_0_10px_rgba(234,88,12,0.1)]">體 (Courage)</span>
+                  <span className="px-2.5 py-1 rounded-full text-xs font-black border border-[#db2777]/30 bg-[#db2777]/10 text-[#db2777] shadow-[0_0_10px_rgba(219,39,119,0.1)]">群 (Empathy)</span>
+                  <span className="px-2.5 py-1 rounded-full text-xs font-black border border-[#7c3aed]/30 bg-[#7c3aed]/10 text-[#7c3aed] shadow-[0_0_10px_rgba(124,58,237,0.1)]">美 (Creativity)</span>
+                </div>
+                {!isReadOnly ? (
+                  <button
+                    onClick={handleSelfDrawQuests}
+                    className="px-6 py-2.5 rounded-[4px] text-xs font-black bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white transition-all shadow-lg hover:shadow-cyan-500/20 active:scale-95"
+                  >
+                    {t('selfDrawQuestsBtn')}
+                  </button>
+                ) : (
+                  <p className="text-xs text-slate-500 italic">
+                    {t('readOnlyGoogleBlock')}
+                  </p>
+                )}
+              </div>
+            </div>
+          );
+        }
+
+        if (drawnTaskIds.length === 0) {
+          return (
+            <div className="space-y-4 animate-success">
+              <div className="flex items-center justify-between border-b border-[#35363A] pb-3">
+                <div className="flex items-center gap-2">
+                  <Compass className="h-5 w-5 text-[#3661FF]" />
+                  <h3 className="text-md font-black text-slate-850">{t('questBoard')} ({t('activeSlots')}: 0/5)</h3>
+                </div>
+                <span className="text-xs text-slate-400 font-bold">
+                  {t('weeklyBalanceIndex')}：<span className="text-[#00E676]">{balancedIndex} 分</span>
+                </span>
+              </div>
+              <div className="empty-state-card glass-panel text-center p-12 space-y-4">
+                <div className="text-6xl animate-float">🎲</div>
+                <h4 className="text-lg font-black text-slate-200">{t('noQuestsTitle')}</h4>
+                <p className="text-xs text-slate-400 max-w-sm mx-auto leading-normal">
+                  {t('drawQuestsDesc')}
+                </p>
+                {!isReadOnly && (
+                  <button
+                    onClick={handleDrawOrRefresh}
+                    className="px-6 py-2.5 rounded-[4px] text-xs font-black bg-[#00E676] hover:bg-[#00c867] text-[#111216] transition-colors shadow-lg"
+                  >
+                    {t('drawDailyQuestsBtn')}
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        }
+
+        if (activeTasksList.length === 0) {
+          return (
+            <div className="space-y-4 animate-success">
+              <div className="flex items-center justify-between border-b border-[#35363A] pb-3">
+                <div className="flex items-center gap-2">
+                  <Compass className="h-5 w-5 text-[#3661FF]" />
+                  <h3 className="text-md font-black text-slate-850">{t('questBoard')} ({t('activeSlots')}: 0/5)</h3>
+                </div>
+                <span className="text-xs text-slate-400 font-bold">
+                  {t('weeklyBalanceIndex')}：<span className="text-[#00E676]">{balancedIndex} 分</span>
+                </span>
+              </div>
+              <div className="empty-state-card glass-panel text-center p-12 space-y-4">
+                <div className="text-6xl">🎉</div>
+                <h4 className="text-lg font-black text-[#00E676]">{t('questsCompletedTitle')}</h4>
+                <p className="text-xs text-slate-400 max-w-sm mx-auto leading-normal">
+                  {t('questsCompletedDesc')}
+                </p>
+                {!isReadOnly && (
+                  <button
+                    onClick={handleDrawOrRefresh}
+                    className="px-6 py-2.5 rounded-[4px] text-xs font-black bg-[#3661FF] hover:bg-[#4e75ff] text-white transition-colors shadow-lg"
+                  >
+                    {t('drawMoreQuestsBtn')}
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        }
+
+        return (
+          <div className="space-y-4 animate-success">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#35363A] pb-3">
+              <div className="flex items-center gap-2">
+                <Compass className="h-5 w-5 text-[#3661FF]" />
+                <h3 className="text-md font-black text-slate-850">{t('questBoard')} ({t('activeSlots')}: {activeTasksList.filter(t => t.status === '進行中' || t.status === '需修正').length}/5)</h3>
+              </div>
+              
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-xs text-slate-400 font-semibold">
+                  {t('weeklyBalanceIndex')}：<span className="text-[#00E676] font-bold">{balancedIndex} 分</span>
+                </span>
+                {!isReadOnly && (
+                  <button
+                    onClick={handleDrawOrRefresh}
+                    className="flex items-center gap-1.5 px-3 py-1 bg-[#252529] border border-[#35363A] rounded-[4px] text-xs font-black text-slate-200 hover:text-white hover:bg-[#35363A] transition-all"
+                    title="重新抽取/刷新進行中的任務（鎖定待覆核及需修正任務）"
+                  >
+                    {t('refreshQuestsBtn')}
+                  </button>
+                )}
+              </div>
+            </div>
+            
+            <div className="text-[10px] text-slate-500 font-bold">
+              {t('refreshQuestsTip')}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {activeTasksList.map((task) => {
+                const isSubmitting = submittingTaskId === task.id;
+                const hasCorrection = task.status === '進行中' && task.rejectionReason;
+
+                return (
+                  <div 
+                    key={task.id} 
+                    className={`glass-panel p-5 border transition-all flex flex-col justify-between gap-4 relative ${
+                      hasCorrection 
+                        ? 'border-rose-500/30 bg-rose-500/5' 
+                        : task.status === '待覆核' 
+                          ? 'border-amber-500/20 bg-amber-500/5 opacity-80' 
+                          : 'border-white/5 hover:border-violet-500/20'
+                    }`}
+                  >
+                    {/* V2 Loading Block overlay during API simulation */}
+                    {isSubmitting && isSubmittingApi && (
+                      <div className="loading-blocker">
+                        <div className="spinner-overlay"></div>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-md font-extrabold text-slate-200">{task.name}</span>
+                            {hasCorrection && (
+                              <span className="bg-rose-500 text-slate-900 px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider animate-pulse">
+                                {t('taskStatusRejected')}
+                              </span>
+                            )}
+                            {task.status === '待覆核' && (
+                              <span className="bg-amber-500/25 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded text-[10px] font-bold">
+                                {t('taskStatusPending')}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-400 mt-1">{task.description}</p>
+                        </div>
+                        <span className={`text-xs font-bold border px-2 py-0.5 rounded-full whitespace-nowrap ${getTypeBadgeColor(task.type)}`}>
+                          {translateType(task.type)} | {t('taskDifficultyLabel')} {translateDifficulty(task.difficulty)}
+                        </span>
+                        {!isReadOnly && task.status === '進行中' && !task.rejectionReason && (() => {
+                          const candidatePool = tasks.filter(t =>
+                            (!t.assignedTo || t.assignedTo === stats.id) &&
+                            t.status === '進行中' &&
+                            !drawnTaskIds.includes(t.id)
+                          );
+                          return candidatePool.length > 0 ? (
+                            <button
+                              onClick={() => handleRerollTask(task.id)}
+                              title={language === 'zh' ? '換一個任務' : 'Swap this quest'}
+                              className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-slate-400 hover:text-violet-300 bg-white/5 hover:bg-violet-500/15 border border-white/10 hover:border-violet-500/30 rounded-lg transition-all shrink-0"
+                            >
+                              🔄 {language === 'zh' ? '換一個' : 'Swap'}
+                            </button>
+                          ) : null;
+                        })()}
+                      </div>
+
+                      {hasCorrection && (
+                        <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs mt-1">
+                          <span className="font-bold">❌ {t('parentRejectionReason')}：</span> {task.rejectionReason}
+                        </div>
+                      )}
+
+                      <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-400 bg-white/5 p-2 rounded-lg border border-white/5">
+                        <span>{t('expLabel')}：<span className="text-violet-400 font-bold">+{task.expReward} EXP</span></span>
+                        <span>{t('goldLabel')}：<span className="text-amber-400 font-bold">🪙 {task.goldReward || 50}</span></span>
+                        <span>{t('taskTypeLabel')}：<span className={getAttributeColor(task.attributeReward)}>{translateType(task.attributeReward)}</span></span>
+                        <span>{t('ticketsLabel')}：<span className="text-cyan-400 font-bold">+{task.ticketReward || 1} 🎫</span></span>
+                      </div>
+                    </div>
+
+                    {task.status !== '待覆核' && (
+                      <div className="mt-2 pt-2 border-t border-white/5">
+                        {isReadOnly ? (
+                          <div className="text-center text-slate-500 font-bold text-xs py-2 bg-slate-900/40 rounded border border-white/5">
+                            👀 {t('readOnlyTaskBlock')}
+                          </div>
+                        ) : !isSubmitting ? (
+                          <button
+                            onClick={() => setSubmittingTaskId(task.id)}
+                            className="w-full flex items-center justify-center gap-1.5 py-2 rounded-[4px] text-xs font-black bg-[#3661FF] hover:bg-[#4e75ff] text-white transition-colors uppercase tracking-wider"
+                          >
+                            <Send className="h-3.5 w-3.5" />
+                            {t('submitReviewBtn')}
+                          </button>
+                        ) : (
+                          <div className="space-y-3">
+                            <div>
+                              <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">
+                                {t('messageToParents')}
+                              </label>
+                              <input 
+                                type="text"
+                                value={submissionNotes}
+                                onChange={(e) => setSubmissionNotes(e.target.value)}
+                                placeholder={language === 'zh' ? "e.g. 我已經整理好了喔，乾乾淨淨！" : "e.g. I have cleaned it up!"}
+                                className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-violet-500"
+                              />
+                            </div>
+
+                            {/* V2 Real HTML5 File Validation Input */}
+                            <div>
+                              <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">
+                                {t('uploadProofPhoto')}
+                              </label>
+                              <input 
+                                type="file"
+                                accept="image/png, image/jpeg"
+                                onChange={handlePhotoUpload}
+                                className="w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-white/10 file:text-slate-200 hover:file:bg-white/15 file:cursor-pointer"
+                              />
+                              {photoError && (
+                                <p className="text-[10px] text-rose-400 font-bold mt-1.5 flex items-center gap-1">
+                                  <AlertTriangle className="h-3 w-3 shrink-0" />
+                                  {photoError}
+                                </p>
+                              )}
+                              {submissionPhoto && (
+                                <p className="text-[10px] text-emerald-400 font-bold mt-1">
+                                  {t('photoLoaded')}
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleTaskSubmit(task.id)}
+                                disabled={isSubmittingApi}
+                                className="flex-1 py-1.5 rounded-[4px] text-xs font-black bg-[#00E676] hover:bg-[#00c867] text-[#111216] transition-colors flex items-center justify-center gap-1.5"
+                              >
+                                {isSubmittingApi && <span className="spinner-inline"></span>}
+                                {isSubmittingApi ? t('submitting') : t('submitReviewBtn')}
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setSubmittingTaskId(null);
+                                  setSubmissionNotes('');
+                                  setSubmissionPhoto('');
+                                  setPhotoError('');
+                                }}
+                                className="px-3 py-1.5 rounded-[4px] text-xs font-bold bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white transition-colors"
+                              >
+                                {t('cancel')}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* --- Tab 3: Gacha (Drawing Cards with locked loading button states) --- */}
+      {activeSubTab === 'gacha' && (
+        <div className="glass-panel p-6 flex flex-col items-center justify-center min-h-[400px] text-center relative overflow-hidden animate-success">
+          
+          {gachaState === 'idle' && (
+            <div className="space-y-6 max-w-sm">
+              <div className="text-6xl animate-float">🎁</div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-black text-amber-400">{t('summonTitle')}</h3>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  {t('summonDesc')}
+                </p>
+              </div>
+              <div className="p-3 bg-white/5 border border-white/5 rounded-xl font-bold text-sm">
+                {t('availableTickets')}：<span className="text-cyan-400 text-lg">🎫 {stats.tickets}</span>
+              </div>
+              <button
+                onClick={startDrawCard}
+                disabled={stats.tickets < 1 || isDrawingGacha || isReadOnly}
+                className={`w-full py-3 rounded-[4px] font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                  stats.tickets >= 1 && !isDrawingGacha && !isReadOnly
+                    ? 'bg-[#00E676] text-[#111216] hover:bg-[#00c867] shadow-md border-t border-white/20' 
+                    : 'bg-[#252529] border border-[#35363A] text-slate-500 cursor-not-allowed'
+                }`}
+              >
+                {isDrawingGacha && <span className="spinner-inline"></span>}
+                {isReadOnly ? t('readOnlyGachaBlock') : isDrawingGacha ? t('summoning') : stats.tickets >= 1 ? t('openMysteryChest') : t('insufficientTickets')}
+              </button>
+            </div>
+          )}
+
+          {gachaState === 'shaking' && (
+            <div className="space-y-6">
+              <div className="text-8xl animate-chest-shake">🎁</div>
+              <h4 className="text-lg font-black text-amber-400 animate-pulse">{t('openingChest')}</h4>
+            </div>
+          )}
+
+          {gachaState === 'revealing' && (
+            <div className="space-y-6">
+              <div className="text-8xl animate-chest-open">🎁</div>
+              <div className="w-32 h-32 rounded-full bg-amber-400/20 animate-ping absolute"></div>
+            </div>
+          )}
+
+          {gachaState === 'shown' && drawnCard && (
+            <div className="space-y-6 max-w-sm w-full animate-card-draw">
+              <div className={`glass-panel p-6 border-2 rounded-2xl mx-auto space-y-4 max-w-[280px] text-center bg-gradient-to-b from-slate-950 to-slate-900 ${getRarityClass(drawnCard.rarity)}`}>
+                <span className={`inline-block px-2.5 py-0.5 text-[10px] font-black rounded-md uppercase tracking-widest ${getRarityBadge(drawnCard.rarity)}`}>
+                  {drawnCard.rarity}
+                </span>
+                
+                <div className="text-5xl mt-2">
+                  {drawnCard.type === '資源卡' ? '💎' : drawnCard.type === '特權卡' ? '📜' : drawnCard.type === '體驗卡' ? '🗺️' : '🎖️'}
+                </div>
+
+                <div className="space-y-1">
+                  <h4 className="text-md font-black text-slate-100">{drawnCard.name}</h4>
+                  <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{drawnCard.type}</div>
+                </div>
+
+                <p className="text-xs text-slate-300 border-t border-white/5 pt-3 leading-relaxed">
+                  {drawnCard.desc}
+                </p>
+              </div>
+
+              <div className="text-xs text-slate-400">
+                {drawnCard.type === '資源卡' 
+                  ? t('resourceAdded') 
+                  : t('cardAddedToBackpack')}
+              </div>
+
+              <button
+                onClick={() => {
+                  setGachaState('idle');
+                  setDrawnCard(null);
+                }}
+                className="px-6 py-2 rounded-[4px] text-xs font-bold bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white transition-colors"
+              >
+                {t('claimTreasure')}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* --- Tab 4: Backpack (Inventory with empty states) --- */}
+      {activeSubTab === 'backpack' && (
+        <div className="space-y-6 animate-success">
+          {/* Animated 3D Interactive Backpack Header Console */}
+          <div className="backpack-container">
+            <div className="backpack-icon-wrapper">
+              <span className="backpack-icon">🎒</span>
+              <span className="absolute -top-1 -right-1 bg-indigo-500 text-slate-100 text-[10px] font-black px-2 py-0.5 rounded-full border border-slate-900 shadow-md">
+                {inventory.filter(i => i.status === '未使用').length}
+              </span>
+            </div>
+            <h3 className="text-lg font-black text-slate-100 uppercase tracking-widest relative z-10 flex items-center gap-2">
+              {t('myBackpack')}
+            </h3>
+          </div>
+
+          {/* V2 Empty State for Inventory */}
+          {inventory.length === 0 ? (
+            <div className="empty-state-card glass-panel p-8 text-center">
+              <div className="empty-state-icon">🎒</div>
+              <h4 className="text-md font-bold text-slate-300">{t('backpackEmpty')}</h4>
+              <p className="text-xs text-slate-500 mt-2 max-w-sm mx-auto leading-normal">
+                {t('backpackEmptyDesc')}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {inventory.map((item, idx) => {
+                const isExpired = item.status === '已過期';
+                const isRedeeming = item.inventoryId === redeemingId;
+                return (
+                  <div 
+                    key={item.inventoryId}
+                    style={{ animationDelay: `${idx * 80}ms` }}
+                    className={`glass-panel p-5 border-2 flex flex-col justify-between gap-4 bg-gradient-to-b from-slate-900 to-slate-950 animate-backpack-item ${
+                      isRedeeming ? 'item-redeeming' : ''
+                    } ${
+                      isExpired ? 'border-white/5 opacity-55' : getRarityClass(item.rarity)
+                    }`}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className={`px-2 py-0.5 text-[9px] font-black rounded-md uppercase tracking-wider ${
+                          isExpired ? 'bg-slate-800 text-slate-500 border border-slate-700' : getRarityBadge(item.rarity)
+                        }`}>
+                          {item.rarity}
+                        </span>
+                        <span className="text-[10px] text-slate-500">{item.dateAcquired}</span>
+                      </div>
+
+                      <h4 className={`text-md font-bold ${isExpired ? 'text-slate-500 line-through' : 'text-slate-100'}`}>
+                        {item.name}
+                      </h4>
+                      <p className="text-xs text-slate-400">{item.desc}</p>
+                      {item.expireAt && (
+                        <p className={`text-[10px] font-bold ${isExpired ? 'text-rose-500' : 'text-slate-500'}`}>
+                          {t('expiryDate')}: {item.expireAt} {isExpired && `(${t('cardExpired')})`}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2 border-t border-white/5 pt-3 mt-1">
+                      
+                      <div className="flex items-center gap-1">
+                        {item.status === '未使用' && <Clock className="h-3.5 w-3.5 text-cyan-400" />}
+                        {item.status === '待核銷' && <Clock className="h-3.5 w-3.5 text-amber-400 animate-pulse" />}
+                        {item.status === '已使用' && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />}
+                        {item.status === '已過期' && <Ban className="h-3.5 w-3.5 text-rose-500" />}
+                        <span className={`text-xs font-bold ${
+                          item.status === '未使用' ? 'text-cyan-400' :
+                          item.status === '待核銷' ? 'text-amber-400' :
+                          item.status === '已使用' ? 'text-emerald-400' : 'text-rose-500'
+                        }`}>
+                          {item.status === '未使用' ? t('voucherStatusUnused') :
+                           item.status === '待核銷' ? t('voucherStatusPending') :
+                           item.status === '已使用' ? t('voucherStatusUsed') :
+                           t('voucherStatusExpired')}
+                        </span>
+                      </div>
+
+                      {item.status === '未使用' && (
+                        isReadOnly ? (
+                          <span className="text-[10px] text-slate-500 italic">
+                            {t('readOnlyTag')}
+                          </span>
+                        ) : item.type === '收藏卡' ? (
+                          <button
+                            onClick={() => handleRedeemClick(item.inventoryId, true)}
+                            className="px-3 py-1 bg-[#00E676] text-[#111216] hover:bg-[#00c867] text-xs font-black rounded-[4px] transition-colors"
+                          >
+                            {language === 'zh' ? '佩戴展示' : 'Display'}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleRedeemClick(item.inventoryId, false)}
+                            className="px-3 py-1 bg-[#3661FF] text-white hover:bg-[#4e75ff] text-xs font-black rounded-[4px] transition-colors"
+                          >
+                            {language === 'zh' ? '出示核銷' : 'Use'}
+                          </button>
+                        )
+                      )}
+
+                      {item.status === '待核銷' && (
+                        <span className="text-[10px] text-amber-500/80 font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                          {language === 'zh' ? '等待家長審核' : 'Pending parent approval'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* --- Tab 5: Wishlist --- */}
+      {activeSubTab === 'wishlist' && (
+        <div className="space-y-6 animate-success">
+          {wishlist.filter(w => w.isUltimate).map(wish => (
+            <div key={wish.id} className="glass-panel p-6 border border-amber-500/30 bg-gradient-to-r from-slate-900 to-amber-500/5 space-y-4">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="space-y-1">
+                  <div className="text-xs text-amber-400 font-extrabold uppercase tracking-widest flex items-center gap-1">
+                    <Trophy className="h-4 w-4 animate-bounce" />
+                    {t('ultimatePrize')}
+                  </div>
+                  <h3 className="text-xl font-black text-slate-100">{wish.title}</h3>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-bold text-slate-300">
+                    {t('familyTotalPoints')}：<span className="text-amber-400 font-black">{familyScore}</span> / {wish.pointsNeeded} Pts
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="h-4 w-full bg-slate-950 border border-white/10 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-400 rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(100, (familyScore / wish.pointsNeeded) * 100)}%` }}
+                  ></div>
+                </div>
+                <div className="flex justify-between text-xs text-slate-300 font-bold">
+                  <span>{t('progress')}: {Math.min(100, Math.round((familyScore / wish.pointsNeeded) * 100))}%</span>
+                  <span>{t('pointsShortOfUnlock', { count: Math.max(0, wish.pointsNeeded - familyScore) })}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          <div className="space-y-4">
+            <h3 className="text-md font-bold text-slate-200">{t('familyWishlistTitle')}</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {wishlist.filter(w => !w.isUltimate).map(wish => {
+                const canRedeem = familyScore >= wish.pointsNeeded && !wish.isRedeemed;
+
+                return (
+                  <div 
+                    key={wish.id}
+                    className={`glass-panel p-5 border flex flex-col justify-between gap-4 ${
+                      wish.isRedeemed ? 'border-emerald-500/20 bg-emerald-500/5 opacity-70' : 'border-white/5'
+                    }`}
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-md font-bold text-slate-200">{wish.title}</h4>
+                        {wish.isRedeemed && (
+                          <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px] font-bold">
+                            {t('wishlistRedeemed')}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-slate-400">
+                        {t('pointsRequired')}：<span className="text-slate-200 font-bold">{wish.pointsNeeded} Pts</span>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-white/5 pt-3 mt-1 flex items-center justify-between">
+                      <span className="text-xs text-slate-300 font-bold">
+                        {!wish.isRedeemed ? `${t('currentStatus')}: ${familyScore}/${wish.pointsNeeded} Pts` : t('familyWishRealized')}
+                      </span>
+
+                      {!wish.isRedeemed && !isReadOnly && (
+                        <button
+                          disabled={!canRedeem}
+                          onClick={() => onClaimWishlistItem(wish.id)}
+                          className={`px-3 py-1.5 rounded-[4px] text-xs font-black transition-all ${
+                            canRedeem 
+                              ? 'bg-[#00E676] hover:bg-[#00c867] text-[#111216] shadow-md border-t border-white/20' 
+                              : 'bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white transition-colors'
+                          }`}
+                        >
+                          {t('claimWishlistBtn')}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Avatar Selector Modal */}
+      {showAvatarModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="glass-panel p-6 border border-violet-500/30 bg-[#17181c] max-w-md w-full rounded-2xl space-y-6 relative shadow-2xl">
+            <div className="flex justify-between items-center border-b border-white/10 pb-3">
+              <h3 className="text-md font-black text-slate-100 flex items-center gap-2">
+                <Camera className="h-5 w-5 text-violet-400" />
+                {t('selectAvatar')}
+              </h3>
+              <button 
+                onClick={() => {
+                  setShowAvatarModal(false);
+                  setSelectedAvatar(stats.avatar || 'boy');
+                  setAvatarUploadError('');
+                }} 
+                className="text-slate-400 hover:text-slate-200 font-bold transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                {t('selectDefaultAvatar')}
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setSelectedAvatar('boy')}
+                  className={`p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${
+                    selectedAvatar === 'boy'
+                      ? 'bg-violet-600/20 border-violet-500 text-white'
+                      : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'
+                  }`}
+                >
+                  <span className="text-4xl">👦</span>
+                  <span className="text-xs font-bold text-slate-300">{t('boyLabel')}</span>
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => setSelectedAvatar('girl')}
+                  className={`p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${
+                    selectedAvatar === 'girl'
+                      ? 'bg-violet-600/20 border-violet-500 text-white'
+                      : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'
+                  }`}
+                >
+                  <span className="text-4xl">👧</span>
+                  <span className="text-xs font-bold text-slate-300">{t('girlLabel')}</span>
+                </button>
+              </div>
+
+              <div className="border-t border-white/10 pt-4 space-y-3">
+                <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                  {t('orUploadCustomImage')}
+                </label>
+                <div className="flex flex-col items-center justify-center border-2 border-dashed border-white/10 rounded-xl p-4 hover:border-violet-500/50 transition-colors relative">
+                  <input
+                    type="file"
+                    accept="image/png, image/jpeg"
+                    onChange={handleAvatarFileChange}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  <div className="flex flex-col items-center gap-2 pointer-events-none">
+                    <Upload className="h-6 w-6 text-slate-400" />
+                    <span className="text-xs text-slate-400 font-semibold">{t('clickToUpload')}</span>
+                    <span className="text-[10px] text-slate-500">{t('limit2MB')}</span>
+                  </div>
+                </div>
+
+                {avatarUploadError && (
+                  <p className="text-[10px] text-rose-400 font-bold flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3 shrink-0" />
+                    {avatarUploadError}
+                  </p>
+                )}
+
+                {/* Preview custom upload */}
+                {selectedAvatar && selectedAvatar.startsWith('data:') && (
+                  <div className="flex items-center gap-3 bg-white/5 border border-white/5 p-3 rounded-xl">
+                    <div className="w-12 h-12 rounded-xl border border-white/10 overflow-hidden shrink-0">
+                      <img src={selectedAvatar} alt="Custom Preview" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="text-xs">
+                      <p className="text-slate-200 font-bold">{t('customUploadPreview')}</p>
+                      <p className="text-slate-500 text-[10px]">{t('customImageSelected')}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end border-t border-white/10 pt-4">
+              <button
+                type="button"
+                onClick={handleSaveAvatar}
+                className="px-4 py-2 rounded-lg text-xs font-black bg-[#00E676] text-[#111216] hover:bg-[#00c867] transition-colors"
+              >
+                {t('saveChanges')}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAvatarModal(false);
+                  setSelectedAvatar(stats.avatar || 'boy');
+                  setAvatarUploadError('');
+                }}
+                className="px-4 py-2 rounded-lg text-xs font-bold bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white transition-colors"
+              >
+                {t('cancel')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+export default KidPortal;
