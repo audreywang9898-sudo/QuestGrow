@@ -1,0 +1,366 @@
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+const getHeaders = () => {
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+  const token = localStorage.getItem('questgrow_jwt_token');
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+};
+
+const handleResponse = async (response) => {
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || '請求失敗，請稍後再試。');
+  }
+  return data;
+};
+
+export const api = {
+  // --- Auth ---
+  login: async (email, password) => {
+    const res = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await handleResponse(res);
+    if (data.token) {
+      localStorage.setItem('questgrow_jwt_token', data.token);
+    }
+    return data;
+  },
+
+  register: async (email, password, name, avatar) => {
+    const res = await fetch(`${API_URL}/auth/register`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ email, password, name, avatar }),
+    });
+    const data = await handleResponse(res);
+    if (data.token) {
+      localStorage.setItem('questgrow_jwt_token', data.token);
+    }
+    return data;
+  },
+
+  googleLogin: async (email, googleId, name, avatar, role) => {
+    const res = await fetch(`${API_URL}/auth/google`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ email, googleId, name, avatar, role }),
+    });
+    const data = await handleResponse(res);
+    if (data.token) {
+      localStorage.setItem('questgrow_jwt_token', data.token);
+    }
+    return data;
+  },
+
+  linkGoogle: async (googleId, googleEmail) => {
+    const res = await fetch(`${API_URL}/auth/link-google`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ googleId, googleEmail }),
+    });
+    return handleResponse(res);
+  },
+
+  logout: () => {
+    localStorage.removeItem('questgrow_jwt_token');
+  },
+
+  // --- Users / Family Members ---
+  getMembers: async () => {
+    const res = await fetch(`${API_URL}/users/members`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  getChildren: async () => {
+    const res = await fetch(`${API_URL}/users/children`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  addChild: async (childData) => {
+    const res = await fetch(`${API_URL}/users/children`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(childData),
+    });
+    return handleResponse(res);
+  },
+
+  deleteChild: async (childId) => {
+    const res = await fetch(`${API_URL}/users/children/${childId}`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  updateChildProfile: async (childId, data) => {
+    const res = await fetch(`${API_URL}/users/children/${childId}`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+  },
+
+  addParent: async (parentData) => {
+    const res = await fetch(`${API_URL}/users/parents`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(parentData),
+    });
+    return handleResponse(res);
+  },
+
+  deleteParent: async (parentEmail) => {
+    const res = await fetch(`${API_URL}/users/parents/${parentEmail}`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  updateParent: async (parentData) => {
+    const res = await fetch(`${API_URL}/users/parents`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify(parentData),
+    });
+    return handleResponse(res);
+  },
+
+  clearAllFamilyData: async () => {
+    const res = await fetch(`${API_URL}/users/family/clear`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  // --- Tasks ---
+  getTasks: async () => {
+    const res = await fetch(`${API_URL}/tasks`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  addTask: async (taskData) => {
+    const res = await fetch(`${API_URL}/tasks`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(taskData),
+    });
+    return handleResponse(res);
+  },
+
+  editTask: async (taskId, taskData) => {
+    const res = await fetch(`${API_URL}/tasks/${taskId}`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify(taskData),
+    });
+    return handleResponse(res);
+  },
+
+  deleteTask: async (taskId) => {
+    const res = await fetch(`${API_URL}/tasks/${taskId}`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  clearAllTasks: async (filter = 'all') => {
+    const res = await fetch(`${API_URL}/tasks?filter=${filter}`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  submitTask: async (taskId, notes, photo) => {
+    const res = await fetch(`${API_URL}/tasks/${taskId}/submit`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ notes, photo }),
+    });
+    return handleResponse(res);
+  },
+
+  reviewTask: async (taskId, action, reason) => {
+    const res = await fetch(`${API_URL}/tasks/${taskId}/review`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ action, reason }),
+    });
+    return handleResponse(res);
+  },
+
+  // --- Backpack & Gacha ---
+  getInventory: async () => {
+    const res = await fetch(`${API_URL}/items/inventory`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  getRedeemLogs: async () => {
+    const res = await fetch(`${API_URL}/items/redeem-logs`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  drawGachaCard: async (card, costTickets) => {
+    const res = await fetch(`${API_URL}/items/gacha`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ card, costTickets }),
+    });
+    return handleResponse(res);
+  },
+
+  requestRedeem: async (inventoryId) => {
+    const res = await fetch(`${API_URL}/items/inventory/${inventoryId}/redeem-request`, {
+      method: 'POST',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  reviewRedeem: async (inventoryId, action) => {
+    const res = await fetch(`${API_URL}/items/inventory/${inventoryId}/redeem-review`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ action }),
+    });
+    return handleResponse(res);
+  },
+
+  // --- Family & Goals ---
+  getFamilyData: async () => {
+    const res = await fetch(`${API_URL}/family`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  getWishlist: async () => {
+    const res = await fetch(`${API_URL}/family/wishlist`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  addWishlistItem: async (title, pointsNeeded) => {
+    const res = await fetch(`${API_URL}/family/wishlist`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ title, pointsNeeded }),
+    });
+    return handleResponse(res);
+  },
+
+  editWishlistItem: async (id, title, pointsNeeded) => {
+    const res = await fetch(`${API_URL}/family/wishlist/${id}`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify({ title, pointsNeeded }),
+    });
+    return handleResponse(res);
+  },
+
+  deleteWishlistItem: async (id) => {
+    const res = await fetch(`${API_URL}/family/wishlist/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  redeemWishlist: async (id) => {
+    const res = await fetch(`${API_URL}/family/wishlist/${id}/redeem`, {
+      method: 'POST',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  getParentGoals: async () => {
+    const res = await fetch(`${API_URL}/family/goals`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  addParentGoal: async (category, title) => {
+    const res = await fetch(`${API_URL}/family/goals`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ category, title }),
+    });
+    return handleResponse(res);
+  },
+
+  updateGoalProgress: async (id, progress) => {
+    const res = await fetch(`${API_URL}/family/goals/${id}/progress`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify({ progress }),
+    });
+    return handleResponse(res);
+  },
+
+  deleteParentGoal: async (id) => {
+    const res = await fetch(`${API_URL}/family/goals/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  getWeeklyComp: async () => {
+    const res = await fetch(`${API_URL}/family/weekly-comp`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  getEventLogs: async () => {
+    const res = await fetch(`${API_URL}/family/event-logs`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  addEventLog: async (eventType, metadata) => {
+    const res = await fetch(`${API_URL}/family/event-logs`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ eventType, metadata }),
+    });
+    return handleResponse(res);
+  },
+};

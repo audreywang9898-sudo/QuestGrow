@@ -15,6 +15,9 @@ jspm_packages/
 dist/
 dist-ssr/
 *.local
+.env
+.env.*
+server/.env
 
 # Editor directories and files
 .vscode/*
