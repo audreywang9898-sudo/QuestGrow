@@ -164,10 +164,10 @@ VALUES ('f1111111-1111-1111-1111-111111111111', '格林冒險家庭');
 -- but for seeding we can insert raw or a pre-hashed string: '$2a$10$tJqIscC2zRkZlJ48aA719usG5p08x3J4wD9h7W5G.vCgE/c2UvWp.' is 'password123')
 INSERT INTO users (id, family_id, email, password_hash, name, role, avatar) 
 VALUES 
-('aaaa1111-1111-1111-1111-111111111111', 'f1111111-1111-1111-1111-111111111111', 'parent@questgrow.com', '$2a$10$tJqIscC2zRkZlJ48aA719usG5p08x3J4wD9h7W5G.vCgE/c2UvWp.', 'Audrey & Richard', 'parent', 'girl'),
-('aaaa2222-2222-2222-2222-222222222222', 'f1111111-1111-1111-1111-111111111111', 'kid@questgrow.com', '$2a$10$tJqIscC2zRkZlJ48aA719usG5p08x3J4wD9h7W5G.vCgE/c2UvWp.', '小格林 (Leo)', 'kid', 'boy'),
-('aaaa3333-3333-3333-3333-333333333333', 'f1111111-1111-1111-1111-111111111111', 'michelle@questgrow.com', '$2a$10$tJqIscC2zRkZlJ48aA719usG5p08x3J4wD9h7W5G.vCgE/c2UvWp.', 'Michelle', 'kid', 'girl'),
-('aaaa4444-4444-4444-4444-444444444444', 'f1111111-1111-1111-1111-111111111111', 'daniel@questgrow.com', '$2a$10$tJqIscC2zRkZlJ48aA719usG5p08x3J4wD9h7W5G.vCgE/c2UvWp.', 'Daniel', 'kid', 'boy');
+('aaaa1111-1111-1111-1111-111111111111', 'f1111111-1111-1111-1111-111111111111', 'parent@questgrow.com', '$2a$10$euDgSzeDgGyC1pcs8sNo1evkYNQmLLOoipAvZWKa9Z3ZjhiFY5vTy', 'Audrey & Richard', 'parent', 'girl'),
+('aaaa2222-2222-2222-2222-222222222222', 'f1111111-1111-1111-1111-111111111111', 'kid@questgrow.com', '$2a$10$euDgSzeDgGyC1pcs8sNo1evkYNQmLLOoipAvZWKa9Z3ZjhiFY5vTy', '小格林 (Leo)', 'kid', 'boy'),
+('aaaa3333-3333-3333-3333-333333333333', 'f1111111-1111-1111-1111-111111111111', 'michelle@questgrow.com', '$2a$10$euDgSzeDgGyC1pcs8sNo1evkYNQmLLOoipAvZWKa9Z3ZjhiFY5vTy', 'Michelle', 'kid', 'girl'),
+('aaaa4444-4444-4444-4444-444444444444', 'f1111111-1111-1111-1111-111111111111', 'daniel@questgrow.com', '$2a$10$euDgSzeDgGyC1pcs8sNo1evkYNQmLLOoipAvZWKa9Z3ZjhiFY5vTy', 'Daniel', 'kid', 'boy');
 
 -- 3. Create Children Profiles
 INSERT INTO children (id, user_id, name, age, birthday, avatar, level, exp, exp_needed, gold, tickets, job_class, attributes)
