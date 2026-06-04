@@ -20,6 +20,43 @@ function LoginPortal({ onLogin, googleClientId }) {
   const [sandboxRole, setSandboxRole] = useState('parent');
   const [isSandboxFirstTime, setIsSandboxFirstTime] = useState(false);
 
+  // Diagnostics States
+  const [diagnosing, setDiagnosing] = useState(false);
+  const [diagResult, setDiagResult] = useState(null); // null, 'success', 'fail'
+  const [diagDetails, setDiagDetails] = useState('');
+
+  const runDiagnostics = async () => {
+    setDiagnosing(true);
+    setDiagResult(null);
+    setDiagDetails('');
+    const targetUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    
+    try {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), 6000); // 6s timeout
+      
+      const res = await fetch(`${targetUrl}/health`, { 
+        method: 'GET',
+        signal: controller.signal
+      });
+      clearTimeout(id);
+      
+      if (res.ok) {
+        const data = await res.json();
+        setDiagResult('success');
+        setDiagDetails(data.message || '連線測試成功！後端 API 伺服器運作正常。');
+      } else {
+        setDiagResult('fail');
+        setDiagDetails(`伺服器回應錯誤碼: ${res.status} ${res.statusText}`);
+      }
+    } catch (err) {
+      setDiagResult('fail');
+      setDiagDetails(err.message || err.toString() || '連線逾時或被拒絕 (Network Error)');
+    } finally {
+      setDiagnosing(false);
+    }
+  };
+
   // Preset quick login selector for instant testing
   const presets = [
     { email: 'parent@questgrow.com', password: 'password123', label: `👩 ${t('presetParentLabel', { names: 'Audrey & Richard' })}`, desc: t('presetParentDesc') },
@@ -66,7 +103,7 @@ function LoginPortal({ onLogin, googleClientId }) {
       const base64Url = credential.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
       const jsonPayload = decodeURIComponent(
-        atob(base64)
+         atob(base64)
           .split('')
           .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
           .join('')
@@ -86,7 +123,7 @@ function LoginPortal({ onLogin, googleClientId }) {
     }
   };
 
-  const handleStandardSubmit = (e) => {
+  const handleStandardSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
 
@@ -97,7 +134,7 @@ function LoginPortal({ onLogin, googleClientId }) {
 
     if (activeTab === 'login') {
       // Pass credentials to App.jsx handler
-      const success = onLogin({ email, password, isRegister: false });
+      const success = await onLogin({ email, password, isRegister: false });
       if (!success) {
         setErrorMsg(t('loginErrorPrompt'));
       }
@@ -106,7 +143,7 @@ function LoginPortal({ onLogin, googleClientId }) {
         setErrorMsg(t('fillNameError'));
         return;
       }
-      const success = onLogin({ email, password, name, role: regRole, isRegister: true });
+      const success = await onLogin({ email, password, name, role: regRole, isRegister: true });
       if (!success) {
         setErrorMsg(t('emailAlreadyRegistered'));
       } else {
@@ -121,10 +158,14 @@ function LoginPortal({ onLogin, googleClientId }) {
     }
   };
 
-  const handleQuickLogin = (preset) => {
+  const handleQuickLogin = async (preset) => {
     setEmail(preset.email);
     setPassword(preset.password);
-    onLogin({ email: preset.email, password: preset.password, isRegister: false });
+    setErrorMsg('');
+    const success = await onLogin({ email: preset.email, password: preset.password, isRegister: false });
+    if (!success) {
+      setErrorMsg(t('loginErrorPrompt'));
+    }
   };
 
   const triggerGoogleSandboxAuth = () => {
@@ -332,6 +373,54 @@ function LoginPortal({ onLogin, googleClientId }) {
             </div>
           </div>
         )}
+
+        {/* Connection Diagnostics */}
+        <div className="pt-4 border-t border-slate-100 flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={runDiagnostics}
+            className={`w-full py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+              diagnosing 
+                ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
+                : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 border border-amber-500/30'
+            }`}
+            disabled={diagnosing}
+          >
+            🔍 {diagnosing ? '正在測試後端連線...' : '連線診斷與部署助手 (Diagnostics)'}
+          </button>
+
+          {diagResult && (
+            <div className={`p-4 rounded-xl border text-xs font-semibold space-y-2 text-left ${
+              diagResult === 'success' 
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800' 
+                : 'bg-rose-500/10 border-rose-500/30 text-rose-800'
+            }`}>
+              <div className="flex items-center gap-2 font-black">
+                {diagResult === 'success' ? '✓ 連線成功' : '✗ 連線失敗'}
+              </div>
+              <p className="opacity-90 font-mono text-[10px] break-all">
+                API URL: {import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}
+              </p>
+              <p className="opacity-90">
+                詳細資訊: {diagDetails}
+              </p>
+              {diagResult === 'fail' && (
+                <div className="mt-2 pt-2 border-t border-rose-500/20 text-[11px] text-rose-700 space-y-1">
+                  <p className="font-bold">💡 部署排障建議 Checklist：</p>
+                  <ul className="list-disc pl-4 space-y-1 text-[10px] font-medium leading-normal">
+                    <li>請確認您的後端 Web Service 已在 Render 成功啟動並顯示為 Live。</li>
+                    <li>
+                      前端 React App 需要設定環境變數 <code className="bg-rose-500/20 px-1 rounded font-mono">VITE_API_URL</code> 指向後端網址（例如：<code className="bg-rose-500/20 px-1 rounded font-mono">https://your-backend.onrender.com/api</code>）。
+                    </li>
+                    <li className="text-amber-700 font-bold">
+                      ⚠️ 重要：在 Render 後台修改 `VITE_API_URL` 後，前端 Static Site 必須點選 **Manual Deploy {"->"} Clear Cache and Deploy** 重新編譯，環境變數才會寫入 Vite 靜態檔案！
+                    </li>
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
       </div>
 
