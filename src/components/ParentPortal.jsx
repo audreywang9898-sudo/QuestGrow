@@ -2279,14 +2279,27 @@ function ParentPortal({
                         <td colSpan="4" className="py-6 px-4 text-center text-slate-500">{t('noTelemetryLogs')}</td>
                       </tr>
                     ) : (
-                      eventLogs.map((log) => (
-                        <tr key={log.id} className="hover:bg-white/5 text-slate-300">
-                          <td className="py-2 px-4 whitespace-nowrap text-slate-400">{log.timestamp.replace('T', ' ').substr(0, 19)}</td>
-                          <td className="py-2 px-4 whitespace-nowrap font-bold text-cyan-400">{log.event_type}</td>
-                          <td className="py-2 px-4 whitespace-nowrap text-slate-400">{log.user_id}</td>
-                          <td className="py-2 px-4 font-mono text-[10px] text-slate-500 truncate max-w-xs" title={log.metadata}>{log.metadata}</td>
-                        </tr>
-                      ))
+                      eventLogs.map((log) => {
+                        const displayTime = log.timestamp 
+                          ? (typeof log.timestamp === 'string' 
+                              ? log.timestamp.replace('T', ' ').substring(0, 19) 
+                              : new Date(log.timestamp).toISOString().replace('T', ' ').substring(0, 19))
+                          : '';
+                        const metadataStr = log.metadata 
+                          ? (typeof log.metadata === 'object' 
+                              ? JSON.stringify(log.metadata) 
+                              : String(log.metadata))
+                          : '';
+
+                        return (
+                          <tr key={log.id} className="hover:bg-white/5 text-slate-300">
+                            <td className="py-2 px-4 whitespace-nowrap text-slate-400">{displayTime}</td>
+                            <td className="py-2 px-4 whitespace-nowrap font-bold text-cyan-400">{log.eventType || log.event_type}</td>
+                            <td className="py-2 px-4 whitespace-nowrap text-slate-400">{log.userId || log.user_id}</td>
+                            <td className="py-2 px-4 font-mono text-[10px] text-slate-500 truncate max-w-xs" title={metadataStr}>{metadataStr}</td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
