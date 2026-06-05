@@ -70,8 +70,10 @@ function LoginPortal({ onLogin, googleClientId }) {
     /* global google */
     if (window.google && google.accounts && google.accounts.id) {
       try {
+        const client_id = import.meta.env.VITE_GOOGLE_CLIENT_ID || googleClientId || "853920950328-mockclientid.apps.googleusercontent.com";
+        console.log("Initializing Google GSI with client_id:", client_id);
         google.accounts.id.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || googleClientId || "853920950328-mockclientid.apps.googleusercontent.com",
+          client_id,
           callback: (response) => {
             handleGoogleCredential(response.credential);
           },
@@ -318,6 +320,11 @@ function LoginPortal({ onLogin, googleClientId }) {
           
           {/* Google Official GSI Button Container */}
           <div id="google-gsi-btn-container" className="min-h-[40px] flex justify-center w-full"></div>
+          {import.meta.env.DEV && (
+            <div className="text-[9px] text-slate-400 font-mono text-center select-all -mt-1 mb-1">
+              Active Client ID: {import.meta.env.VITE_GOOGLE_CLIENT_ID || "None"}
+            </div>
+          )}
 
           {/* Fallback Sandbox Google Simulator Toggle */}
           <button
