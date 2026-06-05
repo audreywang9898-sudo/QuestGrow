@@ -139,6 +139,8 @@ export const translations = {
     wishlistRedeemed: "已解鎖兌換",
     wishlistCanRedeem: "可兌換",
     wishlistProgress: "進度",
+    familyWishlistTitle: "家庭願望清單",
+    noKidWishlistItems: "目前沒有設定任何家庭願望喔！請提示爸爸媽媽前往家長端的「系統設定 -> 願望清單設定」來新增願望。",
 
     // Parent Settings Tab
     parentManagementTitle: "家長角色管理",
@@ -488,6 +490,8 @@ export const translations = {
     wishlistRedeemed: "Claimed",
     wishlistCanRedeem: "Ready",
     wishlistProgress: "Progress",
+    familyWishlistTitle: "Family Wishlist",
+    noKidWishlistItems: "No family wishes have been set yet! Remind your parents to add wishes in 'System Settings -> Wishlist Settings' on the parent portal.",
 
     // Parent Settings Tab
     parentManagementTitle: "Parent Profiles Management",

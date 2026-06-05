@@ -1299,90 +1299,102 @@ function KidPortal({
       {/* --- Tab 5: Wishlist --- */}
       {activeSubTab === 'wishlist' && (
         <div className="space-y-6 animate-success">
-          {wishlist.filter(w => w.isUltimate).map(wish => (
-            <div key={wish.id} className="glass-panel p-6 border border-amber-500/30 bg-gradient-to-r from-slate-900 to-amber-500/5 space-y-4">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="space-y-1">
-                  <div className="text-xs text-amber-400 font-extrabold uppercase tracking-widest flex items-center gap-1">
-                    <Trophy className="h-4 w-4 animate-bounce" />
-                    {t('ultimatePrize')}
-                  </div>
-                  <h3 className="text-xl font-black text-slate-100">{wish.title}</h3>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-bold text-slate-300">
-                    {t('familyTotalPoints')}：<span className="text-amber-400 font-black">{familyScore}</span> / {wish.pointsNeeded} Pts
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="h-4 w-full bg-slate-950 border border-white/10 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-400 rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min(100, (familyScore / wish.pointsNeeded) * 100)}%` }}
-                  ></div>
-                </div>
-                <div className="flex justify-between text-xs text-slate-300 font-bold">
-                  <span>{t('progress')}: {Math.min(100, Math.round((familyScore / wish.pointsNeeded) * 100))}%</span>
-                  <span>{t('pointsShortOfUnlock', { count: Math.max(0, wish.pointsNeeded - familyScore) })}</span>
-                </div>
-              </div>
+          {wishlist.length === 0 ? (
+            <div className="empty-state-card glass-panel p-12 text-center space-y-4">
+              <div className="text-6xl animate-float">🏆</div>
+              <h4 className="text-lg font-black text-slate-200">{t('familyWishlistTitle')}</h4>
+              <p className="text-xs text-slate-400 max-w-sm mx-auto leading-normal">
+                {t('noKidWishlistItems')}
+              </p>
             </div>
-          ))}
-
-          <div className="space-y-4">
-            <h3 className="text-md font-bold text-slate-200">{t('familyWishlistTitle')}</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {wishlist.filter(w => !w.isUltimate).map(wish => {
-                const canRedeem = familyScore >= wish.pointsNeeded && !wish.isRedeemed;
-
-                return (
-                  <div 
-                    key={wish.id}
-                    className={`glass-panel p-5 border flex flex-col justify-between gap-4 ${
-                      wish.isRedeemed ? 'border-emerald-500/20 bg-emerald-500/5 opacity-70' : 'border-white/5'
-                    }`}
-                  >
+          ) : (
+            <>
+              {wishlist.filter(w => w.isUltimate).map(wish => (
+                <div key={wish.id} className="glass-panel p-6 border border-amber-500/30 bg-gradient-to-r from-slate-900 to-amber-500/5 space-y-4">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
                     <div className="space-y-1">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-md font-bold text-slate-200">{wish.title}</h4>
-                        {wish.isRedeemed && (
-                          <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px] font-bold">
-                            {t('wishlistRedeemed')}
-                          </span>
-                        )}
+                      <div className="text-xs text-amber-400 font-extrabold uppercase tracking-widest flex items-center gap-1">
+                        <Trophy className="h-4 w-4 animate-bounce" />
+                        {t('ultimatePrize')}
                       </div>
-                      <div className="text-xs text-slate-400">
-                        {t('pointsRequired')}：<span className="text-slate-200 font-bold">{wish.pointsNeeded} Pts</span>
-                      </div>
+                      <h3 className="text-xl font-black text-slate-100">{wish.title}</h3>
                     </div>
-
-                    <div className="border-t border-white/5 pt-3 mt-1 flex items-center justify-between">
-                      <span className="text-xs text-slate-300 font-bold">
-                        {!wish.isRedeemed ? `${t('currentStatus')}: ${familyScore}/${wish.pointsNeeded} Pts` : t('familyWishRealized')}
-                      </span>
-
-                      {!wish.isRedeemed && !isReadOnly && (
-                        <button
-                          disabled={!canRedeem}
-                          onClick={() => onClaimWishlistItem(wish.id)}
-                          className={`px-3 py-1.5 rounded-[4px] text-xs font-black transition-all ${
-                            canRedeem 
-                              ? 'bg-[#00E676] hover:bg-[#00c867] text-[#111216] shadow-md border-t border-white/20' 
-                              : 'bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white transition-colors'
-                          }`}
-                        >
-                          {t('claimWishlistBtn')}
-                        </button>
-                      )}
+                    <div className="text-right">
+                      <div className="text-sm font-bold text-slate-300">
+                        {t('familyTotalPoints')}：<span className="text-amber-400 font-black">{familyScore}</span> / {wish.pointsNeeded} Pts
+                      </div>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </div>
+
+                  <div className="space-y-2">
+                    <div className="h-4 w-full bg-slate-950 border border-white/10 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-400 rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(100, (familyScore / wish.pointsNeeded) * 100)}%` }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between text-xs text-slate-300 font-bold">
+                      <span>{t('progress')}: {Math.min(100, Math.round((familyScore / wish.pointsNeeded) * 100))}%</span>
+                      <span>{t('pointsShortOfUnlock', { count: Math.max(0, wish.pointsNeeded - familyScore) })}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <div className="space-y-4">
+                <h3 className="text-md font-bold text-slate-200">{t('familyWishlistTitle')}</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {wishlist.filter(w => !w.isUltimate).map(wish => {
+                    const canRedeem = familyScore >= wish.pointsNeeded && !wish.isRedeemed;
+
+                    return (
+                      <div 
+                        key={wish.id}
+                        className={`glass-panel p-5 border flex flex-col justify-between gap-4 ${
+                          wish.isRedeemed ? 'border-emerald-500/20 bg-emerald-500/5 opacity-70' : 'border-white/5'
+                        }`}
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-md font-bold text-slate-200">{wish.title}</h4>
+                            {wish.isRedeemed && (
+                              <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px] font-bold">
+                                {t('wishlistRedeemed')}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-slate-400">
+                            {t('pointsRequired')}：<span className="text-slate-200 font-bold">{wish.pointsNeeded} Pts</span>
+                          </div>
+                        </div>
+
+                        <div className="border-t border-white/5 pt-3 mt-1 flex items-center justify-between">
+                          <span className="text-xs text-slate-300 font-bold">
+                            {!wish.isRedeemed ? `${t('currentStatus')}: ${familyScore}/${wish.pointsNeeded} Pts` : t('familyWishRealized')}
+                          </span>
+
+                          {!wish.isRedeemed && !isReadOnly && (
+                            <button
+                              disabled={!canRedeem}
+                              onClick={() => onClaimWishlistItem(wish.id)}
+                              className={`px-3 py-1.5 rounded-[4px] text-xs font-black transition-all ${
+                                canRedeem 
+                                  ? 'bg-[#00E676] hover:bg-[#00c867] text-[#111216] shadow-md border-t border-white/20' 
+                                  : 'bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white transition-colors'
+                              }`}
+                            >
+                              {t('claimWishlistBtn')}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
 
