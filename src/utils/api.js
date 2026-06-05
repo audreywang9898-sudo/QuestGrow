@@ -47,11 +47,11 @@ export const api = {
     return data;
   },
 
-  googleLogin: async (email, googleId, name, avatar, role) => {
+  googleLogin: async (idToken, role) => {
     const res = await fetch(`${API_URL}/auth/google`, {
       method: 'POST',
       headers: getHeaders(),
-      body: JSON.stringify({ email, googleId, name, avatar, role }),
+      body: JSON.stringify({ idToken, role }),
     });
     const data = await handleResponse(res);
     if (data.token) {
@@ -60,11 +60,11 @@ export const api = {
     return data;
   },
 
-  linkGoogle: async (googleId, googleEmail) => {
+  linkGoogle: async (idToken) => {
     const res = await fetch(`${API_URL}/auth/link-google`, {
       method: 'POST',
       headers: getHeaders(),
-      body: JSON.stringify({ googleId, googleEmail }),
+      body: JSON.stringify({ idToken }),
     });
     return handleResponse(res);
   },

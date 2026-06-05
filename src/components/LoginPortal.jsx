@@ -71,7 +71,7 @@ function LoginPortal({ onLogin, googleClientId }) {
     if (window.google && google.accounts && google.accounts.id) {
       try {
         google.accounts.id.initialize({
-          client_id: googleClientId || "853920950328-mockclientid.apps.googleusercontent.com",
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || googleClientId || "853920950328-mockclientid.apps.googleusercontent.com",
           callback: (response) => {
             handleGoogleCredential(response.credential);
           },
@@ -96,31 +96,12 @@ function LoginPortal({ onLogin, googleClientId }) {
     }
   }, [googleClientId, activeTab]);
 
-  // Decode standard Google JWT credential
+  // Pass raw standard Google JWT credential to backend
   const handleGoogleCredential = (credential) => {
-    try {
-      // Decode JWT payload (standard Google GSI return)
-      const base64Url = credential.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(
-         atob(base64)
-          .split('')
-          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
-      );
-      const payload = JSON.parse(jsonPayload);
-
-      // Successfully decoded!
-      onLogin({
-        email: payload.email,
-        name: payload.name,
-        avatar: payload.picture || 'boy',
-        isGoogle: true,
-        googleId: payload.sub
-      });
-    } catch (err) {
-      setErrorMsg(t('googleDecodeError'));
-    }
+    onLogin({
+      credential,
+      isGoogle: true
+    });
   };
 
   const handleStandardSubmit = async (e) => {
@@ -171,12 +152,9 @@ function LoginPortal({ onLogin, googleClientId }) {
   const triggerGoogleSandboxAuth = () => {
     // Simulate retrieving Google account and passing credentials
     onLogin({
-      email: sandboxEmail,
-      name: sandboxName,
-      avatar: sandboxPicture,
+      credential: 'google-mock-' + sandboxEmail.replace(/[^a-zA-Z0-9]/g, ''),
       role: sandboxRole,
-      isGoogle: true,
-      googleId: 'google-mock-' + sandboxEmail.replace(/[^a-zA-Z0-9]/g, '')
+      isGoogle: true
     });
     setShowGoogleSandbox(false);
   };

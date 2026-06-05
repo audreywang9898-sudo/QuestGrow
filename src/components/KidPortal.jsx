@@ -699,8 +699,8 @@ function KidPortal({
                   onClick={() => {
                     const email = prompt(t('enterGoogleEmailPrompt'), "kid@gmail.com");
                     if (email) {
-                      const googleId = "google-mock-" + email.replace(/[^a-zA-Z0-9]/g, "");
-                      onLinkGoogleAccount(googleId, email);
+                      const mockToken = "google-mock-" + email.replace(/[^a-zA-Z0-9]/g, "");
+                      onLinkGoogleAccount(mockToken);
                     }
                   }}
                   type="button"

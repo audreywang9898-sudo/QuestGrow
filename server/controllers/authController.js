@@ -2,8 +2,19 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import pool from '../config/db.js';
 import dotenv from 'dotenv';
+import { OAuth2Client } from 'google-auth-library';
 
 dotenv.config();
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+const verifyGoogleToken = async (idToken) => {
+  const ticket = await googleClient.verifyIdToken({
+    idToken,
+    audience: process.env.GOOGLE_CLIENT_ID,
+  });
+  return ticket.getPayload();
+};
 
 const generateToken = (user) => {
   return jwt.sign(
@@ -118,13 +129,35 @@ export const login = async (req, res) => {
 
 // 3. Google Sign-In / Sign-Up
 export const googleLogin = async (req, res) => {
-  const { email, googleId, name, avatar, role } = req.body;
+  const { idToken, role } = req.body;
 
-  if (!email || !googleId) {
-    return res.status(400).json({ message: '缺少 Google 登入所需資訊。' });
+  if (!idToken) {
+    return res.status(400).json({ message: '缺少 Google 登入驗證憑證 (idToken)。' });
   }
 
   try {
+    let email, googleId, name, avatar;
+
+    // Sandbox Mock Bypassing for Local Testing
+    if (process.env.NODE_ENV !== 'production' && idToken.startsWith('google-mock-')) {
+      email = idToken.replace('google-mock-', '') + '@gmail.com';
+      googleId = idToken;
+      name = idToken.replace('google-mock-', '').split('@')[0];
+      avatar = 'boy';
+    } else {
+      // Real verification
+      try {
+        const payload = await verifyGoogleToken(idToken);
+        email = payload.email;
+        googleId = payload.sub;
+        name = payload.name;
+        avatar = payload.picture || 'boy';
+      } catch (err) {
+        console.error('Google token verification failed:', err);
+        return res.status(401).json({ message: 'Google 登入憑證無效或已過期。' });
+      }
+    }
+
     const dbEmail = email.toLowerCase();
     // 1. Search by Google ID or email
     const findUser = await pool.query(
@@ -161,7 +194,7 @@ export const googleLogin = async (req, res) => {
     await pool.query('BEGIN');
 
     // Create a new Family
-    const familyName = `${name || dbEmail.split('@')[0]}的家庭`;
+    const familyName = `${name}的家庭`;
     const newFamily = await pool.query(
       'INSERT INTO families (name) VALUES ($1) RETURNING id',
       [familyName]
@@ -172,12 +205,27 @@ export const googleLogin = async (req, res) => {
     const newUser = await pool.query(
       `INSERT INTO users (family_id, email, password_hash, name, role, avatar, google_id) 
        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, family_id, email, name, role, avatar, child_id`,
-      [familyId, dbEmail, passwordHash, name || dbEmail.split('@')[0], targetRole, avatar || 'boy', googleId]
+      [familyId, dbEmail, passwordHash, name, targetRole, avatar, googleId]
     );
+    const userId = newUser.rows[0].id;
+
+    let childId = null;
+    if (targetRole === 'kid') {
+      const newChild = await pool.query(
+        `INSERT INTO children (user_id, name, age, birthday, avatar, level, exp, exp_needed, gold, tickets, job_class) 
+         VALUES ($1, $2, 10, '10/24', $3, 1, 0, 400, 100, 1, 'Explorer (探索者) ⚔️') RETURNING id`,
+        [userId, name, avatar || 'boy']
+      );
+      childId = newChild.rows[0].id;
+      await pool.query('UPDATE users SET child_id = $1 WHERE id = $2', [childId, userId]);
+    }
 
     await pool.query('COMMIT');
 
-    const user = newUser.rows[0];
+    const user = {
+      ...newUser.rows[0],
+      child_id: childId
+    };
     const token = generateToken(user);
 
     res.status(201).json({
@@ -194,14 +242,32 @@ export const googleLogin = async (req, res) => {
 
 // 4. Link Google Account to Currently Logged-in User
 export const linkGoogleAccount = async (req, res) => {
-  const { googleId, googleEmail } = req.body;
+  const { idToken } = req.body;
   const userId = req.user.id;
 
-  if (!googleId) {
-    return res.status(400).json({ message: '缺少 Google 帳戶識別碼。' });
+  if (!idToken) {
+    return res.status(400).json({ message: '缺少 Google 驗證憑證 (idToken)。' });
   }
 
   try {
+    let googleId, googleEmail;
+
+    // Sandbox Mock Bypassing for Local Testing
+    if (process.env.NODE_ENV !== 'production' && idToken.startsWith('google-mock-')) {
+      googleEmail = idToken.replace('google-mock-', '') + '@gmail.com';
+      googleId = idToken;
+    } else {
+      // Real verification
+      try {
+        const payload = await verifyGoogleToken(idToken);
+        googleEmail = payload.email;
+        googleId = payload.sub;
+      } catch (err) {
+        console.error('Google token verification failed:', err);
+        return res.status(401).json({ message: 'Google 驗證憑證無效或已過期。' });
+      }
+    }
+
     // Check if this googleId is already linked to another account
     const checkLinked = await pool.query(
       'SELECT id FROM users WHERE google_id = $1',

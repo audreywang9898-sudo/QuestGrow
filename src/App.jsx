@@ -168,7 +168,7 @@ function App() {
 
   // --- Auth Handlers ---
   const handleLogin = async (authData) => {
-    const { email, password, name, role: selectedRole, isRegister, isGoogle, googleId, avatar } = authData;
+    const { email, password, name, role: selectedRole, isRegister, isGoogle, credential, avatar } = authData;
 
     try {
       if (isRegister) {
@@ -178,7 +178,7 @@ function App() {
       }
 
       if (isGoogle) {
-        const data = await api.googleLogin(email, googleId, name, avatar, selectedRole);
+        const data = await api.googleLogin(credential, selectedRole);
         setCurrentUser(data.user);
         setRole(data.user.role);
         showToast(`歡迎回來，${data.user.name}！`, 'success');
@@ -203,9 +203,9 @@ function App() {
     showToast('已成功登出。', 'info');
   };
 
-  const handleLinkGoogleAccount = async (googleId, googleEmail) => {
+  const handleLinkGoogleAccount = async (idToken) => {
     try {
-      await api.linkGoogle(googleId, googleEmail);
+      await api.linkGoogle(idToken);
       showToast('🎉 成功連結 Google 帳戶！', 'success');
       fetchAllData();
       return true;
@@ -343,10 +343,26 @@ function App() {
   const handleClearAllTasks = async (targetFilter = 'all') => {
     try {
       await api.clearAllTasks(targetFilter);
-      showToast('任務清除成功。', 'info');
+      
+      let msg = '';
+      if (targetFilter === 'all') {
+        msg = language === 'zh' ? '已成功清除所有小孩的全部任務。' : 'Successfully cleared all quests for all children.';
+      } else if (targetFilter === 'general') {
+        msg = language === 'zh' ? '已成功清除所有通用任務。' : 'Successfully cleared all general quests.';
+      } else {
+        const targetChild = children.find(c => c.id === targetFilter);
+        const childName = targetChild ? targetChild.name : '';
+        if (childName) {
+          msg = language === 'zh' ? `已成功清除指派給「${childName}」的任務。` : `Successfully cleared all quests assigned to "${childName}".`;
+        } else {
+          msg = language === 'zh' ? '任務清除成功。' : 'Quests cleared successfully.';
+        }
+      }
+      
+      showToast(msg, 'info');
       fetchAllData();
     } catch (error) {
-      showToast(error.message || '清除任務失敗。', 'error');
+      showToast(error.message || (language === 'zh' ? '清除任務失敗。' : 'Failed to clear quests.'), 'error');
     }
   };
 

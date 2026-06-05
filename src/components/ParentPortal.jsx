@@ -1615,8 +1615,8 @@ function ParentPortal({
                     onClick={() => {
                       const email = prompt("請輸入欲連結的 Google 帳戶 Email:", "parent@gmail.com");
                       if (email) {
-                        const googleId = "google-mock-" + email.replace(/[^a-zA-Z0-9]/g, "");
-                        onLinkGoogleAccount(googleId, email);
+                        const mockToken = "google-mock-" + email.replace(/[^a-zA-Z0-9]/g, "");
+                        onLinkGoogleAccount(mockToken);
                       }
                     }}
                     type="button"

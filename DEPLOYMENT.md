@@ -56,6 +56,7 @@ npm run dev
    * `DATABASE_URL`: *(填入剛剛複製的 PostgreSQL **Internal Connection String**)*
    * `JWT_SECRET`: *(填入一組隨機複雜的密鑰字串，例如 `my_questgrow_super_secret_jwt_key_2026`)*
    * `PORT`: `5000`
+   * `GOOGLE_CLIENT_ID`: *(填入您的 Google Client ID，例如 `723480361066-5v0ujs9tm810ncqu9cne1s0raoleup05.apps.googleusercontent.com`)*
 5. 點選 **Create Web Service** 進行部署。
 6. 部署成功後，複製該 Web Service 的網址 (例如 `https://questgrow-backend.onrender.com`)。
 
@@ -75,6 +76,7 @@ npm run dev
    * **Publish Directory**: `dist`
 4. 點選 **Advanced**，新增環境變數：
    * `VITE_API_URL`: `https://questgrow-backend.onrender.com/api` *(填入您部署的後端 API 網址，結尾加上 `/api`)*
+   * `VITE_GOOGLE_CLIENT_ID`: *(填入與後端相同的 Google Client ID)*
 5. 點選 **Create Static Site** 完成部署。
 
 ### 選擇 2：部署在 Vercel
@@ -83,6 +85,8 @@ npm run dev
 3. 在設定面板中，展開 **Environment Variables**，新增：
    * **Key**: `VITE_API_URL`
    * **Value**: `https://questgrow-backend.onrender.com/api` *(您的後端 API 網址)*
+   * **Key**: `VITE_GOOGLE_CLIENT_ID`
+   * **Value**: *(您的 Google Client ID)*
 4. 點選 **Deploy** 即可開始部署。由於 Vite 會自動讀取這個變數，編譯時將自動連結至雲端後端。
 
 ---
