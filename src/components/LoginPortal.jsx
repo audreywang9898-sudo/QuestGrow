@@ -333,7 +333,7 @@ function LoginPortal({ onLogin, googleClientId }) {
             Active Client ID: {import.meta.env.VITE_GOOGLE_CLIENT_ID || googleClientId || "None"}
           </div>
 
-          {/* Fallback Sandbox Google Simulator Toggle */}
+          {/* Fallback Sandbox Google Simulator Toggle (Commented out)
           <button
             type="button"
             onClick={() => {
@@ -344,9 +344,10 @@ function LoginPortal({ onLogin, googleClientId }) {
           >
             🤖 {t('enterGoogleSandbox')}
           </button>
+          */}
         </div>
 
-        {/* Quick presets (Testing sandbox console) */}
+        {/* Quick presets (Testing sandbox console - Commented out)
         {activeTab === 'login' && (
           <div className="border-t border-slate-100 pt-4 space-y-2">
             <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{t('presetsTitle')}</div>
@@ -365,6 +366,7 @@ function LoginPortal({ onLogin, googleClientId }) {
             </div>
           </div>
         )}
+        */}
 
         {/* Connection Diagnostics */}
         <div className="pt-4 border-t border-slate-100 flex flex-col gap-2">
@@ -416,7 +418,7 @@ function LoginPortal({ onLogin, googleClientId }) {
 
       </div>
 
-      {/* Google Sandbox Simulator Modal Console */}
+      {/* Google Sandbox Simulator Modal Console (Commented out)
       {showGoogleSandbox && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="glass-panel p-6 border-2 border-indigo-500/30 bg-[#f7faff] max-w-md w-full rounded-2xl space-y-6 relative shadow-2xl animate-success">
@@ -532,6 +534,7 @@ function LoginPortal({ onLogin, googleClientId }) {
           </div>
         </div>
       )}
+      */}
 
     </div>
   );
