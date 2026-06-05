@@ -31,7 +31,7 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
     role VARCHAR(50) NOT NULL CHECK (role IN ('parent', 'kid')),
-    avatar VARCHAR(50) DEFAULT 'boy',
+    avatar VARCHAR(255) DEFAULT 'boy',
     google_id VARCHAR(255) UNIQUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -43,7 +43,7 @@ CREATE TABLE children (
     name VARCHAR(255) NOT NULL,
     age INT DEFAULT 10,
     birthday VARCHAR(50) DEFAULT '10/24',
-    avatar VARCHAR(50) DEFAULT 'boy',
+    avatar VARCHAR(255) DEFAULT 'boy',
     level INT DEFAULT 1,
     exp INT DEFAULT 0,
     exp_needed INT DEFAULT 400,
