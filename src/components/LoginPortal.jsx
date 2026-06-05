@@ -70,7 +70,12 @@ function LoginPortal({ onLogin, googleClientId }) {
     /* global google */
     if (window.google && google.accounts && google.accounts.id) {
       try {
-        const client_id = import.meta.env.VITE_GOOGLE_CLIENT_ID || googleClientId || "853920950328-mockclientid.apps.googleusercontent.com";
+        const client_id = import.meta.env.VITE_GOOGLE_CLIENT_ID || googleClientId;
+        if (!client_id) {
+          console.log("Google GSI client_id not loaded yet, waiting...");
+          return;
+        }
+        
         console.log("Initializing Google GSI with client_id:", client_id);
         google.accounts.id.initialize({
           client_id,
@@ -81,17 +86,21 @@ function LoginPortal({ onLogin, googleClientId }) {
           cancel_on_tap_outside: true
         });
 
-        google.accounts.id.renderButton(
-          document.getElementById("google-gsi-btn-container"),
-          { 
-            theme: "filled_blue", 
-            size: "large", 
-            text: "signin_with", 
-            shape: "rectangular", 
-            logo_alignment: "left",
-            width: 320
-          }
-        );
+        const container = document.getElementById("google-gsi-btn-container");
+        if (container) {
+          container.innerHTML = ""; // Clear previous button to prevent duplicate rendering
+          google.accounts.id.renderButton(
+            container,
+            { 
+              theme: "filled_blue", 
+              size: "large", 
+              text: "signin_with", 
+              shape: "rectangular", 
+              logo_alignment: "left",
+              width: 320
+            }
+          );
+        }
       } catch (err) {
         console.warn("Google GSI initialization failed, sandbox is available:", err);
       }

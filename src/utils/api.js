@@ -73,6 +73,14 @@ export const api = {
     localStorage.removeItem('questgrow_jwt_token');
   },
 
+  getAuthConfig: async () => {
+    const res = await fetch(`${API_URL}/auth/config`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
   // --- Users / Family Members ---
   getMembers: async () => {
     const res = await fetch(`${API_URL}/users/members`, {

@@ -36,6 +36,23 @@ function App() {
     return localStorage.getItem('questgrow_role') || 'kid';
   });
 
+  const [googleClientId, setGoogleClientId] = useState('');
+
+  // Fetch Google Client ID from backend config on mount
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const config = await api.getAuthConfig();
+        if (config && config.googleClientId) {
+          setGoogleClientId(config.googleClientId);
+        }
+      } catch (error) {
+        console.error('Failed to fetch auth config:', error);
+      }
+    };
+    fetchConfig();
+  }, []);
+
   // --- Core States ---
   const [children, setChildren] = useState([INITIAL_CHILD_STATS]);
   const [activeChildId, setActiveChildId] = useState('child-default');
@@ -510,7 +527,7 @@ function App() {
   };
 
   if (!currentUser) {
-    return <LoginPortal onLogin={handleLogin} googleClientId={import.meta.env.VITE_GOOGLE_CLIENT_ID} />;
+    return <LoginPortal onLogin={handleLogin} googleClientId={googleClientId} />;
   }
 
   return (

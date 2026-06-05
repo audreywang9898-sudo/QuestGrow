@@ -289,3 +289,10 @@ export const linkGoogleAccount = async (req, res) => {
     res.status(500).json({ message: '伺服器錯誤，綁定 Google 帳戶失敗。' });
   }
 };
+
+// 5. Get Public Auth Configuration
+export const getAuthConfig = async (req, res) => {
+  res.json({
+    googleClientId: process.env.GOOGLE_CLIENT_ID || ""
+  });
+};
