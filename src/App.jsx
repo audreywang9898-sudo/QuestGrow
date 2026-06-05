@@ -510,7 +510,7 @@ function App() {
   };
 
   if (!currentUser) {
-    return <LoginPortal onLogin={handleLogin} googleClientId="" />;
+    return <LoginPortal onLogin={handleLogin} googleClientId={import.meta.env.VITE_GOOGLE_CLIENT_ID} />;
   }
 
   return (
