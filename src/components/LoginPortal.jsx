@@ -20,6 +20,23 @@ function LoginPortal({ onLogin, googleClientId }) {
   const [sandboxRole, setSandboxRole] = useState('parent');
   const [isSandboxFirstTime, setIsSandboxFirstTime] = useState(false);
 
+  const [googleScriptLoaded, setGoogleScriptLoaded] = useState(false);
+
+  // Poll for window.google availability in case script loads asynchronously
+  useEffect(() => {
+    if (window.google && google.accounts && google.accounts.id) {
+      setGoogleScriptLoaded(true);
+      return;
+    }
+    const interval = setInterval(() => {
+      if (window.google && google.accounts && google.accounts.id) {
+        setGoogleScriptLoaded(true);
+        clearInterval(interval);
+      }
+    }, 100);
+    return () => clearInterval(interval);
+  }, []);
+
   // Diagnostics States
   const [diagnosing, setDiagnosing] = useState(false);
   const [diagResult, setDiagResult] = useState(null); // null, 'success', 'fail'
@@ -31,7 +48,7 @@ function LoginPortal({ onLogin, googleClientId }) {
     setDiagDetails('');
     const getFallbackApiUrl = () => {
       if (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')) {
-        return 'https://questgrow.onrender.com/api';
+        return '/api';
       }
       return 'http://localhost:5000/api';
     };
@@ -112,7 +129,7 @@ function LoginPortal({ onLogin, googleClientId }) {
         console.warn("Google GSI initialization failed, sandbox is available:", err);
       }
     }
-  }, [googleClientId, activeTab]);
+  }, [googleClientId, activeTab, googleScriptLoaded]);
 
   // Pass raw standard Google JWT credential to backend
   const handleGoogleCredential = (credential) => {
@@ -402,7 +419,7 @@ function LoginPortal({ onLogin, googleClientId }) {
                 {diagResult === 'success' ? '✓ 連線成功' : '✗ 連線失敗'}
               </div>
               <p className="opacity-90 font-mono text-[10px] break-all">
-                API URL: {import.meta.env.VITE_API_URL || (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com') ? 'https://questgrow.onrender.com/api' : 'http://localhost:5000/api')}
+                API URL: {import.meta.env.VITE_API_URL || (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com') ? '/api' : 'http://localhost:5000/api')}
               </p>
               <p className="opacity-90">
                 詳細資訊: {diagDetails}

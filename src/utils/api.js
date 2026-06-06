@@ -1,7 +1,7 @@
 const getFallbackApiUrl = () => {
   if (typeof window !== 'undefined') {
     if (window.location.hostname.includes('onrender.com')) {
-      return 'https://questgrow.onrender.com/api';
+      return '/api';
     }
   }
   return 'http://localhost:5000/api';

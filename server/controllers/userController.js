@@ -141,7 +141,7 @@ export const deleteChild = async (req, res) => {
     }
 
     await pool.query('BEGIN');
-    
+
     // Deleting the user account cascades and deletes the child profile, tasks, and inventory
     await pool.query('DELETE FROM users WHERE id = $1', [userId]);
 
@@ -422,7 +422,7 @@ export const clearAllFamilyData = async (req, res) => {
 
   try {
     await pool.query('BEGIN');
-    
+
     // Clear all associated users, children, tasks, etc. by deleting the family entry
     await pool.query('DELETE FROM families WHERE id = $1', [familyId]);
 
