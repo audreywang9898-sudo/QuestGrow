@@ -353,6 +353,25 @@ function LoginPortal({ onLogin, googleClientId }) {
           
           {/* Google Official GSI Button Container */}
           <div id="google-gsi-btn-container" className="min-h-[40px] flex justify-center w-full"></div>
+
+          {/* iOS / Mobile Browser Helper Tip */}
+          <div className="mt-1 text-left bg-indigo-50/50 border border-indigo-100/60 p-3.5 rounded-xl text-[10px] text-slate-500 leading-relaxed space-y-1.5 max-w-[320px]">
+            <p className="font-bold text-indigo-650 flex items-center gap-1">
+              💡 {language === 'zh' ? '行動裝置 / iOS 用戶登入提示：' : 'Mobile / iOS Users Sign-in Tip:'}
+            </p>
+            <ul className="list-disc pl-3.5 space-y-1 font-medium">
+              <li>
+                {language === 'zh' 
+                  ? '請避免在 LINE、FB、Instagram 等 App 內建瀏覽器開啟本網頁。請點選畫面右上角「...」，選擇「以瀏覽器開啟」或「在 Safari 開啟」後再登入。' 
+                  : 'Avoid signing in inside in-app browsers (LINE, FB, IG). Tap the top-right "..." and select "Open in Browser" or "Open in Safari" first.'}
+              </li>
+              <li>
+                {language === 'zh'
+                  ? '若使用 Safari 出現白畫面，請前往手機的「設定 > Safari」，暫時將「阻擋彈出式視窗」與「防止跨網站追蹤」關閉後重試。'
+                  : 'If Safari shows a blank page, go to "Settings > Safari" on your phone and temporarily turn OFF "Block Pop-ups" and "Prevent Cross-Site Tracking".'}
+              </li>
+            </ul>
+          </div>
           {/*
           <div className="text-[9px] text-slate-400 font-mono text-center select-all -mt-1 mb-1">
             Active Client ID: {import.meta.env.VITE_GOOGLE_CLIENT_ID || googleClientId || "None"}
