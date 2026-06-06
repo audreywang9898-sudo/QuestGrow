@@ -47,7 +47,13 @@ export const renderAvatarContent = (avatar, role) => {
   return <span className="text-2xl">👤</span>;
 };
 
-export default function Avatar({ avatar, role, badge, className = "w-12 h-12 rounded-full bg-gradient-to-tr from-violet-600 to-cyan-400 flex items-center justify-center text-2xl shadow-md overflow-hidden shrink-0" }) {
+export default function Avatar({ 
+  avatar, 
+  role, 
+  badge, 
+  badgePosition = "bottom-right", 
+  className = "w-12 h-12 rounded-full bg-gradient-to-tr from-violet-600 to-cyan-400 flex items-center justify-center text-2xl shadow-md overflow-hidden shrink-0" 
+}) {
   const avatarEl = (
     <div className={className}>
       {renderAvatarContent(avatar, role)}
@@ -60,11 +66,21 @@ export default function Avatar({ avatar, role, badge, className = "w-12 h-12 rou
     else if (badge.includes('dragon') || badge.includes('屠龍')) emoji = '🐉';
     else if (badge.includes('companion') || badge.includes('格林')) emoji = '🌟';
 
+    // Position class mappings
+    let posClass = "absolute -bottom-0.5 -right-0.5";
+    if (badgePosition === "bottom-left") {
+      posClass = "absolute -bottom-0.5 -left-0.5";
+    } else if (badgePosition === "top-right") {
+      posClass = "absolute -top-0.5 -right-0.5";
+    } else if (badgePosition === "top-left") {
+      posClass = "absolute -top-0.5 -left-0.5";
+    }
+
     return (
       <div className="relative inline-block shrink-0">
         {avatarEl}
         <div 
-          className="absolute -bottom-0.5 -right-0.5 w-[35%] h-[35%] min-w-[14px] min-h-[14px] max-w-[24px] max-h-[24px] bg-[#1B1B1D] border border-amber-400 rounded-full flex items-center justify-center text-[60%] shadow-lg z-10 animate-bounce"
+          className={`${posClass} w-[35%] h-[35%] min-w-[14px] min-h-[14px] max-w-[24px] max-h-[24px] bg-[#1B1B1D] border border-amber-400 rounded-full flex items-center justify-center text-[60%] shadow-lg z-10 animate-bounce`}
           title={badge}
         >
           {emoji}

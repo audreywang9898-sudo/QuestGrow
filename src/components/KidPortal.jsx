@@ -672,6 +672,7 @@ function KidPortal({
                   avatar={stats.avatar} 
                   role="kid" 
                   badge={activeBadge}
+                  badgePosition="bottom-left"
                   className="w-20 h-20 rounded-full bg-gradient-to-tr from-violet-600 to-cyan-400 flex items-center justify-center shadow-xl shadow-violet-500/20 border border-white/20 overflow-hidden" 
                 />
                 {!isReadOnly && (
