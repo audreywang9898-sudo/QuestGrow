@@ -6,7 +6,7 @@ import userRoutes from './routes/userRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
 import itemRoutes from './routes/itemRoutes.js';
 import familyRoutes from './routes/familyRoutes.js';
-import { getMessage } from './utils/messageManager.js';
+import { getMessage, languageMiddleware } from './utils/messageManager.js';
 
 dotenv.config();
 
@@ -16,6 +16,7 @@ const PORT = process.env.PORT || 5000;
 // Enable CORS for all requests to support frontends running on different ports/domains
 app.use(cors());
 app.use(express.json());
+app.use(languageMiddleware);
 
 // API Health Check
 app.get('/api/health', (req, res) => {

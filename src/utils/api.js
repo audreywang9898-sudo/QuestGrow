@@ -8,6 +8,8 @@ const getHeaders = () => {
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
+  const lang = localStorage.getItem('questgrow_language') || 'zh';
+  headers['Accept-Language'] = lang;
   return headers;
 };
 
