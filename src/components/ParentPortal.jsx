@@ -1073,7 +1073,12 @@ function ParentPortal({
                               <span className="text-lg">👥</span>
                             ) : (
                               <div className="w-6 h-6 flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-violet-600 to-cyan-400">
-                                <Avatar avatar={group.avatar} role="kid" className="w-full h-full" />
+                                <Avatar 
+                                  avatar={group.avatar} 
+                                  role="kid" 
+                                  badge={inventory.find(i => i.childId === groupKey && i.type === '收藏卡' && i.status === '已使用')?.id}
+                                  className="w-full h-full" 
+                                />
                               </div>
                             )}
                             <h4 className="text-sm font-black text-slate-200">
@@ -1715,7 +1720,11 @@ function ParentPortal({
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Avatar avatar={child.avatar} role="kid" />
+                      <Avatar 
+                        avatar={child.avatar} 
+                        role="kid" 
+                        badge={inventory.find(i => i.childId === child.id && i.type === '收藏卡' && i.status === '已使用')?.id}
+                      />
                       <div className="flex-1 min-w-0">
                         <h4 className="text-sm font-black text-slate-200 truncate">{child.name}</h4>
                         <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
@@ -2184,7 +2193,12 @@ function ParentPortal({
                       : 'border-transparent text-[#b5b7bc] hover:text-white'
                   }`}
                 >
-                  <Avatar avatar={child.avatar} role="kid" className="w-5 h-5 rounded-full shrink-0" />
+                  <Avatar 
+                    avatar={child.avatar} 
+                    role="kid" 
+                    badge={inventory.find(i => i.childId === child.id && i.type === '收藏卡' && i.status === '已使用')?.id}
+                    className="w-5 h-5 rounded-full shrink-0" 
+                  />
                   {child.name}
                 </button>
               ))}

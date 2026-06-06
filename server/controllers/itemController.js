@@ -330,3 +330,70 @@ export const reviewRedeem = async (req, res) => {
     res.status(500).json({ message: getMessage('REVIEW_REDEEM_ERROR') });
   }
 };
+
+// 6. Toggle equip cosmetic card (kid or parent)
+export const toggleEquipItem = async (req, res) => {
+  const childId = req.user.child_id;
+  const familyId = req.user.family_id;
+  const { inventoryId } = req.params;
+
+  try {
+    let itemResult;
+    if (childId) {
+      itemResult = await pool.query(
+        'SELECT * FROM inventory WHERE id = $1 AND child_id = $2',
+        [inventoryId, childId]
+      );
+    } else if (req.user.role === 'parent') {
+      itemResult = await pool.query(
+        `SELECT i.* FROM inventory i
+         JOIN children c ON i.child_id = c.id
+         JOIN users u ON c.user_id = u.id
+         WHERE i.id = $1 AND u.family_id = $2`,
+        [inventoryId, familyId]
+      );
+    } else {
+      return res.status(403).json({ message: '無效的使用者角色。 | Invalid user role.' });
+    }
+
+    if (itemResult.rows.length === 0) {
+      return res.status(404).json({ message: '找不到此道具卡！ | Inventory item not found.' });
+    }
+
+    const item = itemResult.rows[0];
+
+    if (item.type !== '收藏卡') {
+      return res.status(400).json({ message: '只有收藏卡可以配戴！ | Only collection cards can be equipped.' });
+    }
+
+    const currentStatus = item.status;
+    let newStatus = '未使用';
+
+    await pool.query('BEGIN');
+
+    if (currentStatus === '未使用') {
+      newStatus = '已使用';
+      await pool.query(
+        "UPDATE inventory SET status = '未使用' WHERE child_id = $1 AND type = '收藏卡' AND status = '已使用'",
+        [item.child_id]
+      );
+    }
+
+    await pool.query(
+      'UPDATE inventory SET status = $1 WHERE id = $2',
+      [newStatus, inventoryId]
+    );
+
+    await pool.query('COMMIT');
+
+    res.json({
+      message: newStatus === '已使用' ? '已成功配戴徽章！ | Badge equipped successfully!' : '已成功取下徽章。 | Badge unequipped successfully!',
+      status: newStatus
+    });
+  } catch (error) {
+    await pool.query('ROLLBACK');
+    console.error('toggleEquipItem error:', error);
+    res.status(500).json({ message: '配戴徽章失敗，請稍後再試。 | Failed to equip badge.' });
+  }
+};
+

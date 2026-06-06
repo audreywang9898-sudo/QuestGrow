@@ -47,10 +47,31 @@ export const renderAvatarContent = (avatar, role) => {
   return <span className="text-2xl">👤</span>;
 };
 
-export default function Avatar({ avatar, role, className = "w-12 h-12 rounded-full bg-gradient-to-tr from-violet-600 to-cyan-400 flex items-center justify-center text-2xl shadow-md overflow-hidden shrink-0" }) {
-  return (
+export default function Avatar({ avatar, role, badge, className = "w-12 h-12 rounded-full bg-gradient-to-tr from-violet-600 to-cyan-400 flex items-center justify-center text-2xl shadow-md overflow-hidden shrink-0" }) {
+  const avatarEl = (
     <div className={className}>
       {renderAvatarContent(avatar, role)}
     </div>
   );
+
+  if (badge) {
+    let emoji = '🏅';
+    if (badge.includes('persistence') || badge.includes('不屈')) emoji = '✊';
+    else if (badge.includes('dragon') || badge.includes('屠龍')) emoji = '🐉';
+    else if (badge.includes('companion') || badge.includes('格林')) emoji = '🌟';
+
+    return (
+      <div className="relative inline-block shrink-0">
+        {avatarEl}
+        <div 
+          className="absolute -bottom-0.5 -right-0.5 w-[35%] h-[35%] min-w-[14px] min-h-[14px] max-w-[24px] max-h-[24px] bg-[#1B1B1D] border border-amber-400 rounded-full flex items-center justify-center text-[60%] shadow-lg z-10 animate-bounce"
+          title={badge}
+        >
+          {emoji}
+        </div>
+      </div>
+    );
+  }
+
+  return avatarEl;
 }

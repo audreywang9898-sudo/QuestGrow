@@ -264,6 +264,15 @@ export const api = {
     return handleResponse(res);
   },
 
+  toggleEquipItem: async (inventoryId) => {
+    const res = await fetch(`${API_URL}/items/inventory/${inventoryId}/toggle-equip`, {
+      method: 'POST',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+
   // --- Family & Goals ---
   getFamilyData: async () => {
     const res = await fetch(`${API_URL}/family`, {

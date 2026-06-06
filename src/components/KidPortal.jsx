@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { GACHA_POOL, TASK_TEMPLATES } from '../utils/mockData';
 import { useLanguage } from './LanguageContext';
+import Avatar from './Avatar';
 import { 
   Sparkles, Award, Compass, Shield, BookOpen, Heart, 
   Wallet, Trophy, Send, User, ChevronRight, Package, 
@@ -65,9 +66,12 @@ function KidPortal({
   onLinkGoogleAccount,
   onAddTask,
   isReadOnly = false,
-  googleClientId
+  googleClientId,
+  onToggleEquip
 }) {
   const { t, language } = useLanguage();
+  const activeBadgeItem = inventory.find(i => i.type === '收藏卡' && i.status === '已使用');
+  const activeBadge = activeBadgeItem ? activeBadgeItem.id : null;
   const [activeSubTab, setActiveSubTab] = useState('wishlist');
   const [submittingTaskId, setSubmittingTaskId] = useState(null);
   const [submissionNotes, setSubmissionNotes] = useState('');
@@ -664,9 +668,12 @@ function KidPortal({
           <div className="glass-panel p-6 flex flex-col items-center justify-between text-center gap-6">
             <div className="space-y-2 w-full">
               <div className="relative w-20 h-20 mx-auto group">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-violet-600 to-cyan-400 flex items-center justify-center shadow-xl shadow-violet-500/20 border border-white/20 overflow-hidden">
-                  {renderAvatar(stats.avatar)}
-                </div>
+                <Avatar 
+                  avatar={stats.avatar} 
+                  role="kid" 
+                  badge={activeBadge}
+                  className="w-20 h-20 rounded-full bg-gradient-to-tr from-violet-600 to-cyan-400 flex items-center justify-center shadow-xl shadow-violet-500/20 border border-white/20 overflow-hidden" 
+                />
                 {!isReadOnly && (
                   <button 
                     onClick={() => {
@@ -1307,7 +1314,7 @@ function KidPortal({
                           </span>
                         ) : item.type === '收藏卡' ? (
                           <button
-                            onClick={() => handleRedeemClick(item.inventoryId, true)}
+                            onClick={() => onToggleEquip(item.inventoryId)}
                             className="px-3 py-1 bg-[#00E676] text-[#111216] hover:bg-[#00c867] text-xs font-black rounded-[4px] transition-colors"
                           >
                             {language === 'zh' ? '佩戴展示' : 'Display'}
@@ -1318,6 +1325,17 @@ function KidPortal({
                             className="px-3 py-1 bg-[#3661FF] text-white hover:bg-[#4e75ff] text-xs font-black rounded-[4px] transition-colors"
                           >
                             {language === 'zh' ? '出示核銷' : 'Use'}
+                          </button>
+                        )
+                      )}
+
+                      {item.status === '已使用' && item.type === '收藏卡' && (
+                        isReadOnly ? null : (
+                          <button
+                            onClick={() => onToggleEquip(item.inventoryId)}
+                            className="px-3 py-1 bg-[#FF4747] text-white hover:bg-rose-700 text-xs font-black rounded-[4px] transition-colors"
+                          >
+                            {language === 'zh' ? '取下徽章' : 'Unequip'}
                           </button>
                         )
                       )}

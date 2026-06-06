@@ -65,9 +65,9 @@ function App() {
   // --- Core States ---
   const [children, setChildren] = useState([INITIAL_CHILD_STATS]);
   const [activeChildId, setActiveChildId] = useState('child-default');
-  const [drawnTaskIds, setDrawnTaskIds] = useState(() => {
-    const local = localStorage.getItem('questgrow_drawn_task_ids');
-    return local ? JSON.parse(local) : [];
+  const [drawnTasksMap, setDrawnTasksMap] = useState(() => {
+    const local = localStorage.getItem('questgrow_drawn_tasks_map');
+    return local ? JSON.parse(local) : {};
   });
   
   const [tasks, setTasks] = useState([]);
@@ -173,8 +173,8 @@ function App() {
   }, [activeChildId]);
 
   useEffect(() => {
-    localStorage.setItem('questgrow_drawn_task_ids', JSON.stringify(drawnTaskIds));
-  }, [drawnTaskIds]);
+    localStorage.setItem('questgrow_drawn_tasks_map', JSON.stringify(drawnTasksMap));
+  }, [drawnTasksMap]);
 
   useEffect(() => {
     localStorage.setItem('questgrow_role', role);
@@ -370,7 +370,7 @@ function App() {
       if (role === 'kid' && isArray) {
         showToast('🎉 抽選成功！德、智、體、群、美各 1 張任務已加入你的冒險任務庫。', 'success');
         const newDrawnIds = results.map(r => r.task.id);
-        setDrawnTaskIds(newDrawnIds);
+        setDrawnTasksMap(prev => ({ ...prev, [activeChildId]: newDrawnIds }));
       } else {
         showToast('任務指派成功！', 'success');
       }
@@ -496,6 +496,21 @@ function App() {
     } catch (error) {
       showToast(error.message || '駁回卡片使用失敗。', 'error');
     }
+  };
+
+  const handleToggleEquip = async (inventoryId) => {
+    try {
+      const data = await api.toggleEquipItem(inventoryId);
+      showToast(data.message, 'success');
+      fetchAllData();
+    } catch (error) {
+      showToast(error.message || '操作失敗。', 'error');
+    }
+  };
+
+  const getActiveBadge = (childId) => {
+    const activeItem = inventory.find(i => i.childId === childId && i.type === '收藏卡' && i.status === '已使用');
+    return activeItem ? activeItem.id : null;
   };
 
   // --- Parent Goals ---
@@ -650,6 +665,7 @@ function App() {
                       <Avatar 
                         avatar={child.avatar} 
                         role="kid" 
+                        badge={getActiveBadge(child.id)}
                         className={`w-7 h-7 flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-violet-600 to-cyan-400 ${
                           isSelf ? 'ring-2 ring-[#00E676] ring-offset-1 ring-offset-[#252529] shadow-[0_0_8px_rgba(0,230,118,0.4)]' : ''
                         }`} 
@@ -693,7 +709,12 @@ function App() {
 
             {/* User Profile & Logout pill */}
             <div className="flex items-center gap-2 bg-[#252529] border border-[#35363A] px-3 py-1.5 rounded-[4px] text-xs font-bold text-slate-350 shrink-0">
-              <Avatar avatar={currentUser.avatar} role={currentUser.role} className="w-5 h-5 rounded-full flex items-center justify-center overflow-hidden" />
+              <Avatar 
+                avatar={currentUser.avatar} 
+                role={currentUser.role} 
+                badge={currentUser.role === 'kid' ? getActiveBadge(currentUser.childId) : null}
+                className="w-5 h-5 rounded-full flex items-center justify-center overflow-hidden" 
+              />
               <span className="truncate max-w-[85px] text-slate-300" title={currentUser.name}>
                 {currentUser.name}
               </span>
@@ -714,8 +735,8 @@ function App() {
         {role === 'kid' ? (
           <KidPortal 
             stats={childStats} 
-            tasks={tasks} 
-            inventory={inventory.filter(i => !i.ownerId || i.ownerId === activeChildId)} 
+            tasks={tasks.filter(t => !t.assignedTo || t.assignedTo === activeChildId)} 
+            inventory={inventory.filter(i => i.childId === activeChildId)} 
             wishlist={wishlist}
             familyScore={familyScore}
             onSubmitTask={handleSubmitTask}
@@ -725,14 +746,17 @@ function App() {
             balancedIndex={getBalancedDevelopmentIndex()}
             onClaimWishlistItem={handleRedeemWishlist}
             simulatedDate={getSimulatedDateString()}
-            drawnTaskIds={drawnTaskIds}
-            onUpdateDrawnTasks={setDrawnTaskIds}
+            drawnTaskIds={drawnTasksMap[activeChildId] || []}
+            onUpdateDrawnTasks={(newIds) => {
+              setDrawnTasksMap(prev => ({ ...prev, [activeChildId]: newIds }));
+            }}
             onUpdateChildProfile={handleUpdateChildProfile}
             currentUser={currentUser}
             onAddTask={handleAddTask}
             onLinkGoogleAccount={handleLinkGoogleAccount}
             isReadOnly={currentUser && currentUser.role === 'kid' && activeChildId !== currentUser.childId}
             googleClientId={googleClientId}
+            onToggleEquip={handleToggleEquip}
           />
         ) : (
           <ParentPortal 
