@@ -1,4 +1,14 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const getFallbackApiUrl = () => {
+  if (typeof window !== 'undefined') {
+    if (window.location.hostname.includes('onrender.com')) {
+      return 'https://questgrow.onrender.com/api';
+    }
+  }
+  return 'http://localhost:5000/api';
+};
+
+const API_URL = import.meta.env.VITE_API_URL || getFallbackApiUrl();
+
 
 const getHeaders = () => {
   const headers = {

@@ -29,7 +29,14 @@ function LoginPortal({ onLogin, googleClientId }) {
     setDiagnosing(true);
     setDiagResult(null);
     setDiagDetails('');
-    const targetUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const getFallbackApiUrl = () => {
+      if (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')) {
+        return 'https://questgrow.onrender.com/api';
+      }
+      return 'http://localhost:5000/api';
+    };
+    const targetUrl = import.meta.env.VITE_API_URL || getFallbackApiUrl();
+
     
     try {
       const controller = new AbortController();
@@ -395,7 +402,7 @@ function LoginPortal({ onLogin, googleClientId }) {
                 {diagResult === 'success' ? '✓ 連線成功' : '✗ 連線失敗'}
               </div>
               <p className="opacity-90 font-mono text-[10px] break-all">
-                API URL: {import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}
+                API URL: {import.meta.env.VITE_API_URL || (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com') ? 'https://questgrow.onrender.com/api' : 'http://localhost:5000/api')}
               </p>
               <p className="opacity-90">
                 詳細資訊: {diagDetails}
