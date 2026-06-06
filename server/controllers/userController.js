@@ -1,5 +1,6 @@
 import pool from '../config/db.js';
 import bcrypt from 'bcryptjs';
+import { getMessage } from '../utils/messageManager.js';
 
 // 1. Get all users in the family
 export const getFamilyUsers = async (req, res) => {
@@ -15,7 +16,7 @@ export const getFamilyUsers = async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error('getFamilyUsers error:', error);
-    res.status(500).json({ message: '無法獲取家庭成員資料。' });
+    res.status(500).json({ message: getMessage('FETCH_MEMBERS_ERROR') });
   }
 };
 
@@ -34,7 +35,7 @@ export const getChildren = async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error('getChildren error:', error);
-    res.status(500).json({ message: '無法獲取小孩角色資料。' });
+    res.status(500).json({ message: getMessage('FETCH_CHILDREN_ERROR') });
   }
 };
 
@@ -44,7 +45,7 @@ export const addChild = async (req, res) => {
   const { name, age, birthday, avatar, email, password } = req.body;
 
   if (!name || !email || !password) {
-    return res.status(400).json({ message: '姓名、信箱與密碼為必填項目。' });
+    return res.status(400).json({ message: getMessage('ADD_CHILD_REQUIRED_FIELDS') });
   }
 
   const dbEmail = email.toLowerCase();
@@ -53,7 +54,7 @@ export const addChild = async (req, res) => {
     // Check if email exists
     const emailCheck = await pool.query('SELECT id FROM users WHERE email = $1', [dbEmail]);
     if (emailCheck.rows.length > 0) {
-      return res.status(400).json({ message: '此電子信箱已被其他帳號使用。' });
+      return res.status(400).json({ message: getMessage('EMAIL_ALREADY_USED') });
     }
 
     // Limit maximum child count per family to 8 (consistent with App.jsx)
@@ -62,7 +63,7 @@ export const addChild = async (req, res) => {
       [familyId]
     );
     if (parseInt(countCheck.rows[0].count, 10) >= 8) {
-      return res.status(400).json({ message: '最多只能新增 8 位小孩。' });
+      return res.status(400).json({ message: getMessage('MAX_CHILDREN_LIMIT') });
     }
 
     // Hash password
@@ -99,13 +100,13 @@ export const addChild = async (req, res) => {
     );
 
     res.status(201).json({
-      message: `成功新增冒險者「${name}」！`,
+      message: getMessage('ADD_CHILD_SUCCESS', { name }),
       child: childDetails.rows[0]
     });
   } catch (error) {
     await pool.query('ROLLBACK');
     console.error('addChild error:', error);
-    res.status(500).json({ message: '伺服器錯誤，新增小孩失敗。' });
+    res.status(500).json({ message: getMessage('ADD_CHILD_ERROR') });
   }
 };
 
@@ -125,7 +126,7 @@ export const deleteChild = async (req, res) => {
     );
 
     if (verifyChild.rows.length === 0) {
-      return res.status(404).json({ message: '找不到該小孩資料，或無權限操作。' });
+      return res.status(404).json({ message: getMessage('CHILD_NOT_FOUND') });
     }
 
     const userId = verifyChild.rows[0].user_id;
@@ -136,7 +137,7 @@ export const deleteChild = async (req, res) => {
       [familyId]
     );
     if (parseInt(countCheck.rows[0].count, 10) <= 1) {
-      return res.status(400).json({ message: '至少需要保留 1 位小孩，無法全部刪除。' });
+      return res.status(400).json({ message: getMessage('MIN_CHILDREN_LIMIT') });
     }
 
     await pool.query('BEGIN');
@@ -146,11 +147,11 @@ export const deleteChild = async (req, res) => {
 
     await pool.query('COMMIT');
 
-    res.json({ message: '已成功刪除該小孩的角色與帳號資料。' });
+    res.json({ message: getMessage('DELETE_CHILD_SUCCESS') });
   } catch (error) {
     await pool.query('ROLLBACK');
     console.error('deleteChild error:', error);
-    res.status(500).json({ message: '伺服器錯誤，刪除失敗。' });
+    res.status(500).json({ message: getMessage('DELETE_CHILD_ERROR') });
   }
 };
 
@@ -171,7 +172,7 @@ export const updateChildProfile = async (req, res) => {
     );
 
     if (verifyChild.rows.length === 0) {
-      return res.status(404).json({ message: '找不到該小孩資料，或無權限操作。' });
+      return res.status(404).json({ message: getMessage('CHILD_NOT_FOUND') });
     }
 
     const userId = verifyChild.rows[0].user_id;
@@ -181,7 +182,7 @@ export const updateChildProfile = async (req, res) => {
       const dbEmail = data.email.toLowerCase();
       const emailCheck = await pool.query('SELECT id FROM users WHERE email = $1 AND id != $2', [dbEmail, userId]);
       if (emailCheck.rows.length > 0) {
-        return res.status(400).json({ message: '此電子信箱已被使用。' });
+        return res.status(400).json({ message: getMessage('EMAIL_IN_USE') });
       }
     }
 
@@ -254,13 +255,13 @@ export const updateChildProfile = async (req, res) => {
     );
 
     res.json({
-      message: '角色資料更新成功！',
+      message: getMessage('UPDATE_CHILD_SUCCESS'),
       child: updatedStats.rows[0]
     });
   } catch (error) {
     await pool.query('ROLLBACK');
     console.error('updateChildProfile error:', error);
-    res.status(500).json({ message: '伺服器錯誤，更新失敗。' });
+    res.status(500).json({ message: getMessage('UPDATE_CHILD_ERROR') });
   }
 };
 
@@ -270,7 +271,7 @@ export const addParent = async (req, res) => {
   const { name, email, password, avatar } = req.body;
 
   if (!name || !email || !password) {
-    return res.status(400).json({ message: '姓名、信箱與密碼為必填項目。' });
+    return res.status(400).json({ message: getMessage('ADD_PARENT_REQUIRED_FIELDS') });
   }
 
   const dbEmail = email.toLowerCase();
@@ -279,7 +280,7 @@ export const addParent = async (req, res) => {
     // Check if email exists
     const emailCheck = await pool.query('SELECT id FROM users WHERE email = $1', [dbEmail]);
     if (emailCheck.rows.length > 0) {
-      return res.status(400).json({ message: '此電子信箱已被使用。' });
+      return res.status(400).json({ message: getMessage('EMAIL_IN_USE') });
     }
 
     // Limit maximum parent count per family to 8
@@ -288,7 +289,7 @@ export const addParent = async (req, res) => {
       [familyId]
     );
     if (parseInt(countCheck.rows[0].count, 10) >= 8) {
-      return res.status(400).json({ message: '最多只能新增 8 位家長。' });
+      return res.status(400).json({ message: getMessage('MAX_PARENTS_LIMIT') });
     }
 
     // Hash password
@@ -302,12 +303,12 @@ export const addParent = async (req, res) => {
     );
 
     res.status(201).json({
-      message: `成功新增家長「${name}」！`,
+      message: getMessage('ADD_PARENT_SUCCESS', { name }),
       parent: result.rows[0]
     });
   } catch (error) {
     console.error('addParent error:', error);
-    res.status(500).json({ message: '伺服器錯誤，新增家長失敗。' });
+    res.status(500).json({ message: getMessage('ADD_PARENT_ERROR') });
   }
 };
 
@@ -318,7 +319,7 @@ export const deleteParent = async (req, res) => {
   const currentParentEmail = req.user.email;
 
   if (parentEmail.toLowerCase() === currentParentEmail.toLowerCase()) {
-    return res.status(400).json({ message: '您不能刪除目前正在登入的家長帳號！' });
+    return res.status(400).json({ message: getMessage('DELETE_SELF_PARENT_ERROR') });
   }
 
   try {
@@ -329,7 +330,7 @@ export const deleteParent = async (req, res) => {
     );
 
     if (checkTarget.rows.length === 0) {
-      return res.status(404).json({ message: '找不到該家長資料，或無權限操作。' });
+      return res.status(404).json({ message: getMessage('PARENT_NOT_FOUND') });
     }
 
     // Confirm family has at least 1 parent remaining
@@ -338,15 +339,15 @@ export const deleteParent = async (req, res) => {
       [familyId]
     );
     if (parseInt(countCheck.rows[0].count, 10) <= 1) {
-      return res.status(400).json({ message: '至少需要保留 1 位家長。' });
+      return res.status(400).json({ message: getMessage('MIN_PARENTS_LIMIT') });
     }
 
     await pool.query('DELETE FROM users WHERE email = $1', [parentEmail.toLowerCase()]);
 
-    res.json({ message: `已成功刪除家長「${checkTarget.rows[0].name}」的帳號。` });
+    res.json({ message: getMessage('DELETE_PARENT_SUCCESS', { name: checkTarget.rows[0].name }) });
   } catch (error) {
     console.error('deleteParent error:', error);
-    res.status(500).json({ message: '伺服器錯誤，刪除家長失敗。' });
+    res.status(500).json({ message: getMessage('DELETE_PARENT_ERROR') });
   }
 };
 
@@ -361,7 +362,7 @@ export const updateParent = async (req, res) => {
       const dbEmail = email.toLowerCase();
       const emailCheck = await pool.query('SELECT id FROM users WHERE email = $1 AND id != $2', [dbEmail, userId]);
       if (emailCheck.rows.length > 0) {
-        return res.status(400).json({ message: '此電子信箱已被使用。' });
+        return res.status(400).json({ message: getMessage('EMAIL_IN_USE') });
       }
     }
 
@@ -393,7 +394,7 @@ export const updateParent = async (req, res) => {
     }
 
     if (updateFields.length === 0) {
-      return res.status(400).json({ message: '未提供更新欄位。' });
+      return res.status(400).json({ message: getMessage('UPDATE_PARENT_REQUIRED_FIELDS') });
     }
 
     params.push(userId);
@@ -406,12 +407,12 @@ export const updateParent = async (req, res) => {
     );
 
     res.json({
-      message: '家長個人資料更新成功！',
+      message: getMessage('UPDATE_PARENT_SUCCESS'),
       user: result.rows[0]
     });
   } catch (error) {
     console.error('updateParent error:', error);
-    res.status(500).json({ message: '伺服器錯誤，更新失敗。' });
+    res.status(500).json({ message: getMessage('UPDATE_PARENT_ERROR') });
   }
 };
 
@@ -426,10 +427,10 @@ export const clearAllFamilyData = async (req, res) => {
     await pool.query('DELETE FROM families WHERE id = $1', [familyId]);
 
     await pool.query('COMMIT');
-    res.json({ message: '隱私保護安全：所有家庭與兒童個資已從資料庫完全銷毀！' });
+    res.json({ message: getMessage('DESTROY_DATA_SUCCESS') });
   } catch (error) {
     await pool.query('ROLLBACK');
     console.error('clearAllFamilyData error:', error);
-    res.status(500).json({ message: '無法銷毀家庭數據。' });
+    res.status(500).json({ message: getMessage('DESTROY_DATA_ERROR') });
   }
 };

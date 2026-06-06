@@ -1,4 +1,5 @@
 import pool from '../config/db.js';
+import { getMessage } from '../utils/messageManager.js';
 
 // 1. Get Family Info (Name, Growth Score)
 export const getFamilyData = async (req, res) => {
@@ -11,7 +12,7 @@ export const getFamilyData = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: '找不到家庭資料。' });
+      return res.status(404).json({ message: getMessage('FAMILY_NOT_FOUND') });
     }
 
     const row = result.rows[0];
@@ -22,7 +23,7 @@ export const getFamilyData = async (req, res) => {
     });
   } catch (error) {
     console.error('getFamilyData error:', error);
-    res.status(500).json({ message: '無法獲取家庭資料。' });
+    res.status(500).json({ message: getMessage('FETCH_FAMILY_ERROR') });
   }
 };
 
@@ -48,7 +49,7 @@ export const getWishlist = async (req, res) => {
     res.json(mapped);
   } catch (error) {
     console.error('getWishlist error:', error);
-    res.status(500).json({ message: '無法獲取家庭願望清單。' });
+    res.status(500).json({ message: getMessage('FETCH_WISHLIST_ERROR') });
   }
 };
 
@@ -58,7 +59,7 @@ export const addWishlistItem = async (req, res) => {
   const { title, pointsNeeded } = req.body;
 
   if (!title || pointsNeeded === undefined) {
-    return res.status(400).json({ message: '願望名稱與所需積分為必填項目。' });
+    return res.status(400).json({ message: getMessage('WISHLIST_REQUIRED_FIELDS') });
   }
 
   try {
@@ -71,7 +72,7 @@ export const addWishlistItem = async (req, res) => {
 
     const row = result.rows[0];
     res.status(201).json({
-      message: `成功新增家庭願望：「${title}」`,
+      message: getMessage('ADD_WISH_SUCCESS', { title }),
       item: {
         id: row.id,
         title: row.title,
@@ -83,7 +84,7 @@ export const addWishlistItem = async (req, res) => {
     });
   } catch (error) {
     console.error('addWishlistItem error:', error);
-    res.status(500).json({ message: '無法建立家庭願望。' });
+    res.status(500).json({ message: getMessage('CREATE_WISH_ERROR') });
   }
 };
 
@@ -96,7 +97,7 @@ export const editWishlistItem = async (req, res) => {
   try {
     const checkItem = await pool.query('SELECT id FROM wishlist WHERE id = $1 AND family_id = $2', [id, familyId]);
     if (checkItem.rows.length === 0) {
-      return res.status(404).json({ message: '找不到該願望項目。' });
+      return res.status(404).json({ message: getMessage('WISH_NOT_FOUND') });
     }
 
     await pool.query(
@@ -104,10 +105,10 @@ export const editWishlistItem = async (req, res) => {
       [title, pointsNeeded, id]
     );
 
-    res.json({ message: '家庭願望更新成功！' });
+    res.json({ message: getMessage('UPDATE_WISH_SUCCESS') });
   } catch (error) {
     console.error('editWishlistItem error:', error);
-    res.status(500).json({ message: '更新家庭願望失敗。' });
+    res.status(500).json({ message: getMessage('UPDATE_WISH_ERROR') });
   }
 };
 
@@ -123,13 +124,13 @@ export const deleteWishlistItem = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: '找不到該願望，或無權限操作。' });
+      return res.status(404).json({ message: getMessage('DELETE_WISH_PERMISSION_ERROR') });
     }
 
-    res.json({ message: '成功刪除家庭願望！' });
+    res.json({ message: getMessage('DELETE_WISH_SUCCESS') });
   } catch (error) {
     console.error('deleteWishlistItem error:', error);
-    res.status(500).json({ message: '刪除家庭願望失敗。' });
+    res.status(500).json({ message: getMessage('DELETE_WISH_ERROR') });
   }
 };
 
@@ -173,11 +174,11 @@ export const redeemWishlist = async (req, res) => {
     );
 
     await pool.query('COMMIT');
-    res.json({ message: `🎉 家庭共同願望「${wish.title}」已兌換成功！` });
+    res.json({ message: getMessage('REDEEM_WISH_SUCCESS', { title: wish.title }) });
   } catch (error) {
     await pool.query('ROLLBACK');
     console.error('redeemWishlist error:', error);
-    res.status(500).json({ message: error.message || '兌換失敗。' });
+    res.status(500).json({ message: error.message || getMessage('REDEEM_WISH_ERROR') });
   }
 };
 
@@ -193,7 +194,7 @@ export const getParentGoals = async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error('getParentGoals error:', error);
-    res.status(500).json({ message: '無法獲取家長目標列表。' });
+    res.status(500).json({ message: getMessage('FETCH_PARENT_GOALS_ERROR') });
   }
 };
 
@@ -203,7 +204,7 @@ export const addParentGoal = async (req, res) => {
   const { category, title } = req.body;
 
   if (!category || !title) {
-    return res.status(400).json({ message: '目標類別與目標名稱為必填項目。' });
+    return res.status(400).json({ message: getMessage('GOAL_REQUIRED_FIELDS') });
   }
 
   try {
@@ -215,12 +216,12 @@ export const addParentGoal = async (req, res) => {
     );
 
     res.status(201).json({
-      message: `成功新增家長目標：「${title}」`,
+      message: getMessage('ADD_GOAL_SUCCESS', { title }),
       goal: result.rows[0]
     });
   } catch (error) {
     console.error('addParentGoal error:', error);
-    res.status(500).json({ message: '建立家長目標失敗。' });
+    res.status(500).json({ message: getMessage('CREATE_GOAL_ERROR') });
   }
 };
 
@@ -231,7 +232,7 @@ export const updateGoalProgress = async (req, res) => {
   const { progress } = req.body;
 
   if (progress === undefined || progress < 0 || progress > 100) {
-    return res.status(400).json({ message: '請提供 0 到 100 之間的新進度。' });
+    return res.status(400).json({ message: getMessage('GOAL_PROGRESS_INVALID') });
   }
 
   try {
@@ -269,11 +270,11 @@ export const updateGoalProgress = async (req, res) => {
     }
 
     await pool.query('COMMIT');
-    res.json({ message: '目標進度更新成功！' });
+    res.json({ message: getMessage('UPDATE_GOAL_SUCCESS') });
   } catch (error) {
     await pool.query('ROLLBACK');
     console.error('updateGoalProgress error:', error);
-    res.status(500).json({ message: error.message || '更新目標進度失敗。' });
+    res.status(500).json({ message: error.message || getMessage('UPDATE_GOAL_ERROR') });
   }
 };
 
@@ -289,13 +290,13 @@ export const deleteParentGoal = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: '找不到該目標，或無權限操作。' });
+      return res.status(404).json({ message: getMessage('DELETE_GOAL_PERMISSION_ERROR') });
     }
 
-    res.json({ message: '成功刪除家長目標！' });
+    res.json({ message: getMessage('DELETE_GOAL_SUCCESS') });
   } catch (error) {
     console.error('deleteParentGoal error:', error);
-    res.status(500).json({ message: '刪除目標失敗。' });
+    res.status(500).json({ message: getMessage('DELETE_GOAL_ERROR') });
   }
 };
 
@@ -327,7 +328,7 @@ export const getWeeklyComp = async (req, res) => {
     });
   } catch (error) {
     console.error('getWeeklyComp error:', error);
-    res.status(500).json({ message: '無法獲取每週結算賽事報告。' });
+    res.status(500).json({ message: getMessage('FETCH_WEEKLY_REPORT_ERROR') });
   }
 };
 
@@ -356,7 +357,7 @@ export const getEventLogs = async (req, res) => {
     res.json(mapped);
   } catch (error) {
     console.error('getEventLogs error:', error);
-    res.status(500).json({ message: '無法獲取系統事件日誌。' });
+    res.status(500).json({ message: getMessage('FETCH_EVENT_LOGS_ERROR') });
   }
 };
 
@@ -367,7 +368,7 @@ export const addEventLog = async (req, res) => {
   const { eventType, metadata } = req.body;
 
   if (!eventType) {
-    return res.status(400).json({ message: '缺少事件類型（eventType）。' });
+    return res.status(400).json({ message: getMessage('EVENT_TYPE_REQUIRED') });
   }
 
   try {
@@ -376,9 +377,9 @@ export const addEventLog = async (req, res) => {
        VALUES ($1, $2, $3, $4)`,
       [familyId, userId, eventType, JSON.stringify(metadata || {})]
     );
-    res.status(201).json({ message: '事件已成功記錄。' });
+    res.status(201).json({ message: getMessage('EVENT_LOGGED_SUCCESS') });
   } catch (error) {
     console.error('addEventLog error:', error);
-    res.status(500).json({ message: '記錄系統事件失敗。' });
+    res.status(500).json({ message: getMessage('EVENT_LOG_ERROR') });
   }
 };

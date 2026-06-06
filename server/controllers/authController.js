@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import pool from '../config/db.js';
 import dotenv from 'dotenv';
 import { OAuth2Client } from 'google-auth-library';
+import { getMessage } from '../utils/messageManager.js';
 
 dotenv.config();
 
@@ -35,7 +36,7 @@ export const registerParent = async (req, res) => {
   const { email, password, name, avatar } = req.body;
 
   if (!email || !password || !name) {
-    return res.status(400).json({ message: '信箱、密碼與姓名為必填項目。' });
+    return res.status(400).json({ message: getMessage('REGISTRATION_REQUIRED_FIELDS') });
   }
 
   try {
@@ -43,7 +44,7 @@ export const registerParent = async (req, res) => {
     // Check if email exists
     const userExist = await pool.query('SELECT id FROM users WHERE email = $1', [dbEmail]);
     if (userExist.rows.length > 0) {
-      return res.status(400).json({ message: '此電子信箱已被註冊。' });
+      return res.status(400).json({ message: getMessage('EMAIL_ALREADY_REGISTERED') });
     }
 
     // Hash password
@@ -75,14 +76,14 @@ export const registerParent = async (req, res) => {
     const token = generateToken(user);
 
     res.status(201).json({
-      message: '註冊成功！',
+      message: getMessage('REGISTRATION_SUCCESS'),
       token,
       user
     });
   } catch (error) {
     await pool.query('ROLLBACK');
     console.error('Registration error:', error);
-    res.status(500).json({ message: '伺服器錯誤，註冊失敗。' });
+    res.status(500).json({ message: getMessage('REGISTRATION_ERROR') });
   }
 };
 
@@ -91,7 +92,7 @@ export const login = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.status(400).json({ message: '請輸入電子信箱與密碼。' });
+    return res.status(400).json({ message: getMessage('LOGIN_REQUIRED_FIELDS') });
   }
 
   try {
@@ -104,13 +105,13 @@ export const login = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(400).json({ message: '帳號或密碼錯誤。' });
+      return res.status(400).json({ message: getMessage('INVALID_CREDENTIALS') });
     }
 
     const user = result.rows[0];
     const isMatch = bcrypt.compareSync(password, user.password_hash);
     if (!isMatch) {
-      return res.status(400).json({ message: '帳號或密碼錯誤。' });
+      return res.status(400).json({ message: getMessage('INVALID_CREDENTIALS') });
     }
 
     // Exclude password_hash from response
@@ -119,13 +120,13 @@ export const login = async (req, res) => {
     const token = generateToken(user);
 
     res.json({
-      message: '登入成功！',
+      message: getMessage('LOGIN_SUCCESS'),
       token,
       user
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: '伺服器錯誤，登入失敗。' });
+    res.status(500).json({ message: getMessage('LOGIN_ERROR') });
   }
 };
 
@@ -134,7 +135,7 @@ export const googleLogin = async (req, res) => {
   const { idToken, role } = req.body;
 
   if (!idToken) {
-    return res.status(400).json({ message: '缺少 Google 登入驗證憑證 (idToken)。' });
+    return res.status(400).json({ message: getMessage('GOOGLE_TOKEN_MISSING') });
   }
 
   try {
@@ -156,7 +157,7 @@ export const googleLogin = async (req, res) => {
         avatar = payload.picture || 'boy';
       } catch (err) {
         console.error('Google token verification failed:', err);
-        return res.status(401).json({ message: 'Google 登入憑證無效或已過期。' });
+        return res.status(401).json({ message: getMessage('GOOGLE_TOKEN_INVALID') });
       }
     }
 
@@ -182,7 +183,7 @@ export const googleLogin = async (req, res) => {
       user.childId = user.child_id;
       const token = generateToken(user);
       return res.json({
-        message: 'Google 登入成功！',
+        message: getMessage('GOOGLE_LOGIN_SUCCESS'),
         token,
         user
       });
@@ -233,14 +234,14 @@ export const googleLogin = async (req, res) => {
     const token = generateToken(user);
 
     res.status(201).json({
-      message: 'Google 註冊登入成功！',
+      message: getMessage('GOOGLE_REG_LOGIN_SUCCESS'),
       token,
       user
     });
   } catch (error) {
     await pool.query('ROLLBACK');
     console.error('Google login error:', error);
-    res.status(500).json({ message: '伺服器錯誤，Google 登入失敗。' });
+    res.status(500).json({ message: getMessage('GOOGLE_LOGIN_ERROR') });
   }
 };
 
@@ -250,7 +251,7 @@ export const linkGoogleAccount = async (req, res) => {
   const userId = req.user.id;
 
   if (!idToken) {
-    return res.status(400).json({ message: '缺少 Google 驗證憑證 (idToken)。' });
+    return res.status(400).json({ message: getMessage('LINK_GOOGLE_TOKEN_MISSING') });
   }
 
   try {
@@ -268,7 +269,7 @@ export const linkGoogleAccount = async (req, res) => {
         googleId = payload.sub;
       } catch (err) {
         console.error('Google token verification failed:', err);
-        return res.status(401).json({ message: 'Google 驗證憑證無效或已過期。' });
+        return res.status(401).json({ message: getMessage('LINK_GOOGLE_TOKEN_INVALID') });
       }
     }
 
@@ -278,7 +279,7 @@ export const linkGoogleAccount = async (req, res) => {
       [googleId]
     );
     if (checkLinked.rows.length > 0) {
-      return res.status(400).json({ message: '此 Google 帳戶已被其他 QuestGrow 帳號綁定！' });
+      return res.status(400).json({ message: getMessage('GOOGLE_ALREADY_LINKED') });
     }
 
     // Link it
@@ -287,10 +288,10 @@ export const linkGoogleAccount = async (req, res) => {
       [googleId, userId]
     );
 
-    res.json({ message: '成功連結 Google 帳戶！今後可使用 Google 快速登入。' });
+    res.json({ message: getMessage('LINK_GOOGLE_SUCCESS') });
   } catch (error) {
     console.error('Link Google account error:', error);
-    res.status(500).json({ message: '伺服器錯誤，綁定 Google 帳戶失敗。' });
+    res.status(500).json({ message: getMessage('LINK_GOOGLE_ERROR') });
   }
 };
 

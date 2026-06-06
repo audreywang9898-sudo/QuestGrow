@@ -1,4 +1,5 @@
 import pool from '../config/db.js';
+import { getMessage } from '../utils/messageManager.js';
 
 const getExpirationDate = (rarity) => {
   let days = 9999;
@@ -59,7 +60,7 @@ export const getInventory = async (req, res) => {
     res.json(mapped);
   } catch (error) {
     console.error('getInventory error:', error);
-    res.status(500).json({ message: '無法獲取背包道具。' });
+    res.status(500).json({ message: getMessage('FETCH_INVENTORY_ERROR') });
   }
 };
 
@@ -88,7 +89,7 @@ export const getRedeemLogs = async (req, res) => {
     res.json(mapped);
   } catch (error) {
     console.error('getRedeemLogs error:', error);
-    res.status(500).json({ message: '無法獲取核銷紀錄。' });
+    res.status(500).json({ message: getMessage('FETCH_REDEEM_LOGS_ERROR') });
   }
 };
 
@@ -99,10 +100,10 @@ export const drawGachaCard = async (req, res) => {
   const { card, costTickets } = req.body;
 
   if (!childId) {
-    return res.status(403).json({ message: '只有小孩帳號可進行召喚抽卡。' });
+    return res.status(403).json({ message: getMessage('GACHA_DRAW_ROLE_ERROR') });
   }
   if (!card || costTickets === undefined) {
-    return res.status(400).json({ message: '請提供卡片資料與抽卡券扣除數量。' });
+    return res.status(400).json({ message: getMessage('GACHA_DRAW_FIELDS_MISSING') });
   }
 
   try {
@@ -114,12 +115,12 @@ export const drawGachaCard = async (req, res) => {
       [childId]
     );
     if (childResult.rows.length === 0) {
-      throw new Error('找不到此小孩的角色資料。');
+      throw new Error(getMessage('CHILD_STATS_NOT_FOUND'));
     }
     const child = childResult.rows[0];
 
     if (child.tickets < costTickets) {
-      throw new Error('抽卡券不足！');
+      throw new Error(getMessage('GACHA_INSUFFICIENT_TICKETS'));
     }
 
     // Deduct tickets
@@ -195,14 +196,14 @@ export const drawGachaCard = async (req, res) => {
     );
 
     res.json({
-      message: `召喚成功！獲得 ${card.name}`,
+      message: getMessage('GACHA_DRAW_SUCCESS', { name: card.name }),
       child: updatedChildResult.rows[0],
       item: newItem
     });
   } catch (error) {
     await pool.query('ROLLBACK');
     console.error('drawGachaCard error:', error);
-    res.status(500).json({ message: error.message || '伺服器錯誤，召喚失敗。' });
+    res.status(500).json({ message: error.message || getMessage('GACHA_DRAW_ERROR') });
   }
 };
 
@@ -212,7 +213,7 @@ export const requestRedeem = async (req, res) => {
   const { inventoryId } = req.params;
 
   if (!childId) {
-    return res.status(403).json({ message: '只有小孩帳號可以申請使用卡片。' });
+    return res.status(403).json({ message: getMessage('REDEEM_REQUEST_ROLE_ERROR') });
   }
 
   try {
@@ -223,19 +224,19 @@ export const requestRedeem = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: '找不到此背包卡片。' });
+      return res.status(404).json({ message: getMessage('REDEEM_REQUEST_CARD_NOT_FOUND') });
     }
 
     const item = result.rows[0];
 
     if (item.status !== '未使用') {
-      return res.status(400).json({ message: `卡片目前狀態為「${item.status}」，無法申請使用。` });
+      return res.status(400).json({ message: getMessage('REDEEM_REQUEST_STATUS_INVALID', { status: item.status }) });
     }
 
     // Check expiration
     if (item.expire_at && new Date(item.expire_at) < new Date()) {
       await pool.query('UPDATE inventory SET status = \'已過期\' WHERE id = $1', [inventoryId]);
-      return res.status(400).json({ message: '此卡片已過期，無法申請使用！' });
+      return res.status(400).json({ message: getMessage('REDEEM_REQUEST_CARD_EXPIRED') });
     }
 
     await pool.query(
@@ -243,10 +244,10 @@ export const requestRedeem = async (req, res) => {
       [inventoryId]
     );
 
-    res.json({ message: `已成功申請使用「${item.name}」，等待爸媽確認。` });
+    res.json({ message: getMessage('REDEEM_REQUEST_SUCCESS', { name: item.name }) });
   } catch (error) {
     console.error('requestRedeem error:', error);
-    res.status(500).json({ message: '伺服器錯誤，申請使用失敗。' });
+    res.status(500).json({ message: getMessage('REDEEM_REQUEST_ERROR') });
   }
 };
 
@@ -258,7 +259,7 @@ export const reviewRedeem = async (req, res) => {
   const { action } = req.body; // 'approve' | 'reject'
 
   if (!action) {
-    return res.status(400).json({ message: '必須提供審核動作（action）。' });
+    return res.status(400).json({ message: getMessage('REVIEW_REDEEM_ACTION_MISSING') });
   }
 
   try {
@@ -273,13 +274,13 @@ export const reviewRedeem = async (req, res) => {
     );
 
     if (itemResult.rows.length === 0) {
-      return res.status(404).json({ message: '找不到該申請，或無權限操作。' });
+      return res.status(404).json({ message: getMessage('REVIEW_REDEEM_NOT_FOUND') });
     }
 
     const item = itemResult.rows[0];
 
     if (item.status !== '待核銷') {
-      return res.status(400).json({ message: '此卡片不處於待核銷狀態。' });
+      return res.status(400).json({ message: getMessage('REVIEW_REDEEM_STATUS_INVALID') });
     }
 
     if (action === 'reject') {
@@ -288,14 +289,14 @@ export const reviewRedeem = async (req, res) => {
         'UPDATE inventory SET status = \'未使用\' WHERE id = $1',
         [inventoryId]
       );
-      return res.json({ message: `已駁回「${item.name}」的核銷申請，卡片已退回小孩背包。` });
+      return res.json({ message: getMessage('REVIEW_REDEEM_REJECT_SUCCESS', { name: item.name }) });
     }
 
     if (action === 'approve') {
       // Approve: Check expiration first
       if (item.expire_at && new Date(item.expire_at) < new Date()) {
         await pool.query('UPDATE inventory SET status = \'已過期\' WHERE id = $1', [inventoryId]);
-        return res.status(400).json({ message: '審核失敗：此卡片已過期！無法進行核銷。' });
+        return res.status(400).json({ message: getMessage('REVIEW_REDEEM_EXPIRED') });
       }
 
       await pool.query('BEGIN');
@@ -321,11 +322,11 @@ export const reviewRedeem = async (req, res) => {
 
       await pool.query('COMMIT');
 
-      return res.json({ message: `已核准使用「${item.name}」，全家獲得 +50 成長積分！` });
+      return res.json({ message: getMessage('REVIEW_REDEEM_APPROVE_SUCCESS', { name: item.name }) });
     }
   } catch (error) {
     await pool.query('ROLLBACK');
     console.error('reviewRedeem error:', error);
-    res.status(500).json({ message: '伺服器錯誤，審核失敗。' });
+    res.status(500).json({ message: getMessage('REVIEW_REDEEM_ERROR') });
   }
 };

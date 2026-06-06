@@ -1,4 +1,5 @@
 import pool from '../config/db.js';
+import { getMessage } from '../utils/messageManager.js';
 
 const determineJobClass = (attrs) => {
   const mapping = {
@@ -59,7 +60,7 @@ export const getTasks = async (req, res) => {
     res.json(mapped);
   } catch (error) {
     console.error('getTasks error:', error);
-    res.status(500).json({ message: '無法獲取任務列表。' });
+    res.status(500).json({ message: getMessage('FETCH_TASKS_ERROR') });
   }
 };
 
@@ -73,7 +74,7 @@ export const addTask = async (req, res) => {
   } = req.body;
 
   if (!name || !type || !difficulty) {
-    return res.status(400).json({ message: '任務名稱、屬性類型與難度為必填項目。' });
+    return res.status(400).json({ message: getMessage('TASK_REQUIRED_FIELDS') });
   }
 
   // If assignedTo is 'general' or empty, save as NULL in PostgreSQL
@@ -118,12 +119,12 @@ export const addTask = async (req, res) => {
     };
 
     res.status(201).json({
-      message: `成功指派新任務：「${name}」`,
+      message: getMessage('ADD_TASK_SUCCESS', { name }),
       task: createdTask
     });
   } catch (error) {
     console.error('addTask error:', error);
-    res.status(500).json({ message: '伺服器錯誤，無法建立任務。' });
+    res.status(500).json({ message: getMessage('CREATE_TASK_ERROR') });
   }
 };
 
@@ -140,7 +141,7 @@ export const editTask = async (req, res) => {
       [taskId, familyId]
     );
     if (verifyTask.rows.length === 0) {
-      return res.status(404).json({ message: '找不到該任務，或無權限操作。' });
+      return res.status(404).json({ message: getMessage('TASK_NOT_FOUND') });
     }
 
     const updateFields = [];
@@ -179,7 +180,7 @@ export const editTask = async (req, res) => {
     });
 
     if (updateFields.length === 0) {
-      return res.status(400).json({ message: '未提供更新欄位。' });
+      return res.status(400).json({ message: getMessage('TASK_FIELDS_MISSING') });
     }
 
     params.push(taskId);
@@ -188,10 +189,10 @@ export const editTask = async (req, res) => {
       params
     );
 
-    res.json({ message: '任務更新成功！' });
+    res.json({ message: getMessage('UPDATE_TASK_SUCCESS') });
   } catch (error) {
     console.error('editTask error:', error);
-    res.status(500).json({ message: '伺服器錯誤，更新任務失敗。' });
+    res.status(500).json({ message: getMessage('UPDATE_TASK_ERROR') });
   }
 };
 
@@ -207,13 +208,13 @@ export const deleteTask = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: '找不到該任務，或無權限操作。' });
+      return res.status(404).json({ message: getMessage('TASK_NOT_FOUND') });
     }
 
-    res.json({ message: `已成功刪除任務：「${result.rows[0].name}」` });
+    res.json({ message: getMessage('DELETE_TASK_SUCCESS', { name: result.rows[0].name }) });
   } catch (error) {
     console.error('deleteTask error:', error);
-    res.status(500).json({ message: '伺服器錯誤，刪除任務失敗。' });
+    res.status(500).json({ message: getMessage('DELETE_TASK_ERROR') });
   }
 };
 
@@ -234,10 +235,10 @@ export const clearAllTasks = async (req, res) => {
     }
 
     await pool.query(query, params);
-    res.json({ message: '任務清除成功。' });
+    res.json({ message: getMessage('CLEAR_TASKS_SUCCESS') });
   } catch (error) {
     console.error('clearAllTasks error:', error);
-    res.status(500).json({ message: '伺服器錯誤，清除任務失敗。' });
+    res.status(500).json({ message: getMessage('CLEAR_TASKS_ERROR') });
   }
 };
 
@@ -249,17 +250,17 @@ export const submitTask = async (req, res) => {
   const childId = req.user.child_id;
 
   if (!childId) {
-    return res.status(403).json({ message: '只有小孩帳號可提交任務。' });
+    return res.status(403).json({ message: getMessage('SUBMIT_TASK_ROLE_ERROR') });
   }
 
   try {
     // Verify task belongs to this family
-    const checkTask = await pool.query(
+    const verifyTask = await pool.query(
       'SELECT id FROM tasks WHERE id = $1 AND family_id = $2',
       [taskId, familyId]
     );
-    if (checkTask.rows.length === 0) {
-      return res.status(404).json({ message: '找不到該任務。' });
+    if (verifyTask.rows.length === 0) {
+      return res.status(404).json({ message: getMessage('TASK_NOT_FOUND') });
     }
 
     const submissionData = {
@@ -275,10 +276,10 @@ export const submitTask = async (req, res) => {
       [JSON.stringify(submissionData), taskId]
     );
 
-    res.json({ message: '任務已提交覆核，請等待爸媽確認！' });
+    res.json({ message: getMessage('SUBMIT_TASK_SUCCESS') });
   } catch (error) {
     console.error('submitTask error:', error);
-    res.status(500).json({ message: '伺服器錯誤，提交任務失敗。' });
+    res.status(500).json({ message: getMessage('SUBMIT_TASK_ERROR') });
   }
 };
 
@@ -289,7 +290,7 @@ export const reviewTask = async (req, res) => {
   const { action, reason } = req.body; // action: 'approve' | 'reject'
 
   if (!action) {
-    return res.status(400).json({ message: '必須提供審核動作（action）。' });
+    return res.status(400).json({ message: getMessage('REVIEW_ACTION_MISSING') });
   }
 
   try {
@@ -300,18 +301,18 @@ export const reviewTask = async (req, res) => {
     );
 
     if (taskResult.rows.length === 0) {
-      return res.status(404).json({ message: '找不到此任務。' });
+      return res.status(404).json({ message: getMessage('TASK_NOT_FOUND') });
     }
 
     const task = taskResult.rows[0];
 
     if (task.status !== '待覆核') {
-      return res.status(400).json({ message: '此任務不處於待覆核狀態。' });
+      return res.status(400).json({ message: getMessage('REVIEW_TASK_STATUS_INVALID') });
     }
 
     const childId = task.submission?.childId || task.assigned_to;
     if (!childId) {
-      return res.status(400).json({ message: '無法確認此任務的執行小孩。' });
+      return res.status(400).json({ message: getMessage('CHILD_STATS_NOT_FOUND') });
     }
 
     if (action === 'reject') {
@@ -322,7 +323,7 @@ export const reviewTask = async (req, res) => {
          WHERE id = $2`,
         [reason || '請重新檢查並修改。', taskId]
       );
-      return res.json({ message: `任務「${task.name}」已退回修正。` });
+      return res.json({ message: getMessage('REJECT_TASK_SUCCESS', { name: task.name }) });
     }
 
     if (action === 'approve') {
@@ -342,7 +343,7 @@ export const reviewTask = async (req, res) => {
       );
 
       if (childResult.rows.length === 0) {
-        throw new Error('找不到該小孩的角色資料。');
+        throw new Error(getMessage('CHILD_STATS_NOT_FOUND'));
       }
 
       const child = childResult.rows[0];
@@ -403,7 +404,7 @@ export const reviewTask = async (req, res) => {
       );
 
       return res.json({
-        message: `任務「${task.name}」審核通過，發放獎勵！`,
+        message: getMessage('APPROVE_TASK_SUCCESS', { name: task.name }),
         child: updatedChildResult.rows[0],
         familyScoreAdd
       });

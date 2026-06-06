@@ -6,6 +6,7 @@ import userRoutes from './routes/userRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
 import itemRoutes from './routes/itemRoutes.js';
 import familyRoutes from './routes/familyRoutes.js';
+import { getMessage } from './utils/messageManager.js';
 
 dotenv.config();
 
@@ -18,7 +19,7 @@ app.use(express.json());
 
 // API Health Check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'QuestGrow API Server is running smoothly.' });
+  res.json({ status: 'ok', message: getMessage('SERVER_RUNNING') });
 });
 
 // Mount Routes
@@ -36,7 +37,7 @@ app.get('/', (req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ message: '伺服器發生未預期的錯誤，請聯絡開發團隊。' });
+  res.status(500).json({ message: getMessage('UNEXPECTED_SERVER_ERROR') });
 });
 
 // Start Server
