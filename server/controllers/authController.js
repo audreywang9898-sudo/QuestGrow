@@ -71,6 +71,7 @@ export const registerParent = async (req, res) => {
     await pool.query('COMMIT');
 
     const user = newUser.rows[0];
+    user.childId = user.child_id;
     const token = generateToken(user);
 
     res.status(201).json({
@@ -114,6 +115,7 @@ export const login = async (req, res) => {
 
     // Exclude password_hash from response
     delete user.password_hash;
+    user.childId = user.child_id;
     const token = generateToken(user);
 
     res.json({
@@ -177,6 +179,7 @@ export const googleLogin = async (req, res) => {
         user = updateResult.rows[0];
       }
 
+      user.childId = user.child_id;
       const token = generateToken(user);
       return res.json({
         message: 'Google 登入成功！',
@@ -224,7 +227,8 @@ export const googleLogin = async (req, res) => {
 
     const user = {
       ...newUser.rows[0],
-      child_id: childId
+      child_id: childId,
+      childId: childId
     };
     const token = generateToken(user);
 

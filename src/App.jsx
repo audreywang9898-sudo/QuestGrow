@@ -22,7 +22,16 @@ function App() {
   // --- Authentication States ---
   const [currentUser, setCurrentUser] = useState(() => {
     const local = localStorage.getItem('questgrow_current_user');
-    return local ? JSON.parse(local) : null;
+    if (local) {
+      try {
+        const user = JSON.parse(local);
+        if (user && user.child_id && !user.childId) {
+          user.childId = user.child_id;
+        }
+        return user;
+      } catch (e) {}
+    }
+    return null;
   });
 
   const [role, setRole] = useState(() => {
@@ -196,7 +205,11 @@ function App() {
 
       if (isGoogle) {
         const data = await api.googleLogin(credential, selectedRole);
-        setCurrentUser(data.user);
+        const mappedUser = {
+          ...data.user,
+          childId: data.user.childId || data.user.child_id
+        };
+        setCurrentUser(mappedUser);
         setRole(data.user.role);
         showToast(`歡迎回來，${data.user.name}！`, 'success');
         return true;
@@ -204,7 +217,11 @@ function App() {
 
       // Standard Login
       const data = await api.login(email, password);
-      setCurrentUser(data.user);
+      const mappedUser = {
+        ...data.user,
+        childId: data.user.childId || data.user.child_id
+      };
+      setCurrentUser(mappedUser);
       setRole(data.user.role);
       showToast(`歡迎回來，${data.user.name}！`, 'success');
       return true;
