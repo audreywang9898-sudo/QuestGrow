@@ -286,9 +286,6 @@ function KidPortal({
       if (onAddTask) {
         onAddTask(newTasks);
       }
-      if (onUpdateDrawnTasks) {
-        onUpdateDrawnTasks(newDrawnIds);
-      }
     }
   };
 

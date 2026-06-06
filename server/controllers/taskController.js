@@ -77,6 +77,15 @@ export const addTask = async (req, res) => {
     return res.status(400).json({ message: getMessage('TASK_REQUIRED_FIELDS') });
   }
 
+  // Permission check: kids can only assign tasks to themselves
+  if (req.user.role === 'kid') {
+    if (!assignedTo || assignedTo !== req.user.child_id) {
+      return res.status(403).json({ message: getMessage('INSUFFICIENT_PERMISSION', { role: 'parent' }) });
+    }
+  } else if (req.user.role !== 'parent') {
+    return res.status(403).json({ message: getMessage('INSUFFICIENT_PERMISSION', { role: 'parent' }) });
+  }
+
   // If assignedTo is 'general' or empty, save as NULL in PostgreSQL
   const dbAssignedTo = (assignedTo === 'general' || !assignedTo) ? null : assignedTo;
   

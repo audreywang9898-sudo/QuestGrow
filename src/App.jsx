@@ -343,24 +343,38 @@ function App() {
   };
 
   // --- Task Operations ---
-  const handleAddTask = async (newTask) => {
+  const handleAddTask = async (newTaskOrTasks) => {
     try {
-      // Map frontend task structure to backend API expected format
-      const apiTaskData = {
-        name: newTask.name,
-        description: newTask.description,
-        type: newTask.type,
-        difficulty: newTask.difficulty,
-        expReward: newTask.expReward,
-        goldReward: newTask.goldReward,
-        ticketReward: newTask.ticketReward,
-        attributeReward: newTask.attributeReward,
-        period: newTask.period,
-        assignedTo: newTask.assignedTo,
-        status: newTask.status
-      };
-      await api.addTask(apiTaskData);
-      showToast('任務指派成功！', 'success');
+      const isArray = Array.isArray(newTaskOrTasks);
+      const tasksToAdd = isArray ? newTaskOrTasks : [newTaskOrTasks];
+
+      const promises = tasksToAdd.map(task => {
+        const apiTaskData = {
+          name: task.name,
+          description: task.description,
+          type: task.type,
+          difficulty: task.difficulty,
+          expReward: task.expReward,
+          goldReward: task.goldReward,
+          ticketReward: task.ticketReward,
+          attributeReward: task.attributeReward,
+          period: task.period,
+          assignedTo: task.assignedTo || activeChildId,
+          status: task.status
+        };
+        return api.addTask(apiTaskData);
+      });
+
+      const results = await Promise.all(promises);
+
+      if (role === 'kid' && isArray) {
+        showToast('🎉 抽選成功！德、智、體、群、美各 1 張任務已加入你的冒險任務庫。', 'success');
+        const newDrawnIds = results.map(r => r.task.id);
+        setDrawnTaskIds(newDrawnIds);
+      } else {
+        showToast('任務指派成功！', 'success');
+      }
+
       fetchAllData();
     } catch (error) {
       showToast(error.message || '任務指派失敗。', 'error');

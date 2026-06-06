@@ -5,7 +5,7 @@ import { authenticateToken, requireRole } from '../middleware/authMiddleware.js'
 const router = express.Router();
 
 router.get('/', authenticateToken, getTasks);
-router.post('/', authenticateToken, requireRole('parent'), addTask);
+router.post('/', authenticateToken, addTask);
 router.put('/:taskId', authenticateToken, editTask);
 router.delete('/:taskId', authenticateToken, deleteTask);
 router.delete('/', authenticateToken, clearAllTasks);
