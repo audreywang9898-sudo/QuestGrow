@@ -360,6 +360,23 @@ function ParentPortal({
         };
         onAddTask(newTask);
       });
+    } else if (importAssignedTo === 'general') {
+      const newTask = {
+        id: "task-tpl-" + Date.now() + "-" + Math.random().toString(36).substr(2, 5) + "-general",
+        name: template.name,
+        description: template.description,
+        type: template.type,
+        difficulty: template.difficulty,
+        expReward: template.expReward,
+        goldReward: template.goldReward,
+        ticketReward: template.ticketReward,
+        attributeReward: template.attributeReward,
+        period: template.period,
+        status: '進行中',
+        assignedTo: 'general',
+        dateCreated: new Date().toISOString().split('T')[0]
+      };
+      onAddTask(newTask);
     } else {
       const child = children.find(c => c.id === importAssignedTo);
       if (child) {
@@ -407,6 +424,25 @@ function ParentPortal({
           };
           onAddTask(newTask);
         });
+      });
+    } else if (importAssignedTo === 'general') {
+      group.forEach((template, index) => {
+        const newTask = {
+          id: "task-tpl-" + Date.now() + "-" + index + "-" + Math.random().toString(36).substr(2, 5) + "-general",
+          name: template.name,
+          description: template.description,
+          type: template.type,
+          difficulty: template.difficulty,
+          expReward: template.expReward,
+          goldReward: template.goldReward,
+          ticketReward: template.ticketReward,
+          attributeReward: template.attributeReward,
+          period: template.period,
+          status: '進行中',
+          assignedTo: 'general',
+          dateCreated: new Date().toISOString().split('T')[0]
+        };
+        onAddTask(newTask);
       });
     } else {
       const child = children.find(c => c.id === importAssignedTo);
@@ -854,6 +890,7 @@ function ParentPortal({
                   className="bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none min-w-[180px]"
                 >
                   <option value="all">{t('allChildren')}</option>
+                  <option value="general">{language === 'zh' ? '👥 通用任務 (未指派，任何小孩均可看見)' : '👥 General Task (Unassigned, visible to all)'}</option>
                   {children.map(child => (
                     <option key={child.id} value={child.id}>{child.name}</option>
                   ))}
@@ -1146,6 +1183,7 @@ function ParentPortal({
                       className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none"
                     >
                       <option value="all">{t('allChildren')}</option>
+                      <option value="general">{language === 'zh' ? '👥 通用任務 (未指派，任何小孩均可看見)' : '👥 General Task (Unassigned, visible to all)'}</option>
                       {children.map(child => (
                         <option key={child.id} value={child.id}>{child.name}</option>
                       ))}
