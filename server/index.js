@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
@@ -10,6 +12,9 @@ import { getMessage, languageMiddleware } from './utils/messageManager.js';
 
 dotenv.config();
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -17,6 +22,9 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 app.use(languageMiddleware);
+
+// Serve static files from the React frontend build directory
+app.use(express.static(path.join(__dirname, '../dist')));
 
 // API Health Check
 app.get('/api/health', (req, res) => {
@@ -30,9 +38,12 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/family', familyRoutes);
 
-// Root Health Check Route
-app.get('/', (req, res) => {
-  res.send('QuestGrow API server. Server is healthy.');
+// Wildcard fallback route to serve index.html for client-side routing (excluding /api routes)
+app.get('*', (req, res) => {
+  if (req.originalUrl.startsWith('/api')) {
+    return res.status(404).json({ message: 'API route not found' });
+  }
+  res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
 // Error handling middleware
