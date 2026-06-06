@@ -283,8 +283,20 @@ function App() {
     }
 
     try {
-      await api.updateChildProfile(targetId, data);
+      const res = await api.updateChildProfile(targetId, data);
       showToast('小孩角色資料已更新！', 'success');
+
+      // Update current user state and local storage if the logged-in child's own profile was updated
+      if (currentUser && currentUser.role === 'kid' && currentUser.childId === targetId) {
+        const updatedUser = {
+          ...currentUser,
+          avatar: res.child.avatar,
+          name: res.child.name
+        };
+        setCurrentUser(updatedUser);
+        localStorage.setItem('questgrow_current_user', JSON.stringify(updatedUser));
+      }
+
       fetchAllData();
       return true;
     } catch (error) {
