@@ -663,22 +663,7 @@ function App() {
               </div>
             )}
 
-            {role === 'parent' && currentUser && (
-              <div className="flex items-center gap-1 bg-[#252529] p-1 rounded border border-[#35363A] mx-1">
-                <div
-                  className="flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-lg border border-[#00E676] bg-[#00E676]/10 scale-105 font-black text-[#00E676]"
-                >
-                  <Avatar 
-                    avatar={currentUser.avatar} 
-                    role="parent" 
-                    className="w-7 h-7 flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-rose-600 to-amber-400 ring-2 ring-[#00E676] ring-offset-1 ring-offset-[#252529] shadow-[0_0_8px_rgba(0,230,118,0.4)]" 
-                  />
-                  <span className="text-[9px] font-bold leading-none truncate max-w-[70px]">
-                    {currentUser.name}{language === 'zh' ? ' (我)' : ' (Me)'}
-                  </span>
-                </div>
-              </div>
-            )}
+
 
             {currentUser.role === 'parent' && (
               <>
