@@ -329,9 +329,11 @@ function LoginPortal({ onLogin, googleClientId }) {
           
           {/* Google Official GSI Button Container */}
           <div id="google-gsi-btn-container" className="min-h-[40px] flex justify-center w-full"></div>
+          {/*
           <div className="text-[9px] text-slate-400 font-mono text-center select-all -mt-1 mb-1">
             Active Client ID: {import.meta.env.VITE_GOOGLE_CLIENT_ID || googleClientId || "None"}
           </div>
+          */}
 
           {/* Fallback Sandbox Google Simulator Toggle (Commented out)
           <button
@@ -368,7 +370,7 @@ function LoginPortal({ onLogin, googleClientId }) {
         )}
         */}
 
-        {/* Connection Diagnostics */}
+        {/* Connection Diagnostics (Commented out)
         <div className="pt-4 border-t border-slate-100 flex flex-col gap-2">
           <button
             type="button"
@@ -415,6 +417,7 @@ function LoginPortal({ onLogin, googleClientId }) {
             </div>
           )}
         </div>
+        */}
 
       </div>
 
