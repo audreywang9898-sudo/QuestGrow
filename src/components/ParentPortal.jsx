@@ -1667,6 +1667,8 @@ function ParentPortal({
             <div className="grid grid-cols-1 gap-4">
               {children.map(child => {
                 const isEditing = editingChildId === child.id;
+                const childUser = usersDB?.find(u => (u.child_id || u.childId) === child.id);
+                const isGoogleLinked = !!(childUser && (childUser.google_id || childUser.googleId));
                 return (
                   <div 
                     key={child.id} 
@@ -1697,9 +1699,9 @@ function ParentPortal({
                             setEditChildAge(child.age);
                             setEditChildBirthday(child.birthday || '');
                             
-                            const childUser = usersDB?.find(u => u.childId === child.id);
+                            const childUser = usersDB?.find(u => (u.childId || u.child_id) === child.id);
                             setEditChildEmail(childUser ? childUser.email : '');
-                            setEditChildPassword(childUser ? childUser.password : '');
+                            setEditChildPassword('');
                           }}
                           className="flex-1 py-1.5 rounded bg-[#3661FF] hover:bg-[#4e75ff] text-white text-[11px] font-bold text-center transition-colors"
                         >
@@ -1751,20 +1753,41 @@ function ParentPortal({
                           <div>
                             <label className="block text-[10px] text-slate-400 font-bold uppercase mb-1">{t('emailLabelChild')}</label>
                             <input 
-                              type="email" required value={editChildEmail} onChange={(e) => setEditChildEmail(e.target.value)}
+                              type="email" 
+                              required 
+                              disabled={isGoogleLinked}
+                              value={editChildEmail} 
+                              onChange={(e) => setEditChildEmail(e.target.value)}
                               placeholder="email@questgrow.com"
-                              className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none"
+                              className={`w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs focus:outline-none ${
+                                isGoogleLinked ? 'text-slate-500 cursor-not-allowed opacity-60' : 'text-slate-200'
+                              }`}
                             />
                           </div>
                           <div>
                             <label className="block text-[10px] text-slate-400 font-bold uppercase mb-1">{t('passwordLabelChild')}</label>
                             <input 
-                              type="text" required value={editChildPassword} onChange={(e) => setEditChildPassword(e.target.value)}
-                              placeholder="新密碼"
-                              className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none"
+                              type="text" 
+                              disabled={isGoogleLinked}
+                              value={editChildPassword} 
+                              onChange={(e) => setEditChildPassword(e.target.value)}
+                              placeholder={isGoogleLinked ? (language === 'zh' ? '已聯動 Google (唯讀)' : 'Linked to Google (Read-only)') : (language === 'zh' ? '輸入新密碼以重設' : 'Enter new password to reset')}
+                              className={`w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs focus:outline-none ${
+                                isGoogleLinked ? 'text-slate-500 cursor-not-allowed opacity-60' : 'text-slate-200'
+                              }`}
                             />
                           </div>
                         </div>
+                        {isGoogleLinked && (
+                          <div className="text-[10px] text-amber-500 font-bold bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-lg flex items-center gap-1.5 animate-success">
+                            <span>⚠️</span>
+                            <span>
+                              {language === 'zh' 
+                                ? '此帳號已與 Google 帳戶聯動，其登入信箱與密碼認證資訊處於唯讀模式。' 
+                                : 'This account is linked to Google; its login email and password are in read-only mode.'}
+                            </span>
+                          </div>
+                        )}
                         <div className="flex gap-2 justify-end border-t border-white/5 pt-3">
                           <button type="submit" className="px-4 py-1.5 rounded text-xs font-black bg-[#3661FF] text-white hover:bg-[#4e75ff] transition-colors">{t('saveChanges')}</button>
                           <button type="button" onClick={() => setEditingChildId(null)} className="px-4 py-1.5 rounded text-xs font-bold bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white transition-colors">{t('cancel')}</button>
