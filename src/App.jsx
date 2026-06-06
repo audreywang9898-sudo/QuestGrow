@@ -733,6 +733,7 @@ function App() {
             onAddTask={handleAddTask}
             onLinkGoogleAccount={handleLinkGoogleAccount}
             isReadOnly={currentUser && currentUser.role === 'kid' && activeChildId !== currentUser.childId}
+            googleClientId={googleClientId}
           />
         ) : (
           <ParentPortal 

@@ -64,7 +64,8 @@ function KidPortal({
   currentUser,
   onLinkGoogleAccount,
   onAddTask,
-  isReadOnly = false
+  isReadOnly = false,
+  googleClientId
 }) {
   const { t, language } = useLanguage();
   const [activeSubTab, setActiveSubTab] = useState('wishlist');
@@ -88,6 +89,43 @@ function KidPortal({
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState(stats.avatar || 'boy');
   const [avatarUploadError, setAvatarUploadError] = useState('');
+
+  // Google GSI linking button initializer
+  React.useEffect(() => {
+    /* global google */
+    if (window.google && google.accounts && google.accounts.id && googleClientId && !currentUser?.googleId && !isReadOnly) {
+      try {
+        console.log("Initializing Google GSI linking button...");
+        google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: (response) => {
+            if (response && response.credential) {
+              onLinkGoogleAccount(response.credential);
+            }
+          },
+          auto_select: false,
+        });
+
+        const container = document.getElementById("google-link-btn-container");
+        if (container) {
+          container.innerHTML = ""; // Clear existing contents
+          google.accounts.id.renderButton(
+            container,
+            { 
+              theme: "filled_blue", 
+              size: "medium", 
+              text: "continue_with", 
+              shape: "rectangular", 
+              logo_alignment: "left",
+              width: 200
+            }
+          );
+        }
+      } catch (err) {
+        console.warn("Google GSI linking rendering failed:", err);
+      }
+    }
+  }, [googleClientId, currentUser, isReadOnly]);
 
   // Backpack item taking out animation state & click handler
   const [redeemingId, setRedeemingId] = useState(null);
@@ -695,19 +733,24 @@ function KidPortal({
                   {t('readOnlyGoogleBlock')}
                 </div>
               ) : (
-                <button
-                  onClick={() => {
-                    const email = prompt(t('enterGoogleEmailPrompt'), "kid@gmail.com");
-                    if (email) {
-                      const mockToken = "google-mock-" + email.replace(/[^a-zA-Z0-9]/g, "");
-                      onLinkGoogleAccount(mockToken);
-                    }
-                  }}
-                  type="button"
-                  className="w-full py-1.5 bg-indigo-600/20 hover:bg-indigo-650/35 text-indigo-400 text-[10px] font-black rounded-lg border border-indigo-500/30 transition-all text-center"
-                >
-                  {t('googleLinkLabel')}
-                </button>
+                <div className="space-y-2">
+                  <div id="google-link-btn-container" className="flex justify-center w-full min-h-[36px] my-1"></div>
+                  {(!window.google || !window.google.accounts) && (
+                    <button
+                      onClick={() => {
+                        const email = prompt(t('enterGoogleEmailPrompt'), "kid@gmail.com");
+                        if (email) {
+                          const mockToken = "google-mock-" + email.replace(/[^a-zA-Z0-9]/g, "");
+                          onLinkGoogleAccount(mockToken);
+                        }
+                      }}
+                      type="button"
+                      className="w-full py-1.5 bg-indigo-600/10 hover:bg-indigo-650/20 text-indigo-400 text-[10px] font-black rounded-lg border border-indigo-500/20 border-dashed transition-all text-center"
+                    >
+                      🤖 {t('enterGoogleSandbox')} (Sandbox Fallback)
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           </div>
