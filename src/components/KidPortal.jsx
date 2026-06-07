@@ -96,6 +96,8 @@ function KidPortal({
 
   // TTS Voice Synthesis States and Functions
   const [speakingTaskId, setSpeakingTaskId] = useState(null);
+  const [showCompletedHistory, setShowCompletedHistory] = useState(false);
+  const [showBackpackHistory, setShowBackpackHistory] = useState(false);
 
   const handleSpeak = (item, type = 'task') => {
     if (!('speechSynthesis' in window)) {
