@@ -52,6 +52,7 @@ function ParentPortal({
 }) {
   const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState('audit');
+  const [showHistoryLogs, setShowHistoryLogs] = useState(false);
   
   // Workshop Form State
   const [showAddForm, setShowAddForm] = useState(false);
@@ -824,6 +825,78 @@ function ParentPortal({
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </div>
+
+          {/* Collapsible History Section */}
+          <div className="border-t border-white/10 pt-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
+                <Database className="h-5 w-5 text-cyan-400" />
+                {language === 'zh' ? '歷史審核與核銷紀錄' : 'History Logs'}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowHistoryLogs(prev => !prev)}
+                className="px-3 py-1 bg-white/5 border border-white/10 hover:bg-white/10 text-xs font-bold rounded-lg text-slate-300 transition-all"
+              >
+                {showHistoryLogs ? (language === 'zh' ? '隱藏' : 'Hide') : (language === 'zh' ? '展開' : 'Expand')}
+              </button>
+            </div>
+
+            {showHistoryLogs && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-success">
+                {/* Completed Tasks History */}
+                <div className="glass-panel p-5 space-y-4 bg-slate-950/20">
+                  <h4 className="text-sm font-extrabold text-slate-350 flex items-center gap-2 border-b border-white/5 pb-2">
+                    ✅ {language === 'zh' ? '已完成任務歷史' : 'Completed Quests'}
+                  </h4>
+                  {tasks.filter(t => t.status === '已完成').length === 0 ? (
+                    <p className="text-xs text-slate-500 text-center py-6">{language === 'zh' ? '無已完成的任務紀錄。' : 'No completed quest records.'}</p>
+                  ) : (
+                    <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
+                      {tasks.filter(t => t.status === '已完成').map(task => (
+                        <div key={task.id} className="p-3 bg-white/5 border border-white/5 rounded-xl space-y-1">
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="font-bold text-slate-200">{task.name}</span>
+                            <span className="text-[10px] text-slate-500">{task.dateCreated}</span>
+                          </div>
+                          <p className="text-[11px] text-slate-400 leading-normal">{task.description}</p>
+                          <div className="flex items-center justify-between text-[9px] text-emerald-450 font-bold mt-1">
+                            <span>{language === 'zh' ? '指派給：' : 'Assigned to: '}{children.find(c => c.id === task.assignedTo)?.name || '通用'}</span>
+                            <span>+{task.expReward} EXP | 🪙 {task.goldReward}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Redeemed Cards History */}
+                <div className="glass-panel p-5 space-y-4 bg-slate-950/20">
+                  <h4 className="text-sm font-extrabold text-slate-350 flex items-center gap-2 border-b border-white/5 pb-2">
+                    🎫 {language === 'zh' ? '已核銷獎勵歷史' : 'Redeemed Cards'}
+                  </h4>
+                  {redeemLogs.length === 0 ? (
+                    <p className="text-xs text-slate-500 text-center py-6">{language === 'zh' ? '無已核銷的獎勵紀錄。' : 'No redeemed card records.'}</p>
+                  ) : (
+                    <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
+                      {redeemLogs.map(log => (
+                        <div key={log.id} className="p-3 bg-white/5 border border-white/5 rounded-xl space-y-1">
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="font-bold text-slate-200">{log.cardName}</span>
+                            <span className="text-[10px] text-slate-500">{log.dateRedeemed}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium pt-1">
+                            <span>{language === 'zh' ? '使用者：' : 'User: '}<strong className="text-cyan-400">{log.kidName}</strong></span>
+                            <span>{language === 'zh' ? '審核者：' : 'Reviewer: '}<strong className="text-slate-350">{log.reviewer || '系統'}</strong></span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>

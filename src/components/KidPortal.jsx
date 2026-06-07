@@ -894,124 +894,277 @@ function KidPortal({
       {/* --- Tab 2: Adventure Tasks Board (Empty states & validation added) --- */}
       {activeSubTab === 'tasks' && (() => {
         const totalAvailableTasks = tasks.filter(t => t.status !== '已完成' && (!t.assignedTo || t.assignedTo === stats.id)).length;
+        const completedTasks = tasks.filter(t => t.status === '已完成' && (!t.assignedTo || t.assignedTo === stats.id));
+
+        let activeContent = null;
 
         if (totalAvailableTasks === 0) {
-          return (
-            <div className="space-y-4 animate-success">
-              <div className="flex items-center justify-between border-b border-[#35363A] pb-3">
-                <div className="flex items-center gap-2">
-                  <Compass className="h-5 w-5 text-[#3661FF]" />
-                  <h3 className="text-md font-black text-slate-850">{t('questBoard')} ({t('activeSlots')}: 0/5)</h3>
-                </div>
-                <span className="text-xs text-slate-400 font-bold">
-                  {t('weeklyBalanceIndex')}：<span className="text-[#00E676]">{balancedIndex} 分</span>
-                </span>
+          activeContent = (
+            <div className="empty-state-card glass-panel text-center p-12 space-y-4">
+              <div className="text-6xl animate-float">🗺️</div>
+              <h4 className="text-lg font-black text-slate-200">{t('selfDrawQuestsTitle')}</h4>
+              <p className="text-xs text-slate-400 max-w-md mx-auto leading-normal">
+                {t('selfDrawQuestsDesc')}
+              </p>
+              <div className="flex justify-center gap-3 my-4 flex-wrap">
+                <span className="px-2.5 py-1 rounded-full text-xs font-black border border-[#16a34a]/30 bg-[#16a34a]/10 text-[#16a34a] shadow-[0_0_10px_rgba(22,163,74,0.1)]">德 (Responsibility)</span>
+                <span className="px-2.5 py-1 rounded-full text-xs font-black border border-[#0284c7]/30 bg-[#0284c7]/10 text-[#0284c7] shadow-[0_0_10px_rgba(2,132,199,0.1)]">智 (Wisdom)</span>
+                <span className="px-2.5 py-1 rounded-full text-xs font-black border border-[#ea580c]/30 bg-[#ea580c]/10 text-[#ea580c] shadow-[0_0_10px_rgba(234,88,12,0.1)]">體 (Courage)</span>
+                <span className="px-2.5 py-1 rounded-full text-xs font-black border border-[#db2777]/30 bg-[#db2777]/10 text-[#db2777] shadow-[0_0_10px_rgba(219,39,119,0.1)]">群 (Empathy)</span>
+                <span className="px-2.5 py-1 rounded-full text-xs font-black border border-[#7c3aed]/30 bg-[#7c3aed]/10 text-[#7c3aed] shadow-[0_0_10px_rgba(124,58,237,0.1)]">美 (Creativity)</span>
               </div>
-              <div className="empty-state-card glass-panel text-center p-12 space-y-4">
-                <div className="text-6xl animate-float">🗺️</div>
-                <h4 className="text-lg font-black text-slate-200">{t('selfDrawQuestsTitle')}</h4>
-                <p className="text-xs text-slate-400 max-w-md mx-auto leading-normal">
-                  {t('selfDrawQuestsDesc')}
+              {!isReadOnly ? (
+                <button
+                  onClick={handleSelfDrawQuests}
+                  className="px-6 py-2.5 rounded-[4px] text-xs font-black bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white transition-all shadow-lg hover:shadow-cyan-500/20 active:scale-95"
+                >
+                  {t('selfDrawQuestsBtn')}
+                </button>
+              ) : (
+                <p className="text-xs text-slate-500 italic">
+                  {t('readOnlyGoogleBlock')}
                 </p>
-                <div className="flex justify-center gap-3 my-4 flex-wrap">
-                  <span className="px-2.5 py-1 rounded-full text-xs font-black border border-[#16a34a]/30 bg-[#16a34a]/10 text-[#16a34a] shadow-[0_0_10px_rgba(22,163,74,0.1)]">德 (Responsibility)</span>
-                  <span className="px-2.5 py-1 rounded-full text-xs font-black border border-[#0284c7]/30 bg-[#0284c7]/10 text-[#0284c7] shadow-[0_0_10px_rgba(2,132,199,0.1)]">智 (Wisdom)</span>
-                  <span className="px-2.5 py-1 rounded-full text-xs font-black border border-[#ea580c]/30 bg-[#ea580c]/10 text-[#ea580c] shadow-[0_0_10px_rgba(234,88,12,0.1)]">體 (Courage)</span>
-                  <span className="px-2.5 py-1 rounded-full text-xs font-black border border-[#db2777]/30 bg-[#db2777]/10 text-[#db2777] shadow-[0_0_10px_rgba(219,39,119,0.1)]">群 (Empathy)</span>
-                  <span className="px-2.5 py-1 rounded-full text-xs font-black border border-[#7c3aed]/30 bg-[#7c3aed]/10 text-[#7c3aed] shadow-[0_0_10px_rgba(124,58,237,0.1)]">美 (Creativity)</span>
-                </div>
-                {!isReadOnly ? (
-                  <button
-                    onClick={handleSelfDrawQuests}
-                    className="px-6 py-2.5 rounded-[4px] text-xs font-black bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white transition-all shadow-lg hover:shadow-cyan-500/20 active:scale-95"
-                  >
-                    {t('selfDrawQuestsBtn')}
-                  </button>
-                ) : (
-                  <p className="text-xs text-slate-500 italic">
-                    {t('readOnlyGoogleBlock')}
-                  </p>
-                )}
-              </div>
+              )}
             </div>
+          );
+        } else if (drawnTaskIds.length === 0) {
+          activeContent = (
+            <div className="empty-state-card glass-panel text-center p-12 space-y-4">
+              <div className="text-6xl animate-float">🎲</div>
+              <h4 className="text-lg font-black text-slate-200">{t('noQuestsTitle')}</h4>
+              <p className="text-xs text-slate-400 max-w-sm mx-auto leading-normal">
+                {t('drawQuestsDesc')}
+              </p>
+              {!isReadOnly && (
+                <button
+                  onClick={handleDrawOrRefresh}
+                  className="px-6 py-2.5 rounded-[4px] text-xs font-black bg-[#00E676] hover:bg-[#00c867] text-[#111216] transition-colors shadow-lg"
+                >
+                  {t('drawDailyQuestsBtn')}
+                </button>
+              )}
+            </div>
+          );
+        } else if (activeTasksList.length === 0) {
+          activeContent = (
+            <div className="empty-state-card glass-panel text-center p-12 space-y-4">
+              <div className="text-6xl flex justify-center">🎉</div>
+              <h4 className="text-lg font-black text-[#00E676]">{t('questsCompletedTitle')}</h4>
+              <p className="text-xs text-slate-400 max-w-sm mx-auto leading-normal">
+                {t('questsCompletedDesc')}
+              </p>
+              {!isReadOnly && (
+                <button
+                  onClick={handleDrawOrRefresh}
+                  className="px-6 py-2.5 rounded-[4px] text-xs font-black bg-[#3661FF] hover:bg-[#4e75ff] text-white transition-colors shadow-lg"
+                >
+                  {t('drawMoreQuestsBtn')}
+                </button>
+              )}
+            </div>
+          );
+        } else {
+          activeContent = (
+            <>
+              <div className="text-[10px] text-slate-500 font-bold mb-3">
+                {t('refreshQuestsTip')}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {activeTasksList.map((task) => {
+                  const isSubmitting = submittingTaskId === task.id;
+                  const hasCorrection = task.status === '進行中' && task.rejectionReason;
+
+                  return (
+                    <div 
+                      key={task.id} 
+                      className={`glass-panel p-5 border transition-all flex flex-col justify-between gap-4 relative ${
+                        hasCorrection 
+                          ? 'border-rose-500/30 bg-rose-500/5' 
+                          : task.status === '待覆核' 
+                            ? 'border-amber-500/20 bg-amber-500/5 opacity-80' 
+                            : 'border-white/5 hover:border-violet-500/20'
+                      }`}
+                    >
+                      {/* V2 Loading Block overlay during API simulation */}
+                      {isSubmitting && isSubmittingApi && (
+                        <div className="loading-blocker">
+                          <div className="spinner-overlay"></div>
+                        </div>
+                      )}
+
+                      <div className="space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-md font-extrabold text-slate-200">{task.name}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleSpeak(task)}
+                                className={`p-1.5 rounded-full border transition-all ${
+                                  speakingTaskId === task.id
+                                    ? 'bg-rose-500/20 border-rose-500 text-rose-450 animate-pulse'
+                                    : 'bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10'
+                                }`}
+                                title={language === 'zh' ? '語音讀任務' : 'Read Quest Out Loud'}
+                              >
+                                {speakingTaskId === task.id ? (
+                                  <VolumeX className="h-3.5 w-3.5" />
+                                ) : (
+                                  <Volume2 className="h-3.5 w-3.5" />
+                                )}
+                              </button>
+                              {hasCorrection && (
+                                <span className="bg-rose-500 text-slate-900 px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider animate-pulse">
+                                  {t('taskStatusRejected')}
+                                </span>
+                              )}
+                              {task.status === '待覆核' && (
+                                <span className="bg-amber-500/25 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded text-[10px] font-bold">
+                                  {t('taskStatusPending')}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-slate-400 mt-1">{task.description}</p>
+                          </div>
+                          <span className={`text-xs font-bold border px-2 py-0.5 rounded-full whitespace-nowrap ${getTypeBadgeColor(task.type)}`}>
+                            {translateType(task.type)} | {t('taskDifficultyLabel')} {translateDifficulty(task.difficulty)}
+                          </span>
+                          {!isReadOnly && task.status === '進行中' && !task.rejectionReason && (() => {
+                            const candidatePool = tasks.filter(t =>
+                              (!t.assignedTo || t.assignedTo === stats.id) &&
+                              t.status === '進行中' &&
+                              !drawnTaskIds.includes(t.id)
+                            );
+                            return candidatePool.length > 0 ? (
+                              <button
+                                onClick={() => handleRerollTask(task.id)}
+                                title={language === 'zh' ? '換一個任務' : 'Swap this quest'}
+                                className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-slate-400 hover:text-violet-300 bg-white/5 hover:bg-violet-500/15 border border-white/10 hover:border-violet-500/30 rounded-lg transition-all shrink-0"
+                              >
+                                🔄 {language === 'zh' ? '換一個' : 'Swap'}
+                              </button>
+                            ) : null;
+                          })()}
+                        </div>
+
+                        {hasCorrection && (
+                          <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs mt-1">
+                            <span className="font-bold">❌ {t('parentRejectionReason')}：</span> {task.rejectionReason}
+                          </div>
+                        )}
+
+                        <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-400 bg-white/5 p-2 rounded-lg border border-white/5">
+                          <span>{t('expLabel')}：<span className="text-violet-400 font-bold">+{task.expReward} EXP</span></span>
+                          <span>{t('goldLabel')}：<span className="text-amber-400 font-bold">🪙 {task.goldReward || 50}</span></span>
+                          <span>{t('taskTypeLabel')}：<span className={getAttributeColor(task.attributeReward)}>{translateType(task.attributeReward)}</span></span>
+                          <span>{t('ticketsLabel')}：<span className="text-cyan-400 font-bold">+{task.ticketReward || 1} 🎫</span></span>
+                        </div>
+                      </div>
+
+                      {task.status !== '待覆核' && (
+                        <div className="mt-2 pt-2 border-t border-white/5">
+                          {isReadOnly ? (
+                            <div className="text-center text-slate-500 font-bold text-xs py-2 bg-slate-900/40 rounded border border-white/5">
+                              👀 {t('readOnlyTaskBlock')}
+                            </div>
+                          ) : !isSubmitting ? (
+                            <button
+                              onClick={() => setSubmittingTaskId(task.id)}
+                              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-[4px] text-xs font-black bg-[#3661FF] hover:bg-[#4e75ff] text-white transition-colors uppercase tracking-wider"
+                            >
+                              <Send className="h-3.5 w-3.5" />
+                              {t('submitReviewBtn')}
+                            </button>
+                          ) : (
+                            <div className="space-y-3">
+                              <div>
+                                <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">
+                                  {t('messageToParents')}
+                                </label>
+                                <input 
+                                  type="text"
+                                  value={submissionNotes}
+                                  onChange={(e) => setSubmissionNotes(e.target.value)}
+                                  placeholder={language === 'zh' ? "e.g. 我已經整理好了喔，乾乾淨淨！" : "e.g. I have cleaned it up!"}
+                                  className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-violet-500"
+                                />
+                              </div>
+
+                              {/* V2 Real HTML5 File Validation Input */}
+                              <div>
+                                <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">
+                                  {t('uploadProofPhoto')}
+                                </label>
+                                <input 
+                                  type="file"
+                                  accept="image/png, image/jpeg"
+                                  onChange={handlePhotoUpload}
+                                  className="w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-white/10 file:text-slate-200 hover:file:bg-white/15 file:cursor-pointer"
+                                />
+                                {photoError && (
+                                  <p className="text-[10px] text-rose-400 font-bold mt-1.5 flex items-center gap-1">
+                                    <AlertTriangle className="h-3 w-3 shrink-0" />
+                                    {photoError}
+                                  </p>
+                                )}
+                                {submissionPhoto && (
+                                  <p className="text-[10px] text-emerald-450 font-bold mt-1">
+                                    {t('photoLoaded')}
+                                  </p>
+                                )}
+                              </div>
+
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleTaskSubmit(task.id)}
+                                  disabled={isSubmittingApi}
+                                  className="flex-1 py-1.5 rounded-[4px] text-xs font-black bg-[#00E676] hover:bg-[#00c867] text-[#111216] transition-colors flex items-center justify-center gap-1.5"
+                                >
+                                  {isSubmittingApi && <span className="spinner-inline"></span>}
+                                  {isSubmittingApi ? t('submitting') : t('submitReviewBtn')}
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setSubmittingTaskId(null);
+                                    setSubmissionNotes('');
+                                    setSubmissionPhoto('');
+                                    setPhotoError('');
+                                  }}
+                                  className="px-3 py-1.5 rounded-[4px] text-xs font-bold bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white transition-colors"
+                                >
+                                  {t('cancel')}
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           );
         }
 
-        if (drawnTaskIds.length === 0) {
-          return (
-            <div className="space-y-4 animate-success">
-              <div className="flex items-center justify-between border-b border-[#35363A] pb-3">
-                <div className="flex items-center gap-2">
-                  <Compass className="h-5 w-5 text-[#3661FF]" />
-                  <h3 className="text-md font-black text-slate-850">{t('questBoard')} ({t('activeSlots')}: 0/5)</h3>
-                </div>
-                <span className="text-xs text-slate-400 font-bold">
-                  {t('weeklyBalanceIndex')}：<span className="text-[#00E676]">{balancedIndex} 分</span>
-                </span>
-              </div>
-              <div className="empty-state-card glass-panel text-center p-12 space-y-4">
-                <div className="text-6xl animate-float">🎲</div>
-                <h4 className="text-lg font-black text-slate-200">{t('noQuestsTitle')}</h4>
-                <p className="text-xs text-slate-400 max-w-sm mx-auto leading-normal">
-                  {t('drawQuestsDesc')}
-                </p>
-                {!isReadOnly && (
-                  <button
-                    onClick={handleDrawOrRefresh}
-                    className="px-6 py-2.5 rounded-[4px] text-xs font-black bg-[#00E676] hover:bg-[#00c867] text-[#111216] transition-colors shadow-lg"
-                  >
-                    {t('drawDailyQuestsBtn')}
-                  </button>
-                )}
-              </div>
-            </div>
-          );
-        }
-
-        if (activeTasksList.length === 0) {
-          return (
-            <div className="space-y-4 animate-success">
-              <div className="flex items-center justify-between border-b border-[#35363A] pb-3">
-                <div className="flex items-center gap-2">
-                  <Compass className="h-5 w-5 text-[#3661FF]" />
-                  <h3 className="text-md font-black text-slate-850">{t('questBoard')} ({t('activeSlots')}: 0/5)</h3>
-                </div>
-                <span className="text-xs text-slate-400 font-bold">
-                  {t('weeklyBalanceIndex')}：<span className="text-[#00E676]">{balancedIndex} 分</span>
-                </span>
-              </div>
-              <div className="empty-state-card glass-panel text-center p-12 space-y-4">
-                <div className="text-6xl">🎉</div>
-                <h4 className="text-lg font-black text-[#00E676]">{t('questsCompletedTitle')}</h4>
-                <p className="text-xs text-slate-400 max-w-sm mx-auto leading-normal">
-                  {t('questsCompletedDesc')}
-                </p>
-                {!isReadOnly && (
-                  <button
-                    onClick={handleDrawOrRefresh}
-                    className="px-6 py-2.5 rounded-[4px] text-xs font-black bg-[#3661FF] hover:bg-[#4e75ff] text-white transition-colors shadow-lg"
-                  >
-                    {t('drawMoreQuestsBtn')}
-                  </button>
-                )}
-              </div>
-            </div>
-          );
-        }
+        const activeSlotsCount = activeTasksList.filter(t => t.status === '進行中' || t.status === '需修正').length;
 
         return (
           <div className="space-y-4 animate-success">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#35363A] pb-3">
               <div className="flex items-center gap-2">
                 <Compass className="h-5 w-5 text-[#3661FF]" />
-                <h3 className="text-md font-black text-slate-850">{t('questBoard')} ({t('activeSlots')}: {activeTasksList.filter(t => t.status === '進行中' || t.status === '需修正').length}/5)</h3>
+                <h3 className="text-md font-black text-slate-850">
+                  {t('questBoard')} ({t('activeSlots')}: {activeSlotsCount}/5)
+                </h3>
               </div>
               
               <div className="flex flex-wrap items-center gap-3">
                 <span className="text-xs text-slate-400 font-semibold">
                   {t('weeklyBalanceIndex')}：<span className="text-[#00E676] font-bold">{balancedIndex} 分</span>
                 </span>
-                {!isReadOnly && (
+                {!isReadOnly && totalAvailableTasks > 0 && (
                   <button
                     onClick={handleDrawOrRefresh}
                     className="flex items-center gap-1.5 px-3 py-1 bg-[#252529] border border-[#35363A] rounded-[4px] text-xs font-black text-slate-200 hover:text-white hover:bg-[#35363A] transition-all"
@@ -1022,188 +1175,59 @@ function KidPortal({
                 )}
               </div>
             </div>
-            
-            <div className="text-[10px] text-slate-500 font-bold">
-              {t('refreshQuestsTip')}
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {activeTasksList.map((task) => {
-                const isSubmitting = submittingTaskId === task.id;
-                const hasCorrection = task.status === '進行中' && task.rejectionReason;
+            {activeContent}
 
-                return (
-                  <div 
-                    key={task.id} 
-                    className={`glass-panel p-5 border transition-all flex flex-col justify-between gap-4 relative ${
-                      hasCorrection 
-                        ? 'border-rose-500/30 bg-rose-500/5' 
-                        : task.status === '待覆核' 
-                          ? 'border-amber-500/20 bg-amber-500/5 opacity-80' 
-                          : 'border-white/5 hover:border-violet-500/20'
-                    }`}
-                  >
-                    {/* V2 Loading Block overlay during API simulation */}
-                    {isSubmitting && isSubmittingApi && (
-                      <div className="loading-blocker">
-                        <div className="spinner-overlay"></div>
-                      </div>
-                    )}
+            {/* Collapsible Completed Quests History Section */}
+            <div className="border-t border-white/10 pt-6 space-y-4 mt-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-extrabold text-slate-200 flex items-center gap-2 uppercase tracking-wider">
+                  ✅ {language === 'zh' ? '已完成冒險任務歷史' : 'Completed Quests History'}
+                  {completedTasks.length > 0 && (
+                    <span className="bg-[#00E676]/15 text-[#00E676] px-1.5 py-0.5 rounded text-[10px] font-black border border-[#00E676]/20">
+                      {completedTasks.length}
+                    </span>
+                  )}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowCompletedHistory(prev => !prev)}
+                  className="px-3 py-1 bg-white/5 border border-white/10 hover:bg-white/10 text-xs font-bold rounded-lg text-slate-350 transition-all"
+                >
+                  {showCompletedHistory ? (language === 'zh' ? '隱藏' : 'Hide') : (language === 'zh' ? '展開' : 'Expand')}
+                </button>
+              </div>
 
-                    <div className="space-y-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-md font-extrabold text-slate-200">{task.name}</span>
-                            <button
-                              type="button"
-                              onClick={() => handleSpeak(task)}
-                              className={`p-1.5 rounded-full border transition-all ${
-                                speakingTaskId === task.id
-                                  ? 'bg-rose-500/20 border-rose-500 text-rose-450 animate-pulse'
-                                  : 'bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10'
-                              }`}
-                              title={language === 'zh' ? '語音讀任務' : 'Read Quest Out Loud'}
-                            >
-                              {speakingTaskId === task.id ? (
-                                <VolumeX className="h-3.5 w-3.5" />
-                              ) : (
-                                <Volume2 className="h-3.5 w-3.5" />
-                              )}
-                            </button>
-                            {hasCorrection && (
-                              <span className="bg-rose-500 text-slate-900 px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider animate-pulse">
-                                {t('taskStatusRejected')}
-                              </span>
-                            )}
-                            {task.status === '待覆核' && (
-                              <span className="bg-amber-500/25 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded text-[10px] font-bold">
-                                {t('taskStatusPending')}
-                              </span>
-                            )}
+              {showCompletedHistory && (
+                <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 animate-success">
+                  {completedTasks.length === 0 ? (
+                    <p className="text-xs text-slate-500 text-center py-6">{language === 'zh' ? '無已完成的任務紀錄。' : 'No completed quest records.'}</p>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {completedTasks.map(task => (
+                        <div key={task.id} className="p-3 bg-white/5 border border-white/5 rounded-xl space-y-1">
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="font-bold text-slate-200">{task.name}</span>
+                            <span className="text-[10px] text-slate-550">{task.dateCreated}</span>
                           </div>
-                          <p className="text-xs text-slate-400 mt-1">{task.description}</p>
+                          <p className="text-[11px] text-slate-400 leading-normal">{task.description}</p>
+                          <div className="flex items-center justify-between text-[9px] text-[#00E676] font-bold mt-1.5">
+                            <span className={`px-1.5 py-0.5 rounded border ${getTypeBadgeColor(task.type)} text-[8px]`}>
+                              {translateType(task.type)} | {translateDifficulty(task.difficulty)}
+                            </span>
+                            <span>+{task.expReward} EXP | 🪙 {task.goldReward}</span>
+                          </div>
                         </div>
-                        <span className={`text-xs font-bold border px-2 py-0.5 rounded-full whitespace-nowrap ${getTypeBadgeColor(task.type)}`}>
-                          {translateType(task.type)} | {t('taskDifficultyLabel')} {translateDifficulty(task.difficulty)}
-                        </span>
-                        {!isReadOnly && task.status === '進行中' && !task.rejectionReason && (() => {
-                          const candidatePool = tasks.filter(t =>
-                            (!t.assignedTo || t.assignedTo === stats.id) &&
-                            t.status === '進行中' &&
-                            !drawnTaskIds.includes(t.id)
-                          );
-                          return candidatePool.length > 0 ? (
-                            <button
-                              onClick={() => handleRerollTask(task.id)}
-                              title={language === 'zh' ? '換一個任務' : 'Swap this quest'}
-                              className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-slate-400 hover:text-violet-300 bg-white/5 hover:bg-violet-500/15 border border-white/10 hover:border-violet-500/30 rounded-lg transition-all shrink-0"
-                            >
-                              🔄 {language === 'zh' ? '換一個' : 'Swap'}
-                            </button>
-                          ) : null;
-                        })()}
-                      </div>
-
-                      {hasCorrection && (
-                        <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs mt-1">
-                          <span className="font-bold">❌ {t('parentRejectionReason')}：</span> {task.rejectionReason}
-                        </div>
-                      )}
-
-                      <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-400 bg-white/5 p-2 rounded-lg border border-white/5">
-                        <span>{t('expLabel')}：<span className="text-violet-400 font-bold">+{task.expReward} EXP</span></span>
-                        <span>{t('goldLabel')}：<span className="text-amber-400 font-bold">🪙 {task.goldReward || 50}</span></span>
-                        <span>{t('taskTypeLabel')}：<span className={getAttributeColor(task.attributeReward)}>{translateType(task.attributeReward)}</span></span>
-                        <span>{t('ticketsLabel')}：<span className="text-cyan-400 font-bold">+{task.ticketReward || 1} 🎫</span></span>
-                      </div>
+                      ))}
                     </div>
-
-                    {task.status !== '待覆核' && (
-                      <div className="mt-2 pt-2 border-t border-white/5">
-                        {isReadOnly ? (
-                          <div className="text-center text-slate-500 font-bold text-xs py-2 bg-slate-900/40 rounded border border-white/5">
-                            👀 {t('readOnlyTaskBlock')}
-                          </div>
-                        ) : !isSubmitting ? (
-                          <button
-                            onClick={() => setSubmittingTaskId(task.id)}
-                            className="w-full flex items-center justify-center gap-1.5 py-2 rounded-[4px] text-xs font-black bg-[#3661FF] hover:bg-[#4e75ff] text-white transition-colors uppercase tracking-wider"
-                          >
-                            <Send className="h-3.5 w-3.5" />
-                            {t('submitReviewBtn')}
-                          </button>
-                        ) : (
-                          <div className="space-y-3">
-                            <div>
-                              <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">
-                                {t('messageToParents')}
-                              </label>
-                              <input 
-                                type="text"
-                                value={submissionNotes}
-                                onChange={(e) => setSubmissionNotes(e.target.value)}
-                                placeholder={language === 'zh' ? "e.g. 我已經整理好了喔，乾乾淨淨！" : "e.g. I have cleaned it up!"}
-                                className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-violet-500"
-                              />
-                            </div>
-
-                            {/* V2 Real HTML5 File Validation Input */}
-                            <div>
-                              <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">
-                                {t('uploadProofPhoto')}
-                              </label>
-                              <input 
-                                type="file"
-                                accept="image/png, image/jpeg"
-                                onChange={handlePhotoUpload}
-                                className="w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-white/10 file:text-slate-200 hover:file:bg-white/15 file:cursor-pointer"
-                              />
-                              {photoError && (
-                                <p className="text-[10px] text-rose-400 font-bold mt-1.5 flex items-center gap-1">
-                                  <AlertTriangle className="h-3 w-3 shrink-0" />
-                                  {photoError}
-                                </p>
-                              )}
-                              {submissionPhoto && (
-                                <p className="text-[10px] text-emerald-400 font-bold mt-1">
-                                  {t('photoLoaded')}
-                                </p>
-                              )}
-                            </div>
-
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => handleTaskSubmit(task.id)}
-                                disabled={isSubmittingApi}
-                                className="flex-1 py-1.5 rounded-[4px] text-xs font-black bg-[#00E676] hover:bg-[#00c867] text-[#111216] transition-colors flex items-center justify-center gap-1.5"
-                              >
-                                {isSubmittingApi && <span className="spinner-inline"></span>}
-                                {isSubmittingApi ? t('submitting') : t('submitReviewBtn')}
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setSubmittingTaskId(null);
-                                  setSubmissionNotes('');
-                                  setSubmissionPhoto('');
-                                  setPhotoError('');
-                                }}
-                                className="px-3 py-1.5 rounded-[4px] text-xs font-bold bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white transition-colors"
-                              >
-                                {t('cancel')}
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                  )}
+                </div>
+              )}
             </div>
           </div>
         );
       })()}
+
 
       {/* --- Tab 3: Gacha (Drawing Cards with locked loading button states) --- */}
       {activeSubTab === 'gacha' && (
@@ -1291,132 +1315,193 @@ function KidPortal({
         </div>
       )}
 
-      {/* --- Tab 4: Backpack (Inventory with empty states) --- */}
-      {activeSubTab === 'backpack' && (
-        <div className="space-y-6 animate-success">
-          {/* Animated 3D Interactive Backpack Header Console */}
-          <div className="backpack-container">
-            <div className="backpack-icon-wrapper">
-              <span className="backpack-icon">🎒</span>
-              <span className="absolute -top-1 -right-1 bg-indigo-500 text-slate-100 text-[10px] font-black px-2 py-0.5 rounded-full border border-slate-900 shadow-md">
-                {inventory.filter(i => i.status === '未使用').length}
-              </span>
+            {activeSubTab === 'backpack' && (() => {
+        const activeInventory = inventory.filter(i => i.status === '未使用' || i.status === '待核銷' || (i.status === '已使用' && i.type === '收藏卡'));
+        const historyInventory = inventory.filter(i => (i.status === '已使用' && i.type !== '收藏卡') || i.status === '已過期');
+
+        return (
+          <div className="space-y-6 animate-success">
+            {/* Animated 3D Interactive Backpack Header Console */}
+            <div className="backpack-container">
+              <div className="backpack-icon-wrapper">
+                <span className="backpack-icon">🎒</span>
+                <span className="absolute -top-1 -right-1 bg-indigo-500 text-slate-100 text-[10px] font-black px-2 py-0.5 rounded-full border border-slate-900 shadow-md">
+                  {inventory.filter(i => i.status === '未使用').length}
+                </span>
+              </div>
+              <h3 className="text-lg font-black text-slate-100 uppercase tracking-widest relative z-10 flex items-center gap-2">
+                {t('myBackpack')}
+              </h3>
             </div>
-            <h3 className="text-lg font-black text-slate-100 uppercase tracking-widest relative z-10 flex items-center gap-2">
-              {t('myBackpack')}
-            </h3>
-          </div>
 
-          {/* V2 Empty State for Inventory */}
-          {inventory.length === 0 ? (
-            <div className="empty-state-card glass-panel p-8 text-center">
-              <div className="empty-state-icon">🎒</div>
-              <h4 className="text-md font-bold text-slate-300">{t('backpackEmpty')}</h4>
-              <p className="text-xs text-slate-500 mt-2 max-w-sm mx-auto leading-normal">
-                {t('backpackEmptyDesc')}
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {inventory.map((item, idx) => {
-                const isExpired = item.status === '已過期';
-                const isRedeeming = item.inventoryId === redeemingId;
-                return (
-                  <div 
-                    key={item.inventoryId}
-                    style={{ animationDelay: `${idx * 80}ms` }}
-                    className={`glass-panel p-5 border-2 flex flex-col justify-between gap-4 bg-gradient-to-b from-slate-900 to-slate-950 animate-backpack-item ${
-                      isRedeeming ? 'item-redeeming' : ''
-                    } ${
-                      isExpired ? 'border-white/5 opacity-55' : getRarityClass(item.rarity)
-                    }`}
-                  >
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className={`px-2 py-0.5 text-[9px] font-black rounded-md uppercase tracking-wider ${
-                          isExpired ? 'bg-slate-800 text-slate-500 border border-slate-700' : getRarityBadge(item.rarity)
-                        }`}>
-                          {item.rarity}
-                        </span>
-                        <span className="text-[10px] text-slate-500">{item.dateAcquired}</span>
-                      </div>
-
-                      <h4 className={`text-md font-bold ${isExpired ? 'text-slate-500 line-through' : 'text-slate-100'}`}>
-                        {item.name}
-                      </h4>
-                      <p className="text-xs text-slate-400">{item.desc}</p>
-                      {item.expireAt && (
-                        <p className={`text-[10px] font-bold ${isExpired ? 'text-rose-500' : 'text-slate-500'}`}>
-                          {t('expiryDate')}: {item.expireAt} {isExpired && `(${t('cardExpired')})`}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="flex items-center justify-between gap-2 border-t border-white/5 pt-3 mt-1">
-                      
-                      <div className="flex items-center gap-1">
-                        {item.status === '未使用' && <Clock className="h-3.5 w-3.5 text-cyan-400" />}
-                        {item.status === '待核銷' && <Clock className="h-3.5 w-3.5 text-amber-400 animate-pulse" />}
-                        {item.status === '已使用' && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />}
-                        {item.status === '已過期' && <Ban className="h-3.5 w-3.5 text-rose-500" />}
-                        <span className={`text-xs font-bold ${
-                          item.status === '未使用' ? 'text-cyan-400' :
-                          item.status === '待核銷' ? 'text-amber-400' :
-                          item.status === '已使用' ? 'text-emerald-400' : 'text-rose-500'
-                        }`}>
-                          {item.status === '未使用' ? t('voucherStatusUnused') :
-                           item.status === '待核銷' ? t('voucherStatusPending') :
-                           item.status === '已使用' ? t('voucherStatusUsed') :
-                           t('voucherStatusExpired')}
-                        </span>
-                      </div>
-
-                      {item.status === '未使用' && (
-                        isReadOnly ? (
-                          <span className="text-[10px] text-slate-500 italic">
-                            {t('readOnlyTag')}
+            {/* Active Items Area */}
+            {activeInventory.length === 0 ? (
+              <div className="empty-state-card glass-panel p-8 text-center">
+                <div className="empty-state-icon">🎒</div>
+                <h4 className="text-md font-bold text-slate-300">{t('backpackEmpty')}</h4>
+                <p className="text-xs text-slate-500 mt-2 max-w-sm mx-auto leading-normal">
+                  {t('backpackEmptyDesc')}
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {activeInventory.map((item, idx) => {
+                  const isExpired = item.status === '已過期';
+                  const isRedeeming = item.inventoryId === redeemingId;
+                  return (
+                    <div 
+                      key={item.inventoryId}
+                      style={{ animationDelay: `${idx * 80}ms` }}
+                      className={`glass-panel p-5 border-2 flex flex-col justify-between gap-4 bg-gradient-to-b from-slate-900 to-slate-950 animate-backpack-item ${
+                        isRedeeming ? 'item-redeeming' : ''
+                      } ${
+                        isExpired ? 'border-white/5 opacity-55' : getRarityClass(item.rarity)
+                      }`}
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className={`px-2 py-0.5 text-[9px] font-black rounded-md uppercase tracking-wider ${
+                            isExpired ? 'bg-slate-800 text-slate-500 border border-slate-700' : getRarityBadge(item.rarity)
+                          }`}>
+                            {item.rarity}
                           </span>
-                        ) : item.type === '收藏卡' ? (
-                          <button
-                            onClick={() => onToggleEquip(item.inventoryId)}
-                            className="px-3 py-1 bg-[#00E676] text-[#111216] hover:bg-[#00c867] text-xs font-black rounded-[4px] transition-colors"
-                          >
-                            {language === 'zh' ? '佩戴展示' : 'Display'}
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleRedeemClick(item.inventoryId, false)}
-                            className="px-3 py-1 bg-[#3661FF] text-white hover:bg-[#4e75ff] text-xs font-black rounded-[4px] transition-colors"
-                          >
-                            {language === 'zh' ? '出示核銷' : 'Use'}
-                          </button>
-                        )
-                      )}
+                          <span className="text-[10px] text-slate-500">{item.dateAcquired}</span>
+                        </div>
 
-                      {item.status === '已使用' && item.type === '收藏卡' && (
-                        isReadOnly ? null : (
-                          <button
-                            onClick={() => onToggleEquip(item.inventoryId)}
-                            className="px-3 py-1 bg-[#FF4747] text-white hover:bg-rose-700 text-xs font-black rounded-[4px] transition-colors"
-                          >
-                            {language === 'zh' ? '取下徽章' : 'Unequip'}
-                          </button>
-                        )
-                      )}
+                        <h4 className={`text-md font-bold ${isExpired ? 'text-slate-500 line-through' : 'text-slate-100'}`}>
+                          {item.name}
+                        </h4>
+                        <p className="text-xs text-slate-400">{item.desc}</p>
+                        {item.expireAt && (
+                          <p className={`text-[10px] font-bold ${isExpired ? 'text-rose-500' : 'text-slate-500'}`}>
+                            {t('expiryDate')}: {item.expireAt} {isExpired && `(${t('cardExpired')})`}
+                          </p>
+                        )}
+                      </div>
 
-                      {item.status === '待核銷' && (
-                        <span className="text-[10px] text-amber-500/80 font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                          {language === 'zh' ? '等待家長審核' : 'Pending parent approval'}
-                        </span>
-                      )}
+                      <div className="flex items-center justify-between gap-2 border-t border-white/5 pt-3 mt-1">
+                        
+                        <div className="flex items-center gap-1">
+                          {item.status === '未使用' && <Clock className="h-3.5 w-3.5 text-cyan-400" />}
+                          {item.status === '待核銷' && <Clock className="h-3.5 w-3.5 text-amber-400 animate-pulse" />}
+                          {item.status === '已使用' && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />}
+                          {item.status === '已過期' && <Ban className="h-3.5 w-3.5 text-rose-500" />}
+                          <span className={`text-xs font-bold ${
+                            item.status === '未使用' ? 'text-cyan-400' :
+                            item.status === '待核銷' ? 'text-amber-400' :
+                            item.status === '已使用' ? 'text-emerald-400' : 'text-rose-500'
+                          }`}>
+                            {item.status === '未使用' ? t('voucherStatusUnused') :
+                             item.status === '待核銷' ? t('voucherStatusPending') :
+                             item.status === '已使用' ? t('voucherStatusUsed') :
+                             t('voucherStatusExpired')}
+                          </span>
+                        </div>
+
+                        {item.status === '未使用' && (
+                          isReadOnly ? (
+                            <span className="text-[10px] text-slate-500 italic">
+                              {t('readOnlyTag')}
+                            </span>
+                          ) : item.type === '收藏卡' ? (
+                            <button
+                              onClick={() => onToggleEquip(item.inventoryId)}
+                              className="px-3 py-1 bg-[#00E676] text-[#111216] hover:bg-[#00c867] text-xs font-black rounded-[4px] transition-colors"
+                            >
+                              {language === 'zh' ? '佩戴展示' : 'Display'}
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleRedeemClick(item.inventoryId, false)}
+                              className="px-3 py-1 bg-[#3661FF] text-white hover:bg-[#4e75ff] text-xs font-black rounded-[4px] transition-colors"
+                            >
+                              {language === 'zh' ? '出示核銷' : 'Use'}
+                            </button>
+                          )
+                        )}
+
+                        {item.status === '已使用' && item.type === '收藏卡' && (
+                          isReadOnly ? null : (
+                            <button
+                              onClick={() => onToggleEquip(item.inventoryId)}
+                              className="px-3 py-1 bg-[#FF4747] text-white hover:bg-rose-700 text-xs font-black rounded-[4px] transition-colors"
+                            >
+                              {language === 'zh' ? '取下徽章' : 'Unequip'}
+                            </button>
+                          )
+                        )}
+
+                        {item.status === '待核銷' && (
+                          <span className="text-[10px] text-amber-500/80 font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                            {language === 'zh' ? '等待家長審核' : 'Pending parent approval'}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Collapsible History Section for Used & Expired Items */}
+            <div className="border-t border-white/10 pt-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-extrabold text-slate-200 flex items-center gap-2 uppercase tracking-wider">
+                  🎫 {language === 'zh' ? '已核銷與失效道具歷史' : 'Redeemed & Expired Items History'}
+                  {historyInventory.length > 0 && (
+                    <span className="bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded text-[10px] font-black border border-white/5">
+                      {historyInventory.length}
+                    </span>
+                  )}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowBackpackHistory(prev => !prev)}
+                  className="px-3 py-1 bg-white/5 border border-white/10 hover:bg-white/10 text-xs font-bold rounded-lg text-slate-350 transition-all"
+                >
+                  {showBackpackHistory ? (language === 'zh' ? '隱藏' : 'Hide') : (language === 'zh' ? '展開' : 'Expand')}
+                </button>
+              </div>
+
+              {showBackpackHistory && (
+                <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 animate-success">
+                  {historyInventory.length === 0 ? (
+                    <p className="text-xs text-slate-500 text-center py-6">
+                      {language === 'zh' ? '無歷史紀錄。' : 'No history records.'}
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {historyInventory.map(item => {
+                        const isExpired = item.status === '已過期';
+                        return (
+                          <div key={item.inventoryId} className="p-3 bg-white/5 border border-white/5 rounded-xl space-y-1">
+                            <div className="flex justify-between items-center text-xs">
+                              <span className={`font-bold ${isExpired ? 'text-slate-500 line-through' : 'text-slate-300'}`}>
+                                {item.name}
+                              </span>
+                              <span className="text-[10px] text-slate-500">{item.dateAcquired}</span>
+                            </div>
+                            <p className="text-[11px] text-slate-400 leading-normal">{item.desc}</p>
+                            <div className="flex items-center justify-between text-[9px] font-bold mt-1.5 pt-1 border-t border-white/5">
+                              <span className={`px-1.5 py-0.5 rounded-md uppercase tracking-wider text-[8px] ${getRarityBadge(item.rarity)}`}>
+                                {item.rarity}
+                              </span>
+                              <span className={`text-[10px] ${isExpired ? 'text-rose-500' : 'text-emerald-450'}`}>
+                                {isExpired ? (language === 'zh' ? '已過期' : 'Expired') : (language === 'zh' ? '已核銷使用' : 'Redeemed')}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        );
+      })()}
+
 
       {/* --- Tab 5: Wishlist --- */}
       {activeSubTab === 'wishlist' && (
