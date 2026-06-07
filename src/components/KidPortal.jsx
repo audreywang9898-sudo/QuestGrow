@@ -6,7 +6,7 @@ import {
   Sparkles, Award, Compass, Shield, BookOpen, Heart, 
   Wallet, Trophy, Send, User, ChevronRight, Package, 
   CheckCircle2, Clock, Ban, Eye, AlertTriangle, Bell, Trash2,
-  Camera, Upload
+  Camera, Upload, Volume2, VolumeX
 } from 'lucide-react';
 
 const compressImage = (base64Str, maxWidth = 400, maxHeight = 400) => {
@@ -93,6 +93,53 @@ function KidPortal({
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState(stats.avatar || 'boy');
   const [avatarUploadError, setAvatarUploadError] = useState('');
+
+  // TTS Voice Synthesis States and Functions
+  const [speakingTaskId, setSpeakingTaskId] = useState(null);
+
+  const handleSpeak = (task) => {
+    if (!('speechSynthesis' in window)) {
+      alert(language === 'zh' ? '您的瀏覽器不支援語音播放功能。' : 'Your browser does not support voice playback.');
+      return;
+    }
+
+    if (speakingTaskId === task.id) {
+      window.speechSynthesis.cancel();
+      setSpeakingTaskId(null);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+
+    const textToSpeak = language === 'zh'
+      ? `冒險任務：${task.name}。 任務內容：${task.description}`
+      : `Adventure Quest: ${task.name}. Quest details: ${task.description}`;
+
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    utterance.lang = language === 'zh' ? 'zh-TW' : 'en-US';
+    utterance.rate = 0.9; // Slightly slower for younger children
+    utterance.pitch = 1.1; // Slightly higher pitch for kids
+
+    utterance.onend = () => {
+      setSpeakingTaskId(null);
+    };
+
+    utterance.onerror = () => {
+      setSpeakingTaskId(null);
+    };
+
+    setSpeakingTaskId(task.id);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Stop synthesis when component unmounts
+  React.useEffect(() => {
+    return () => {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
 
   // Google GSI linking button initializer
   React.useEffect(() => {
@@ -1008,6 +1055,22 @@ function KidPortal({
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-md font-extrabold text-slate-200">{task.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleSpeak(task)}
+                              className={`p-1.5 rounded-full border transition-all ${
+                                speakingTaskId === task.id
+                                  ? 'bg-rose-500/20 border-rose-500 text-rose-450 animate-pulse'
+                                  : 'bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10'
+                              }`}
+                              title={language === 'zh' ? '語音讀任務' : 'Read Quest Out Loud'}
+                            >
+                              {speakingTaskId === task.id ? (
+                                <VolumeX className="h-3.5 w-3.5" />
+                              ) : (
+                                <Volume2 className="h-3.5 w-3.5" />
+                              )}
+                            </button>
                             {hasCorrection && (
                               <span className="bg-rose-500 text-slate-900 px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider animate-pulse">
                                 {t('taskStatusRejected')}
