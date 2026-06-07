@@ -638,3 +638,18 @@ tr[class*="hover:bg-white/5"]:hover {
 th[class*="bg-white/5"] {
   background-color: #F8FAFC !important;
 }
+
+/* Bopomofo / Zhuyin Typography & Positioning Rules */
+ruby {
+  ruby-position: over;
+  ruby-align: center;
+}
+
+rt {
+  font-size: 0.55em;
+  color: #64748B !important; /* Muted slate gray */
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  user-select: none;
+  padding-bottom: 2px;
+}

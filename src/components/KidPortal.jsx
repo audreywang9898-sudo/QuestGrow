@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { GACHA_POOL, TASK_TEMPLATES } from '../utils/mockData';
 import { useLanguage } from './LanguageContext';
 import Avatar from './Avatar';
+import { pinyin } from 'pinyin-pro';
+import { pinyinToZhuyin } from 'pinyin-zhuyin';
 import { 
   Sparkles, Award, Compass, Shield, BookOpen, Heart, 
   Wallet, Trophy, Send, User, ChevronRight, Package, 
@@ -70,6 +72,39 @@ function KidPortal({
   onToggleEquip
 }) {
   const { t, language } = useLanguage();
+
+  const renderTextWithZhuyin = (text) => {
+    if (!text) return '';
+    if (language !== 'zh' || !stats.age || stats.age >= 8) {
+      return text;
+    }
+
+    try {
+      const pinyins = pinyin(text, { type: 'array', toneType: 'num' });
+      return (
+        <span className="inline-flex flex-wrap items-end leading-relaxed">
+          {text.split('').map((char, index) => {
+            const py = pinyins[index];
+            const isChinese = /[\u4e00-\u9fa5]/.test(char);
+            if (isChinese && py && py !== char) {
+              const zhuyin = pinyinToZhuyin(py);
+              return (
+                <ruby key={index} className="ruby-char mx-0.5">
+                  {char}
+                  <rt className="text-[10px] select-none text-slate-500 font-medium normal-case block leading-tight">{zhuyin}</rt>
+                </ruby>
+              );
+            }
+            return <span key={index}>{char}</span>;
+          })}
+        </span>
+      );
+    } catch (e) {
+      console.error('Zhuyin generation error:', e);
+      return text;
+    }
+  };
+
   const activeBadgeItem = inventory.find(i => i.type === '收藏卡' && i.status === '已使用');
   const activeBadge = activeBadgeItem ? activeBadgeItem.id : null;
   const [activeSubTab, setActiveSubTab] = useState('wishlist');
@@ -1012,7 +1047,7 @@ function KidPortal({
                         <div className="flex items-start justify-between gap-2">
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-md font-extrabold text-slate-200">{task.name}</span>
+                              <span className="text-md font-extrabold text-slate-200">{renderTextWithZhuyin(task.name)}</span>
                               <button
                                 type="button"
                                 onClick={() => handleSpeak(task)}
@@ -1040,7 +1075,7 @@ function KidPortal({
                                 </span>
                               )}
                             </div>
-                            <p className="text-xs text-slate-400 mt-1">{task.description}</p>
+                            <p className="text-xs text-slate-400 mt-1">{renderTextWithZhuyin(task.description)}</p>
                           </div>
                           <span className={`text-xs font-bold border px-2 py-0.5 rounded-full whitespace-nowrap ${getTypeBadgeColor(task.type)}`}>
                             {translateType(task.type)} | {t('taskDifficultyLabel')} {translateDifficulty(task.difficulty)}
@@ -1222,10 +1257,10 @@ function KidPortal({
                       {completedTasks.map(task => (
                         <div key={task.id} className="p-3 bg-white/5 border border-white/5 rounded-xl space-y-1">
                           <div className="flex justify-between items-center text-xs">
-                            <span className="font-bold text-slate-200">{task.name}</span>
+                            <span className="font-bold text-slate-200">{renderTextWithZhuyin(task.name)}</span>
                             <span className="text-[10px] text-slate-550">{task.dateCreated}</span>
                           </div>
-                          <p className="text-[11px] text-slate-400 leading-normal">{task.description}</p>
+                          <p className="text-[11px] text-slate-400 leading-normal">{renderTextWithZhuyin(task.description)}</p>
                           <div className="flex items-center justify-between text-[9px] text-[#00E676] font-bold mt-1.5">
                             <span className={`px-1.5 py-0.5 rounded border ${getTypeBadgeColor(task.type)} text-[8px]`}>
                               {translateType(task.type)} | {translateDifficulty(task.difficulty)}
@@ -1302,7 +1337,7 @@ function KidPortal({
 
                 <div className="space-y-1">
                   <h4 className="text-md font-black text-slate-100 flex items-center justify-center gap-1.5">
-                    {drawnCard.name}
+                    {renderTextWithZhuyin(drawnCard.name)}
                     <button
                       type="button"
                       onClick={() => handleSpeak(drawnCard, 'card')}
@@ -1324,7 +1359,7 @@ function KidPortal({
                 </div>
 
                 <p className="text-xs text-slate-300 border-t border-white/5 pt-3 leading-relaxed">
-                  {drawnCard.desc}
+                  {renderTextWithZhuyin(drawnCard.desc)}
                 </p>
               </div>
 
@@ -1402,7 +1437,7 @@ function KidPortal({
                         </div>
 
                         <h4 className={`text-md font-bold ${isExpired ? 'text-slate-500 line-through' : 'text-slate-100'} flex items-center gap-1.5`}>
-                          {item.name}
+                          {renderTextWithZhuyin(item.name)}
                           <button
                             type="button"
                             onClick={() => handleSpeak(item, 'backpack')}
@@ -1420,7 +1455,7 @@ function KidPortal({
                             )}
                           </button>
                         </h4>
-                        <p className="text-xs text-slate-400">{item.desc}</p>
+                        <p className="text-xs text-slate-400">{renderTextWithZhuyin(item.desc)}</p>
                         {item.expireAt && (
                           <p className={`text-[10px] font-bold ${isExpired ? 'text-rose-500' : 'text-slate-500'}`}>
                             {t('expiryDate')}: {item.expireAt} {isExpired && `(${t('cardExpired')})`}
@@ -1526,7 +1561,7 @@ function KidPortal({
                           <div key={item.inventoryId} className="p-3 bg-white/5 border border-white/5 rounded-xl space-y-1">
                             <div className="flex justify-between items-center text-xs">
                               <span className={`font-bold ${isExpired ? 'text-slate-500 line-through' : 'text-slate-300'} flex items-center gap-1.5`}>
-                                {item.name}
+                                {renderTextWithZhuyin(item.name)}
                                 <button
                                   type="button"
                                   onClick={() => handleSpeak(item, 'backpack')}
@@ -1546,7 +1581,7 @@ function KidPortal({
                               </span>
                               <span className="text-[10px] text-slate-500">{item.dateAcquired}</span>
                             </div>
-                            <p className="text-[11px] text-slate-400 leading-normal">{item.desc}</p>
+                            <p className="text-[11px] text-slate-400 leading-normal">{renderTextWithZhuyin(item.desc)}</p>
                             <div className="flex items-center justify-between text-[9px] font-bold mt-1.5 pt-1 border-t border-white/5">
                               <span className={`px-1.5 py-0.5 rounded-md uppercase tracking-wider text-[8px] ${getRarityBadge(item.rarity)}`}>
                                 {item.rarity}
