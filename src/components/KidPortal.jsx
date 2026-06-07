@@ -97,13 +97,15 @@ function KidPortal({
   // TTS Voice Synthesis States and Functions
   const [speakingTaskId, setSpeakingTaskId] = useState(null);
 
-  const handleSpeak = (task) => {
+  const handleSpeak = (item, type = 'task') => {
     if (!('speechSynthesis' in window)) {
       alert(language === 'zh' ? '您的瀏覽器不支援語音播放功能。' : 'Your browser does not support voice playback.');
       return;
     }
 
-    if (speakingTaskId === task.id) {
+    const itemId = item.id || item.inventoryId || 'custom-drawn';
+
+    if (speakingTaskId === itemId) {
       window.speechSynthesis.cancel();
       setSpeakingTaskId(null);
       return;
@@ -111,9 +113,20 @@ function KidPortal({
 
     window.speechSynthesis.cancel();
 
-    const textToSpeak = language === 'zh'
-      ? `冒險任務：${task.name}。 任務內容：${task.description}`
-      : `Adventure Quest: ${task.name}. Quest details: ${task.description}`;
+    let textToSpeak = '';
+    if (type === 'task') {
+      textToSpeak = language === 'zh'
+        ? `冒險任務：${item.name}。 任務內容：${item.description}`
+        : `Adventure Quest: ${item.name}. Quest details: ${item.description}`;
+    } else if (type === 'card') {
+      textToSpeak = language === 'zh'
+        ? `獲得道具卡：${item.name}。 道具效果：${item.desc || item.description}`
+        : `Obtained item card: ${item.name}. Effect: ${item.desc || item.description}`;
+    } else if (type === 'backpack') {
+      textToSpeak = language === 'zh'
+        ? `背包道具：${item.name}。 效果說明：${item.desc || item.description}`
+        : `Backpack item: ${item.name}. Description: ${item.desc || item.description}`;
+    }
 
     const utterance = new SpeechSynthesisUtterance(textToSpeak);
     utterance.lang = language === 'zh' ? 'zh-TW' : 'en-US';
@@ -128,7 +141,7 @@ function KidPortal({
       setSpeakingTaskId(null);
     };
 
-    setSpeakingTaskId(task.id);
+    setSpeakingTaskId(itemId);
     window.speechSynthesis.speak(utterance);
   };
 
@@ -1286,7 +1299,25 @@ function KidPortal({
                 </div>
 
                 <div className="space-y-1">
-                  <h4 className="text-md font-black text-slate-100">{drawnCard.name}</h4>
+                  <h4 className="text-md font-black text-slate-100 flex items-center justify-center gap-1.5">
+                    {drawnCard.name}
+                    <button
+                      type="button"
+                      onClick={() => handleSpeak(drawnCard, 'card')}
+                      className={`p-1.5 rounded-full border transition-all ${
+                        speakingTaskId === (drawnCard.id || 'custom-drawn')
+                          ? 'bg-rose-500/20 border-rose-500 text-rose-450 animate-pulse'
+                          : 'bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10'
+                      }`}
+                      title={language === 'zh' ? '語音讀卡片' : 'Read Card Out Loud'}
+                    >
+                      {speakingTaskId === (drawnCard.id || 'custom-drawn') ? (
+                        <VolumeX className="h-3.5 w-3.5" />
+                      ) : (
+                        <Volume2 className="h-3.5 w-3.5" />
+                      )}
+                    </button>
+                  </h4>
                   <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{drawnCard.type}</div>
                 </div>
 
@@ -1368,8 +1399,24 @@ function KidPortal({
                           <span className="text-[10px] text-slate-500">{item.dateAcquired}</span>
                         </div>
 
-                        <h4 className={`text-md font-bold ${isExpired ? 'text-slate-500 line-through' : 'text-slate-100'}`}>
+                        <h4 className={`text-md font-bold ${isExpired ? 'text-slate-500 line-through' : 'text-slate-100'} flex items-center gap-1.5`}>
                           {item.name}
+                          <button
+                            type="button"
+                            onClick={() => handleSpeak(item, 'backpack')}
+                            className={`p-1 rounded-full border transition-all ${
+                              speakingTaskId === item.inventoryId
+                                ? 'bg-rose-500/20 border-rose-500 text-rose-450 animate-pulse'
+                                : 'bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10'
+                            }`}
+                            title={language === 'zh' ? '語音讀道具卡' : 'Read Card Out Loud'}
+                          >
+                            {speakingTaskId === item.inventoryId ? (
+                              <VolumeX className="h-3 w-3" />
+                            ) : (
+                              <Volume2 className="h-3 w-3" />
+                            )}
+                          </button>
                         </h4>
                         <p className="text-xs text-slate-400">{item.desc}</p>
                         {item.expireAt && (
@@ -1476,8 +1523,24 @@ function KidPortal({
                         return (
                           <div key={item.inventoryId} className="p-3 bg-white/5 border border-white/5 rounded-xl space-y-1">
                             <div className="flex justify-between items-center text-xs">
-                              <span className={`font-bold ${isExpired ? 'text-slate-500 line-through' : 'text-slate-300'}`}>
+                              <span className={`font-bold ${isExpired ? 'text-slate-500 line-through' : 'text-slate-300'} flex items-center gap-1.5`}>
                                 {item.name}
+                                <button
+                                  type="button"
+                                  onClick={() => handleSpeak(item, 'backpack')}
+                                  className={`p-1 rounded-full border transition-all ${
+                                    speakingTaskId === item.inventoryId
+                                      ? 'bg-rose-500/20 border-rose-500 text-rose-450 animate-pulse'
+                                      : 'bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10'
+                                  }`}
+                                  title={language === 'zh' ? '語音讀道具卡' : 'Read Card Out Loud'}
+                                >
+                                  {speakingTaskId === item.inventoryId ? (
+                                    <VolumeX className="h-3 w-3" />
+                                  ) : (
+                                    <Volume2 className="h-3 w-3" />
+                                  )}
+                                </button>
                               </span>
                               <span className="text-[10px] text-slate-500">{item.dateAcquired}</span>
                             </div>
