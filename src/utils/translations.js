@@ -69,6 +69,13 @@ export const translations = {
     confirmReject: "確認退回",
     expiredLabel: "卡片期限:",
     expiredAlert: "(⚠️ 已過期失效，禁止核銷)",
+    bulkApproveTasksBtn: "一鍵核准所有任務",
+    bulkApproveRedeemsBtn: "一鍵核銷所有申請",
+    confirmBulkApproveTasksTitle: "確定要一鍵核准所有待審核的任務嗎？",
+    confirmBulkApproveRedeemsTitle: "確定要一鍵核銷所有待處理的申請嗎？",
+    confirmBulkApproveTasksDesc: "這將會把目前所有待審核的任務設定為『已完成』，並發放對應的經驗、金幣與屬性獎勵給孩子。此動作無法復原！",
+    confirmBulkApproveRedeemsDesc: "這將會核准所有待核銷的特權/體驗券申請，並扣除卡片、增加家庭成長積分。此動作無法復原！",
+    confirmApproveBtn: "確認核准",
 
     // Workshop
     quickImportTitle: "快速匯入系統預設模板任務",
@@ -420,6 +427,13 @@ export const translations = {
     confirmReject: "Confirm Rejection",
     expiredLabel: "Card Expiry:",
     expiredAlert: "(⚠️ Expired, use blocked)",
+    bulkApproveTasksBtn: "Approve All Tasks",
+    bulkApproveRedeemsBtn: "Approve All Vouchers",
+    confirmBulkApproveTasksTitle: "Are you sure you want to approve all pending tasks?",
+    confirmBulkApproveRedeemsTitle: "Are you sure you want to approve all pending vouchers?",
+    confirmBulkApproveTasksDesc: "This will mark all pending tasks as 'Completed' and award all EXP, Gold, and attribute rewards. This cannot be undone!",
+    confirmBulkApproveRedeemsDesc: "This will approve all pending voucher redemptions and grant family points. This cannot be undone!",
+    confirmApproveBtn: "Confirm Approve",
 
     // Workshop
     quickImportTitle: "Import Default Template Tasks",

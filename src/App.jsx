@@ -456,6 +456,32 @@ function App() {
     }
   };
 
+  const handleBulkApproveTasks = async () => {
+    const pendingTasks = tasks.filter(t => t.status === '待覆核');
+    if (pendingTasks.length === 0) return;
+    try {
+      await Promise.all(pendingTasks.map(task => api.reviewTask(task.id, 'approve')));
+      showToast('所有待核准任務已完成審核並發放獎勵！', 'success');
+      fetchAllData();
+    } catch (error) {
+      showToast(error.message || '一鍵審核任務失敗。', 'error');
+      fetchAllData();
+    }
+  };
+
+  const handleBulkApproveRedeems = async () => {
+    const pendingRedemptions = inventory.filter(i => i.status === '待核銷');
+    if (pendingRedemptions.length === 0) return;
+    try {
+      await Promise.all(pendingRedemptions.map(item => api.reviewRedeem(item.inventoryId, 'approve')));
+      showToast('所有待核銷特權已核准使用！', 'success');
+      fetchAllData();
+    } catch (error) {
+      showToast(error.message || '一鍵核銷特權失敗。', 'error');
+      fetchAllData();
+    }
+  };
+
   // --- Gacha / Card Draw ---
   const handleAwardGachaCard = async (card, costTickets = 1) => {
     try {
@@ -775,6 +801,8 @@ function App() {
             onRejectTask={handleRejectTask}
             onApproveRedeem={handleApproveRedeem}
             onRejectRedeem={handleRejectRedeem}
+            onBulkApproveTasks={handleBulkApproveTasks}
+            onBulkApproveRedeems={handleBulkApproveRedeems}
             onAddWishlist={handleAddWishlistItem}
             onEditWishlist={handleEditWishlistItem}
             onDeleteWishlist={handleDeleteWishlistItem}

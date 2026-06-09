@@ -33,6 +33,8 @@ function ParentPortal({
   onRejectTask,
   onApproveRedeem,
   onRejectRedeem,
+  onBulkApproveTasks,
+  onBulkApproveRedeems,
   onAddWishlist,
   onEditWishlist,
   onDeleteWishlist,
@@ -131,6 +133,10 @@ function ParentPortal({
 
   // Photo viewer state
   const [previewPhotoUrl, setPreviewPhotoUrl] = useState(null);
+
+  // Bulk Review Confirmation States
+  const [showBulkTasksConfirm, setShowBulkTasksConfirm] = useState(false);
+  const [showBulkRedeemsConfirm, setShowBulkRedeemsConfirm] = useState(false);
 
   const cannedReasons = [
     t('cannedReason1'),
@@ -642,14 +648,96 @@ function ParentPortal({
         );
       })()}
 
+      {showBulkTasksConfirm && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
+          <div className="glass-panel p-6 border border-[#00E676]/30 max-w-md w-full space-y-4 animate-scale-up">
+            <div className="flex items-center gap-3 text-[#00E676]">
+              <ShieldCheck className="h-6 w-6 text-[#00E676] shrink-0" />
+              <h3 className="text-lg font-black text-slate-100">
+                {t('confirmBulkApproveTasksTitle')}
+              </h3>
+            </div>
+            <p className="text-sm text-slate-300 leading-relaxed">
+              {t('confirmBulkApproveTasksDesc')}
+            </p>
+            <div className="flex gap-3 justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  onBulkApproveTasks();
+                  setShowBulkTasksConfirm(false);
+                }}
+                className="px-4 py-2 rounded-[4px] text-xs font-black bg-[#00E676] text-[#111216] hover:bg-[#00c867] transition-colors"
+              >
+                {t('confirmApproveBtn')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowBulkTasksConfirm(false)}
+                className="px-4 py-2 rounded-[4px] text-xs font-bold bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white transition-colors"
+              >
+                {t('cancel')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showBulkRedeemsConfirm && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
+          <div className="glass-panel p-6 border border-[#00E676]/30 max-w-md w-full space-y-4 animate-scale-up">
+            <div className="flex items-center gap-3 text-[#00E676]">
+              <ShieldCheck className="h-6 w-6 text-[#00E676] shrink-0" />
+              <h3 className="text-lg font-black text-slate-100">
+                {t('confirmBulkApproveRedeemsTitle')}
+              </h3>
+            </div>
+            <p className="text-sm text-slate-300 leading-relaxed">
+              {t('confirmBulkApproveRedeemsDesc')}
+            </p>
+            <div className="flex gap-3 justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  onBulkApproveRedeems();
+                  setShowBulkRedeemsConfirm(false);
+                }}
+                className="px-4 py-2 rounded-[4px] text-xs font-black bg-[#00E676] text-[#111216] hover:bg-[#00c867] transition-colors"
+              >
+                {t('confirmApproveBtn')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowBulkRedeemsConfirm(false)}
+                className="px-4 py-2 rounded-[4px] text-xs font-bold bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white transition-colors"
+              >
+                {t('cancel')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {activeTab === 'audit' && (
         <div className="space-y-6 animate-success">
           
           <div className="space-y-4">
-            <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
-              <ClipboardCheck className="h-5 w-5 text-violet-400" />
-              {t('auditTitleTasks')} ({pendingTasks.length})
-            </h3>
+            <div className="flex justify-between items-center flex-wrap gap-2">
+              <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
+                <ClipboardCheck className="h-5 w-5 text-violet-400" />
+                {t('auditTitleTasks')} ({pendingTasks.length})
+              </h3>
+              {pendingTasks.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowBulkTasksConfirm(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-xs font-black bg-[#00E676] text-[#111216] hover:bg-[#00c867] transition-all shadow-md transform hover:scale-105 active:scale-95"
+                >
+                  <Check className="h-3.5 w-3.5" />
+                  {t('bulkApproveTasksBtn')}
+                </button>
+              )}
+            </div>
 
             {pendingTasks.length === 0 ? (
               <div className="glass-panel p-8 text-center text-slate-500 text-sm">
@@ -767,10 +855,22 @@ function ParentPortal({
 
           {/* Pending Redemptions with V2 Expired warning and block protection */}
           <div className="space-y-4">
-            <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
-              <ClipboardCheck className="h-5 w-5 text-indigo-400" />
-              {t('auditTitleRedeems')} ({pendingRedemptions.length})
-            </h3>
+            <div className="flex justify-between items-center flex-wrap gap-2">
+              <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
+                <ClipboardCheck className="h-5 w-5 text-indigo-400" />
+                {t('auditTitleRedeems')} ({pendingRedemptions.length})
+              </h3>
+              {pendingRedemptions.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowBulkRedeemsConfirm(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-xs font-black bg-[#00E676] text-[#111216] hover:bg-[#00c867] transition-all shadow-md transform hover:scale-105 active:scale-95"
+                >
+                  <Check className="h-3.5 w-3.5" />
+                  {t('bulkApproveRedeemsBtn')}
+                </button>
+              )}
+            </div>
 
             {pendingRedemptions.length === 0 ? (
               <div className="glass-panel p-8 text-center text-slate-500 text-sm">
