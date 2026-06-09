@@ -593,6 +593,97 @@ export const TASK_TEMPLATES = [
     attributeReward: "Creativity",
     period: "每週",
     icon: "Sparkles"
+  },
+  {
+    id: "t45",
+    name: "每日收支記帳與小反思",
+    description: "記錄今天的花費與收入，並寫下其中一項是『需要』還是『想要』，與家人討論。",
+    type: "智",
+    difficulty: "簡單",
+    expReward: 100,
+    goldReward: 50,
+    ticketReward: 1,
+    attributeReward: "Wisdom",
+    period: "每日",
+    icon: "BookOpen"
+  },
+  {
+    id: "t46",
+    name: "購物前的『想要與需要』分析",
+    description: "列出最近想買的 3 樣東西，分析它們是『想要』還是『需要』，並向爸媽說明原因。",
+    type: "智",
+    difficulty: "中等",
+    expReward: 200,
+    goldReward: 100,
+    ticketReward: 1,
+    attributeReward: "Wisdom",
+    period: "每週",
+    icon: "BookOpen"
+  },
+  {
+    id: "t47",
+    name: "我的存錢罐與儲蓄目標計畫",
+    description: "制定一個儲蓄目標（如買一本書），計算每週要存多少錢，並將本週零用錢存入存錢罐。",
+    type: "德",
+    difficulty: "中等",
+    expReward: 200,
+    goldReward: 100,
+    ticketReward: 1,
+    attributeReward: "Responsibility",
+    period: "每週",
+    icon: "Shield"
+  },
+  {
+    id: "t48",
+    name: "超市比價與預算大作戰",
+    description: "陪同家人去超市，協助尋找相同品項中性價比最高的商品，並在家庭晚餐預算內完成採購。",
+    type: "智",
+    difficulty: "中等",
+    expReward: 200,
+    goldReward: 100,
+    ticketReward: 1,
+    attributeReward: "Wisdom",
+    period: "每週",
+    icon: "BookOpen"
+  },
+  {
+    id: "t49",
+    name: "零錢捐贈或愛心分享體驗",
+    description: "將自己存下的一小部分零錢捐給需要幫助的機構，或整理閒置玩具分享給他人，學習關懷與分享。",
+    type: "群",
+    difficulty: "簡單",
+    expReward: 100,
+    goldReward: 50,
+    ticketReward: 1,
+    attributeReward: "Empathy",
+    period: "每週",
+    icon: "Heart"
+  },
+  {
+    id: "t50",
+    name: "動手設計彩繪我的夢想儲蓄罐",
+    description: "利用廢棄瓶罐或紙盒，動手彩繪並改造成分類儲蓄罐（分為：儲蓄、消費、分享），發揮創意。",
+    type: "美",
+    difficulty: "較難",
+    expReward: 400,
+    goldReward: 200,
+    ticketReward: 2,
+    attributeReward: "Creativity",
+    period: "每週",
+    icon: "Sparkles"
+  },
+  {
+    id: "t51",
+    name: "財商繪本閱讀或理財短片學習",
+    description: "閱讀一本財商主題繪本（如《小狗錢錢》）或觀看理財科普短片，向家人分享學到的 3 個觀念。",
+    type: "智",
+    difficulty: "中等",
+    expReward: 200,
+    goldReward: 100,
+    ticketReward: 1,
+    attributeReward: "Wisdom",
+    period: "每週",
+    icon: "BookOpen"
   }
 ];
 
@@ -655,6 +746,20 @@ export const INITIAL_TASKS = [
     ticketReward: 1,
     attributeReward: "Empathy",
     period: "每週",
+    status: "進行中",
+    dateCreated: "2026-06-01"
+  },
+  {
+    id: "task-active-5",
+    name: "每日收支記帳與小反思",
+    description: "記錄今天的花費與收入，並寫下其中一項是『需要』還是『想要』，與家人討論。",
+    type: "智",
+    difficulty: "簡單",
+    expReward: 100,
+    goldReward: 50,
+    ticketReward: 1,
+    attributeReward: "Wisdom",
+    period: "每日",
     status: "進行中",
     dateCreated: "2026-06-01"
   }
