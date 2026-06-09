@@ -392,17 +392,12 @@ function KidPortal({
 
   // Reroll a single task - swap it for a random different available task
   const handleRerollTask = (taskIdToSwap) => {
-    // Can only reroll tasks that are '進行中' (not pending/needs correction)
     const childTasks = tasks.filter(t => !t.assignedTo || t.assignedTo === stats.id);
-    const currentDrawn = drawnTaskIds.filter(id => {
-      const task = childTasks.find(t => t.id === id);
-      return task && task.status !== '已完成';
-    });
-
-    // Pool: available tasks not currently drawn
+    
+    // Pool: available tasks not currently in the drawn list
     const candidatePool = childTasks.filter(t =>
       t.status === '進行中' &&
-      !currentDrawn.includes(t.id)
+      !drawnTaskIds.includes(t.id)
     );
 
     if (candidatePool.length === 0) return; // no candidates to swap with
@@ -410,7 +405,7 @@ function KidPortal({
     const shuffled = [...candidatePool].sort(() => Math.random() - 0.5);
     const newTask = shuffled[0];
 
-    const newDrawnTaskIds = currentDrawn.map(id => id === taskIdToSwap ? newTask.id : id);
+    const newDrawnTaskIds = drawnTaskIds.map(id => id === taskIdToSwap ? newTask.id : id);
     onUpdateDrawnTasks(newDrawnTaskIds);
   };
   
