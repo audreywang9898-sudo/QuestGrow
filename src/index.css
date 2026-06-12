@@ -640,16 +640,25 @@ th[class*="bg-white/5"] {
 }
 
 /* Bopomofo / Zhuyin Typography & Positioning Rules */
-ruby {
-  ruby-position: over;
-  ruby-align: center;
+ruby.ruby-char {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  vertical-align: middle !important;
+  margin: 0 0.15em !important;
 }
 
-rt {
-  font-size: 0.55em;
+ruby.ruby-char rt {
+  display: inline-block !important;
+  writing-mode: vertical-rl !important;
+  -webkit-writing-mode: vertical-rl !important;
+  font-size: 0.45em !important;
+  line-height: 1 !important;
+  letter-spacing: -0.05em !important;
   color: #64748B !important; /* Muted slate gray */
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  user-select: none;
-  padding-bottom: 2px;
+  font-weight: 600 !important;
+  user-select: none !important;
+  margin-left: 2px !important;
+  vertical-align: middle !important;
+  padding: 0 !important;
 }

@@ -83,7 +83,7 @@ function KidPortal({
       const pinyins = pinyin(text, { type: 'array', toneType: 'num' });
       return (
         <span className="inline-flex flex-wrap items-end leading-relaxed">
-          {text.split('').map((char, index) => {
+          {[...text].map((char, index) => {
             const py = pinyins[index];
             const isChinese = /[\u4e00-\u9fa5]/.test(char);
             if (isChinese && py && py !== char) {
@@ -91,7 +91,7 @@ function KidPortal({
               return (
                 <ruby key={index} className="ruby-char mx-0.5">
                   {char}
-                  <rt className="text-[10px] select-none text-slate-500 font-medium normal-case block leading-tight">{zhuyin}</rt>
+                  <rt className="text-[10px] select-none text-slate-500 font-medium normal-case">{zhuyin}</rt>
                 </ruby>
               );
             }
@@ -329,28 +329,42 @@ function KidPortal({
     // Filter tasks assigned to this child (or unassigned)
     const childTasks = tasks.filter(t => !t.assignedTo || t.assignedTo === stats.id);
 
-    // 1. Identify tasks that are currently drawn and locked (keep all non-completed drawn tasks so they stay visible)
-    const currentDrawnTasks = childTasks.filter(t => t.status !== '已完成' && drawnTaskIds.includes(t.id));
-    const lockedTaskIds = currentDrawnTasks.map(t => t.id);
-    
-    // 2. Identify active drawn tasks to count slot usage (in progress or needs correction; under review '待覆核' doesn't count)
-    const activeDrawnTasks = currentDrawnTasks.filter(t => t.status === '進行中' || t.status === '需修正');
-    
-    // 3. Identify the pool of available tasks to fill the remaining slots (only tasks with status '進行中' and not already drawn)
+    // Pool of available tasks to fill the slots (only tasks with status '進行中' and not already drawn)
     const candidatePool = childTasks.filter(t => t.status === '進行中' && !drawnTaskIds.includes(t.id));
     
-    // 4. Shuffle candidate pool
+    // Shuffle candidate pool
     const shuffledCandidates = [...candidatePool].sort(() => Math.random() - 0.5);
-    
-    // 5. Take the number of tasks needed to fill up to 5 slots
-    const slotsNeeded = Math.max(0, 5 - activeDrawnTasks.length);
-    const chosenCandidates = shuffledCandidates.slice(0, slotsNeeded).map(t => t.id);
-    
-    // 6. Combine locked tasks and chosen candidates
-    const newDrawnTaskIds = [...lockedTaskIds, ...chosenCandidates];
-    
+    let candidateIndex = 0;
+
+    // Map each drawn task ID: if locked (pending review or needs correction), keep it.
+    // Otherwise, replace it with a new task from the candidate pool if available.
+    const newDrawnTaskIds = drawnTaskIds.map(id => {
+      const t = tasks.find(task => task.id === id);
+      const isLocked = t && (t.status === '待覆核' || t.status === '需修正') && (!t.assignedTo || t.assignedTo === stats.id);
+      
+      if (isLocked) {
+        return id; // Keep locked task in place
+      }
+
+      // Replace with a candidate from pool
+      if (candidateIndex < shuffledCandidates.length) {
+        const nextTask = shuffledCandidates[candidateIndex];
+        candidateIndex++;
+        return nextTask.id;
+      }
+
+      return null; // Remove if no candidates available
+    }).filter(id => id !== null);
+
+    // If total slots drawn < 5, and we still have candidates, fill up to 5 slots
+    while (newDrawnTaskIds.length < 5 && candidateIndex < shuffledCandidates.length) {
+      newDrawnTaskIds.push(shuffledCandidates[candidateIndex].id);
+      candidateIndex++;
+    }
+
     onUpdateDrawnTasks(newDrawnTaskIds);
   };
+
 
   // Self draw 5 quests, one from each category (德, 智, 體, 群, 美)
   const handleSelfDrawQuests = () => {
@@ -588,8 +602,10 @@ function KidPortal({
     }, 850);
   };
 
-  // Filter out completed tasks and only show drawn tasks for child list
-  const activeTasksList = tasks.filter(t => t.status !== '已完成' && drawnTaskIds.includes(t.id) && (!t.assignedTo || t.assignedTo === stats.id));
+  // Filter out completed tasks and only show drawn tasks for child list, preserving the order of drawnTaskIds
+  const activeTasksList = drawnTaskIds
+    .map(id => tasks.find(t => t.id === id))
+    .filter(t => t && t.status !== '已完成' && (!t.assignedTo || t.assignedTo === stats.id));
 
   // Push notifications generator (mocking FCM messages)
   const getFCMNotifications = () => {
