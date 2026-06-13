@@ -48,9 +48,10 @@ function App() {
 
   const [googleClientId, setGoogleClientId] = useState('');
 
-  // Fetch Google Client ID from backend config on mount
+  // Initialize Auth configuration and verify/restore session on mount
   useEffect(() => {
-    const fetchConfig = async () => {
+    const initAuth = async () => {
+      // 1. Fetch Google Client ID
       try {
         const config = await api.getAuthConfig();
         if (config && config.googleClientId) {
@@ -59,8 +60,33 @@ function App() {
       } catch (error) {
         console.error('Failed to fetch auth config:', error);
       }
+
+      // 2. Fetch updated user profile & fresh token if logged in
+      const token = localStorage.getItem('questgrow_jwt_token');
+      if (token) {
+        try {
+          const res = await api.getMe();
+          if (res && res.user) {
+            const mappedUser = {
+              ...res.user,
+              childId: res.user.childId || res.user.child_id
+            };
+            setCurrentUser(mappedUser);
+            if (mappedUser.role === 'admin') {
+              setRole('admin');
+            } else if (mappedUser.role === 'kid') {
+              setRole('kid');
+            }
+          }
+        } catch (error) {
+          console.error('Failed to restore session:', error);
+          // If the token is invalid/expired or user is not found, clear current user
+          setCurrentUser(null);
+          setRole('kid');
+        }
+      }
     };
-    fetchConfig();
+    initAuth();
   }, []);
 
   // --- Core States ---
@@ -162,6 +188,8 @@ function App() {
       localStorage.setItem('questgrow_current_user', JSON.stringify(currentUser));
       if (currentUser.role === 'kid') {
         setRole('kid');
+      } else if (currentUser.role === 'admin') {
+        setRole('admin');
       }
     } else {
       localStorage.removeItem('questgrow_current_user');

@@ -301,3 +301,33 @@ export const getAuthConfig = async (req, res) => {
     googleClientId: process.env.GOOGLE_CLIENT_ID || ""
   });
 };
+
+// 6. Get Current User Profile (Refreshes token with latest role/claims)
+export const getMe = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, family_id, email, name, role, avatar, child_id, google_id
+       FROM users
+       WHERE id = $1`,
+      [req.user.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: '找不到使用者。' });
+    }
+
+    const user = result.rows[0];
+    user.childId = user.child_id;
+
+    // Generate a fresh token with the current database information
+    const token = generateToken(user);
+
+    res.json({
+      user,
+      token
+    });
+  } catch (error) {
+    console.error('Get me error:', error);
+    res.status(500).json({ message: '獲取使用者資訊失敗。' });
+  }
+};

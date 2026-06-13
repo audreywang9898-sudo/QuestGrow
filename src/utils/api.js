@@ -93,6 +93,19 @@ export const api = {
     return handleResponse(res);
   },
 
+  getMe: async () => {
+    const res = await fetch(`${API_URL}/auth/me`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    const data = await handleResponse(res);
+    if (data.token) {
+      localStorage.setItem('questgrow_jwt_token', data.token);
+    }
+    return data;
+  },
+
+
   // --- Users / Family Members ---
   getMembers: async () => {
     const res = await fetch(`${API_URL}/users/members`, {
