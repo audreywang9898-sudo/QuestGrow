@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { getMessage } from '../utils/messageManager.js';
+import { trackUserActivity } from '../utils/sessionTracker.js';
 
 dotenv.config();
 
@@ -17,6 +18,10 @@ export const authenticateToken = (req, res, next) => {
       return res.status(403).json({ message: getMessage('AUTH_TOKEN_INVALID') });
     }
     req.user = decoded; // { id, email, role, family_id, child_id }
+    
+    // Track active user session
+    trackUserActivity(decoded.id);
+    
     next();
   });
 };

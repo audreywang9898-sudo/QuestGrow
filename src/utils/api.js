@@ -392,4 +392,12 @@ export const api = {
     });
     return handleResponse(res);
   },
+
+  getAdminStats: async () => {
+    const res = await fetch(`${API_URL}/admin/stats`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
 };

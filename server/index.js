@@ -8,6 +8,7 @@ import userRoutes from './routes/userRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
 import itemRoutes from './routes/itemRoutes.js';
 import familyRoutes from './routes/familyRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 import { getMessage, languageMiddleware } from './utils/messageManager.js';
 
 dotenv.config();
@@ -37,6 +38,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/family', familyRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Wildcard fallback route to serve index.html for client-side routing (excluding /api routes)
 app.get('*', (req, res) => {

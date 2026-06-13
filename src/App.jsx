@@ -10,6 +10,7 @@ import {
 } from './utils/mockData';
 import ParentPortal from './components/ParentPortal';
 import KidPortal from './components/KidPortal';
+import AdminPortal from './components/AdminPortal';
 import LoginPortal from './components/LoginPortal';
 import Avatar from './components/Avatar';
 import { useLanguage } from './components/LanguageContext';
@@ -758,7 +759,9 @@ function App() {
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">
-        {role === 'kid' ? (
+        {role === 'admin' ? (
+          <AdminPortal currentUser={currentUser} onLogout={handleLogout} />
+        ) : role === 'kid' ? (
           <KidPortal 
             stats={childStats} 
             tasks={tasks.filter(t => !t.assignedTo || t.assignedTo === activeChildId)} 
