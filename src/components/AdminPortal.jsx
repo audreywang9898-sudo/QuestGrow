@@ -4,8 +4,7 @@ import { useLanguage } from './LanguageContext';
 import Avatar from './Avatar';
 import { 
   Users, UserCheck, RefreshCw, Search, Award, 
-  ShieldAlert, Sparkles, BookOpen, Compass, Shield, 
-  Heart, ShieldAlert as AdminIcon, ArrowRightLeft, Info
+  ShieldAlert, Info
 } from 'lucide-react';
 
 function AdminPortal({ currentUser, onLogout }) {
@@ -41,7 +40,7 @@ function AdminPortal({ currentUser, onLogout }) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
         <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-sm font-bold text-slate-400">正在載入系統管理數據...</p>
+        <p className="text-sm font-bold text-slate-500">正在載入系統管理數據...</p>
       </div>
     );
   }
@@ -67,20 +66,20 @@ function AdminPortal({ currentUser, onLogout }) {
   }) || [];
 
   return (
-    <div className="space-y-6 animate-success text-[#D1D5DB]">
+    <div className="space-y-6 animate-success text-slate-800">
       
       {/* Admin Greeting Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-indigo-900/40 to-slate-900/60 p-6 rounded-2xl border border-indigo-500/20 shadow-lg">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div>
           <div className="flex items-center gap-2">
-            <span className="bg-rose-500/20 text-rose-450 border border-rose-500/30 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider">
+            <span className="bg-rose-100 text-rose-800 border border-rose-200 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider">
               🛡️ SYSTEM ADMINISTRATOR
             </span>
           </div>
-          <h2 className="text-2xl font-black text-white mt-1.5 flex items-center gap-2">
+          <h2 className="text-2xl font-black text-slate-900 mt-1.5 flex items-center gap-2">
             管理員控制台 (Admin Console)
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             歡迎回來，{currentUser.name}！此處可監控全平台家庭方案及上線人數。
           </p>
         </div>
@@ -88,7 +87,7 @@ function AdminPortal({ currentUser, onLogout }) {
         <button
           onClick={fetchStats}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-650 hover:bg-indigo-600 text-white rounded-lg border border-indigo-500/30 shadow-md font-bold text-xs transition-all active:scale-95 shrink-0"
+          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg border border-indigo-500/30 shadow-md font-bold text-xs transition-all active:scale-95 shrink-0"
         >
           <RefreshCw className={`h-4 w-4 ${refreshSpin ? 'animate-spin' : ''}`} />
           刷新數據 (Refresh)
@@ -97,8 +96,8 @@ function AdminPortal({ currentUser, onLogout }) {
 
       {/* Error Banner */}
       {error && (
-        <div className="bg-rose-500/10 border border-rose-500/25 p-4 rounded-xl flex items-center gap-3 text-xs text-rose-400 font-bold shadow-sm animate-success">
-          <ShieldAlert className="h-5 w-5 text-rose-500 shrink-0" />
+        <div className="bg-rose-500/10 border border-rose-500/25 p-4 rounded-xl flex items-center gap-3 text-xs text-rose-700 font-bold shadow-sm animate-success">
+          <ShieldAlert className="h-5 w-5 text-rose-600 shrink-0" />
           <span>{error}</span>
         </div>
       )}
@@ -106,56 +105,56 @@ function AdminPortal({ currentUser, onLogout }) {
       {/* Analytics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Card 1: Online Users */}
-        <div className="glass-panel p-6 border-white/5 bg-gradient-to-tr from-[#162a45]/30 to-[#0e1726]/50 flex items-center justify-between shadow-xl relative overflow-hidden">
+        <div className="bg-white p-6 border border-slate-200 rounded-2xl flex items-center justify-between shadow-sm hover:shadow-md transition-all duration-200 relative overflow-hidden">
           <div className="space-y-1">
-            <div className="text-[10px] text-emerald-400 font-black uppercase tracking-wider flex items-center gap-1.5">
+            <div className="text-[10px] text-emerald-600 font-black uppercase tracking-wider flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
               上線人數 (ONLINE NOW)
             </div>
-            <div className="text-3xl font-black text-white">{onlineCount}</div>
-            <div className="text-[10px] text-slate-500">15分鐘內有活動之使用者數</div>
+            <div className="text-3xl font-black text-slate-900">{onlineCount}</div>
+            <div className="text-[10px] text-slate-500 font-semibold">15分鐘內有活動之使用者數</div>
           </div>
-          <div className="p-4 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-inner">
+          <div className="p-4 rounded-full bg-emerald-50 text-emerald-650 border border-emerald-100 shadow-inner">
             <UserCheck className="h-6 w-6" />
           </div>
         </div>
 
         {/* Card 2: Registered Members */}
-        <div className="glass-panel p-6 border-white/5 bg-gradient-to-tr from-[#2d1b4e]/30 to-[#0e1726]/50 flex items-center justify-between shadow-xl relative overflow-hidden">
+        <div className="bg-white p-6 border border-slate-200 rounded-2xl flex items-center justify-between shadow-sm hover:shadow-md transition-all duration-200 relative overflow-hidden">
           <div className="space-y-1">
-            <div className="text-[10px] text-indigo-400 font-black uppercase tracking-wider">
+            <div className="text-[10px] text-indigo-600 font-black uppercase tracking-wider">
               註冊會員總數 (TOTAL MEMBERS)
             </div>
-            <div className="text-3xl font-black text-white">{totalUsers}</div>
-            <div className="text-[10px] text-slate-500">包含家長與兒童帳號</div>
+            <div className="text-3xl font-black text-slate-900">{totalUsers}</div>
+            <div className="text-[10px] text-slate-500 font-semibold">包含家長與兒童帳號</div>
           </div>
-          <div className="p-4 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-inner">
+          <div className="p-4 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-inner">
             <Users className="h-6 w-6" />
           </div>
         </div>
 
         {/* Card 3: Families Count */}
-        <div className="glass-panel p-6 border-white/5 bg-gradient-to-tr from-[#4a2e1b]/30 to-[#0e1726]/50 flex items-center justify-between shadow-xl relative overflow-hidden">
+        <div className="bg-white p-6 border border-slate-200 rounded-2xl flex items-center justify-between shadow-sm hover:shadow-md transition-all duration-200 relative overflow-hidden">
           <div className="space-y-1">
-            <div className="text-[10px] text-amber-400 font-black uppercase tracking-wider">
+            <div className="text-[10px] text-amber-700 font-black uppercase tracking-wider">
               家庭方案數 (TOTAL FAMILIES)
             </div>
-            <div className="text-3xl font-black text-white">{totalFamilies}</div>
-            <div className="text-[10px] text-slate-500">已啟用的家庭專案方案</div>
+            <div className="text-3xl font-black text-slate-900">{totalFamilies}</div>
+            <div className="text-[10px] text-slate-500 font-semibold">已啟用的家庭專案方案</div>
           </div>
-          <div className="p-4 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-inner">
+          <div className="p-4 rounded-full bg-amber-50 text-amber-600 border border-amber-100 shadow-inner">
             <Award className="h-6 w-6" />
           </div>
         </div>
       </div>
 
       {/* Main Stats Panel */}
-      <div className="glass-panel p-6 border-white/5 space-y-6">
+      <div className="bg-white p-6 border border-slate-200 rounded-2xl shadow-sm space-y-6">
         
         {/* Filters and Search */}
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 border-b border-white/5 pb-4">
-          <h3 className="text-sm font-black text-slate-200 uppercase tracking-widest flex items-center gap-2 mr-auto">
-            <Users className="h-4.5 w-4.5 text-indigo-400" />
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 border-b border-slate-100 pb-4">
+          <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2 mr-auto">
+            <Users className="h-4.5 w-4.5 text-indigo-650" />
             會員與方案總覽 (Members & Plans Directory)
           </h3>
 
@@ -163,27 +162,27 @@ function AdminPortal({ currentUser, onLogout }) {
             {/* Search Input */}
             <div className="relative w-full sm:w-60">
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-slate-500" />
+                <Search className="h-4 w-4 text-slate-400" />
               </span>
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="搜尋姓名、Email、家庭..."
-                className="w-full bg-slate-900 border border-white/10 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all"
               />
             </div>
 
             {/* Role Filter Tabs */}
-            <div className="flex border border-white/10 rounded-lg p-0.5 bg-slate-950 w-full sm:w-auto justify-around">
+            <div className="flex border border-slate-200 rounded-lg p-0.5 bg-slate-100 w-full sm:w-auto justify-around">
               {['all', 'admin', 'parent', 'kid'].map((role) => (
                 <button
                   key={role}
                   onClick={() => setRoleFilter(role)}
                   className={`px-3 py-1 text-[10px] font-black rounded-md transition-all uppercase tracking-wider ${
                     roleFilter === role 
-                      ? 'bg-indigo-600 text-white shadow-md' 
-                      : 'text-slate-400 hover:text-slate-200'
+                      ? 'bg-white text-indigo-700 shadow-sm' 
+                      : 'text-slate-500 hover:text-slate-800'
                   }`}
                 >
                   {role === 'all' ? '全部' : role === 'admin' ? '管理員' : role === 'parent' ? '家長' : '兒童'}
@@ -197,7 +196,7 @@ function AdminPortal({ currentUser, onLogout }) {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-white/5 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+              <tr className="border-b border-slate-200 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
                 <th className="py-3 px-4">會員 (Member)</th>
                 <th className="py-3 px-4">Email</th>
                 <th className="py-3 px-4">角色 (Role)</th>
@@ -210,7 +209,7 @@ function AdminPortal({ currentUser, onLogout }) {
             <tbody>
               {filteredMembers.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="py-8 text-center text-slate-500 text-xs font-bold">
+                  <td colSpan="7" className="py-8 text-center text-slate-455 text-xs font-bold">
                     沒有符合條件的會員資料。
                   </td>
                 </tr>
@@ -223,20 +222,20 @@ function AdminPortal({ currentUser, onLogout }) {
                   return (
                     <tr 
                       key={member.userId} 
-                      className="border-b border-white/5 hover:bg-white/5 transition-all text-xs"
+                      className="border-b border-slate-100 hover:bg-slate-50/50 transition-all text-xs"
                     >
                       {/* Avatar and Name */}
                       <td className="py-3.5 px-4 flex items-center gap-3">
                         <Avatar 
                           avatar={member.userAvatar} 
                           role={member.role}
-                          className="w-7 h-7 rounded-full bg-slate-900 border border-white/10 flex items-center justify-center shrink-0 overflow-hidden" 
+                          className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden" 
                         />
-                        <span className="font-extrabold text-slate-250">{member.userName}</span>
+                        <span className="font-extrabold text-slate-800">{member.userName}</span>
                       </td>
 
                       {/* Email */}
-                      <td className="py-3.5 px-4 font-mono text-slate-400 select-all">
+                      <td className="py-3.5 px-4 font-mono text-slate-600 select-all">
                         {member.email}
                       </td>
 
@@ -244,10 +243,10 @@ function AdminPortal({ currentUser, onLogout }) {
                       <td className="py-3.5 px-4">
                         <span className={`px-2 py-0.5 text-[9px] font-black rounded border uppercase tracking-wider ${
                           isAdmin 
-                            ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' 
+                            ? 'bg-rose-50 border-rose-200 text-rose-700' 
                             : isParent 
-                              ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400' 
-                              : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                              ? 'bg-indigo-50 border-indigo-200 text-indigo-700' 
+                              : 'bg-emerald-50 border-emerald-200 text-emerald-700'
                         }`}>
                           {isAdmin ? '系統管理員' : isParent ? '家長' : '兒童'}
                         </span>
@@ -255,34 +254,34 @@ function AdminPortal({ currentUser, onLogout }) {
 
                       {/* Family Plan */}
                       <td className="py-3.5 px-4">
-                        <div className="font-extrabold text-slate-200">{member.familyName || '未知家庭'}</div>
+                        <div className="font-extrabold text-slate-800">{member.familyName || '未知家庭'}</div>
                         <div className="text-[9px] text-slate-500 font-mono">Plan ID: {member.familyId || 'N/A'}</div>
                       </td>
 
                       {/* Family Growth Score */}
-                      <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-4 font-bold">
                         {member.familyName ? (
-                          <span className="text-amber-400 font-black flex items-center gap-1">
+                          <span className="text-amber-600 font-black flex items-center gap-1">
                             🪙 {member.familyGrowthScore?.toLocaleString()}
                           </span>
                         ) : '--'}
                       </td>
 
                       {/* RPG Character Info (Kid only) */}
-                      <td className="py-3.5 px-4 text-slate-350">
+                      <td className="py-3.5 px-4 text-slate-700 font-bold">
                         {isKid && member.childProfileId ? (
                           <div className="space-y-0.5">
-                            <span className="text-[10px] font-extrabold text-violet-400">
+                            <span className="text-[10px] font-extrabold text-violet-750">
                               LV.{member.childLevel} | {member.childJobClass}
                             </span>
                           </div>
                         ) : (
-                          <span className="text-slate-600">-</span>
+                          <span className="text-slate-400">-</span>
                         )}
                       </td>
 
                       {/* Date joined */}
-                      <td className="py-3.5 px-4 text-right text-slate-400 font-semibold font-mono">
+                      <td className="py-3.5 px-4 text-right text-slate-600 font-semibold font-mono">
                         {member.createdAt || '--'}
                       </td>
                     </tr>
@@ -294,12 +293,12 @@ function AdminPortal({ currentUser, onLogout }) {
         </div>
         
         {/* Database statistics footer */}
-        <div className="flex justify-between items-center text-[10px] text-slate-500 border-t border-white/5 pt-4">
-          <span className="flex items-center gap-1.5">
-            <Info className="h-3.5 w-3.5" />
+        <div className="flex justify-between items-center text-[10px] text-slate-500 border-t border-slate-100 pt-4">
+          <span className="flex items-center gap-1.5 font-medium">
+            <Info className="h-3.5 w-3.5 text-indigo-500" />
             系統管理提示：上線人數採用15分鐘滑動視窗(Sliding Window)統計活躍令牌活動。
           </span>
-          <span>
+          <span className="font-extrabold text-slate-650">
             顯示 {filteredMembers.length} / {totalUsers} 位使用者
           </span>
         </div>
