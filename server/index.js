@@ -28,32 +28,29 @@ app.use(helmet({
 }));
 
 // ── 2. CORS ───────────────────────────────────────────────────────────
-// In production: only allow origins listed in ALLOWED_ORIGINS env var.
-// In development: also allow localhost Vite dev server.
-const allowedOrigins = (() => {
-  const origins = new Set();
-  // Add origins from environment variable (comma-separated)
-  if (process.env.ALLOWED_ORIGINS) {
-    process.env.ALLOWED_ORIGINS.split(',').forEach(o => origins.add(o.trim()));
-  }
-  // Always allow localhost in development
-  if (process.env.NODE_ENV !== 'production') {
-    origins.add('http://localhost:5173');
-    origins.add('http://localhost:5000');
-  }
-  return [...origins];
-})();
+// If ALLOWED_ORIGINS env var is set (comma-separated), only those origins are allowed.
+// If NOT set, all origins are allowed (backward-compatible default — safe for single-tenant deploys).
+// To enable strict mode on Render: set ALLOWED_ORIGINS=https://your-frontend.onrender.com
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()).filter(Boolean)
+  : null; // null = allow all (open CORS)
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no Origin header (e.g., mobile apps, server-to-server, curl)
+    // Allow requests with no Origin header (mobile apps, server-to-server, curl)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    console.warn(`CORS blocked origin: ${origin}`);
-    return callback(new Error('CORS policy violation'), false);
+    // Strict mode: only allow listed origins
+    if (allowedOrigins) {
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      console.warn(`CORS blocked origin: ${origin}`);
+      return callback(new Error('CORS policy violation'), false);
+    }
+    // Open mode: allow all (when ALLOWED_ORIGINS is not configured)
+    return callback(null, true);
   },
   credentials: true,
 }));
+
 
 // ── 3. Rate Limiting ──────────────────────────────────────────────────
 // Auth endpoints: max 10 requests per 15 minutes per IP to prevent brute-force
@@ -127,10 +124,10 @@ app.use((err, req, res, next) => {
 // ── 10. Start Server ──────────────────────────────────────────────────
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`QuestGrow Backend Server is running on port ${PORT}`);
-  if (allowedOrigins.length > 0) {
-    console.log(`CORS allowed origins: ${allowedOrigins.join(', ')}`);
+  if (allowedOrigins) {
+    console.log(`CORS strict mode — allowed origins: ${allowedOrigins.join(', ')}`);
   } else {
-    console.warn('WARNING: No ALLOWED_ORIGINS configured. All cross-origin requests will be blocked in production!');
+    console.log('CORS open mode — all origins allowed (set ALLOWED_ORIGINS env var to enable strict mode)');
   }
 });
 
