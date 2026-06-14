@@ -684,6 +684,136 @@ export const TASK_TEMPLATES = [
     attributeReward: "Wisdom",
     period: "每週",
     icon: "BookOpen"
+  },
+  {
+    id: "t52",
+    name: "🪙 家庭「省電節能」小管家",
+    description: "主動關掉家中未使用的電燈、冷氣或電器，並記錄這一週的節能行為，體會「節流即是開源」的道理。",
+    type: "德",
+    difficulty: "簡單",
+    expReward: 100,
+    goldReward: 50,
+    ticketReward: 1,
+    attributeReward: "Responsibility",
+    period: "每日",
+    icon: "Shield"
+  },
+  {
+    id: "t53",
+    name: "🪙 認識利息與複利的神奇力量",
+    description: "向爸媽請教什麼是「利息」與「複利」，模擬若把 100 金幣存入家庭銀行（年利率 10%），三年後會變成多少？寫下計算過程與小發現。",
+    type: "智",
+    difficulty: "中等",
+    expReward: 200,
+    goldReward: 100,
+    ticketReward: 1,
+    attributeReward: "Wisdom",
+    period: "每週",
+    icon: "BookOpen"
+  },
+  {
+    id: "t54",
+    name: "🪙 規劃家庭「跳蚤市場」或「二手拍賣」",
+    description: "整理自己不再需要的舊玩具、書籍或衣物，為它們設定合理的二手售價，並寫下拍賣所得的分配計畫（儲蓄/消費/捐贈）。",
+    type: "美",
+    difficulty: "較難",
+    expReward: 400,
+    goldReward: 200,
+    ticketReward: 2,
+    attributeReward: "Creativity",
+    period: "每週",
+    icon: "Sparkles"
+  },
+  {
+    id: "t55",
+    name: "🪙 區分家庭的「固定支出」與「變動支出」",
+    description: "訪談爸媽並列出家裡 3 個每個月必須支付的「固定支出」（如房租、網路費）與 3 個「變動支出」（如餐費、娛樂費），了解家庭財務結構。",
+    type: "智",
+    difficulty: "中等",
+    expReward: 200,
+    goldReward: 100,
+    ticketReward: 1,
+    attributeReward: "Wisdom",
+    period: "每週",
+    icon: "BookOpen"
+  },
+  {
+    id: "t56",
+    name: "🪙 模擬「風險與保險」的財務觀念",
+    description: "觀看或閱讀關於保險的介紹，並與家人討論：如果腳踏車壞了或身體受傷，會面臨什麼財務損失？「保險」是如何幫助大家分擔風險的？",
+    type: "智",
+    difficulty: "中等",
+    expReward: 200,
+    goldReward: 100,
+    ticketReward: 1,
+    attributeReward: "Wisdom",
+    period: "每週",
+    icon: "BookOpen"
+  },
+  {
+    id: "t57",
+    name: "🪙 記帳一週總結與預算分析會議",
+    description: "回顧自己這一週的記帳記錄，計算總收入與總支出，並向爸媽報告下週預計如何調整消費，以更有效率地達成你的儲蓄目標。",
+    type: "德",
+    difficulty: "中等",
+    expReward: 200,
+    goldReward: 100,
+    ticketReward: 1,
+    attributeReward: "Responsibility",
+    period: "每週",
+    icon: "Shield"
+  },
+  {
+    id: "t58",
+    name: "🪙 認識各國貨幣與匯率換算挑戰",
+    description: "查詢除了台幣/美金之外，另外 3 個不同國家的貨幣名稱與符號，並記錄今天 100 台幣可以兌換多少該國貨幣（如日圓、歐元）。",
+    type: "智",
+    difficulty: "簡單",
+    expReward: 100,
+    goldReward: 50,
+    ticketReward: 1,
+    attributeReward: "Wisdom",
+    period: "每週",
+    icon: "BookOpen"
+  },
+  {
+    id: "t59",
+    name: "🪙 擬定一個「家庭迷你創業」服務點子",
+    description: "想出一個可以為家人提供勞務或服務來「賺取額外獎金」的迷你創業點子（如：洗全家人的鞋子、整理小花園），寫出服務內容與定價。",
+    type: "美",
+    difficulty: "較難",
+    expReward: 400,
+    goldReward: 200,
+    ticketReward: 2,
+    attributeReward: "Creativity",
+    period: "每週",
+    icon: "Sparkles"
+  },
+  {
+    id: "t60",
+    name: "🪙 認識「勞動所得」與「資產所得」",
+    description: "與爸媽討論「用時間與體力賺取薪水（勞動所得）」與「用資產或投資賺取收益（資產所得）」的差別，並舉出生活中各兩個例子。",
+    type: "智",
+    difficulty: "中等",
+    expReward: 200,
+    goldReward: 100,
+    ticketReward: 1,
+    attributeReward: "Wisdom",
+    period: "每週",
+    icon: "BookOpen"
+  },
+  {
+    id: "t61",
+    name: "🪙 知名企業與商業品牌小調查",
+    description: "選擇一個你最常接觸的知名品牌或企業（如樂高、任天堂、迪士尼），調查它是如何獲利的，並向家人介紹它的主要產品和賺錢秘密。",
+    type: "智",
+    difficulty: "中等",
+    expReward: 200,
+    goldReward: 100,
+    ticketReward: 1,
+    attributeReward: "Wisdom",
+    period: "每週",
+    icon: "BookOpen"
   }
 ];
 
@@ -699,7 +829,7 @@ export const INITIAL_TASKS = [
     ticketReward: 1,
     attributeReward: "Wisdom",
     period: "每日",
-    status: "進行中", // 進行中, 待覆核, 已完成
+    status: "進行中",
     dateCreated: "2026-06-01"
   },
   {
@@ -717,7 +847,7 @@ export const INITIAL_TASKS = [
     dateCreated: "2026-06-01",
     submission: {
       notes: "我把書本排好了，地板也擦得很乾淨！",
-      photo: "https://images.unsplash.com/photo-1595428774223-ef52624120d2?w=400&q=80" // Mock kids room image
+      photo: "https://images.unsplash.com/photo-1595428774223-ef52624120d2?w=400&q=80"
     }
   },
   {
@@ -760,6 +890,34 @@ export const INITIAL_TASKS = [
     ticketReward: 1,
     attributeReward: "Wisdom",
     period: "每日",
+    status: "進行中",
+    dateCreated: "2026-06-01"
+  },
+  {
+    id: "task-active-6",
+    name: "🪙 家庭「省電節能」小管家",
+    description: "主動關掉家中未使用的電燈、冷氣或電器，並記錄這一週的節能行為，體會「節流即是開源」的道理。",
+    type: "德",
+    difficulty: "簡單",
+    expReward: 100,
+    goldReward: 50,
+    ticketReward: 1,
+    attributeReward: "Responsibility",
+    period: "每日",
+    status: "進行中",
+    dateCreated: "2026-06-01"
+  },
+  {
+    id: "task-active-7",
+    name: "🪙 認識利息與複利的神奇力量",
+    description: "向爸媽請教什麼是「利息」與「複利」，模擬若把 100 金幣存入家庭銀行（年利率 10%），三年後會變成多少？寫下計算過程與小發現。",
+    type: "智",
+    difficulty: "中等",
+    expReward: 200,
+    goldReward: 100,
+    ticketReward: 1,
+    attributeReward: "Wisdom",
+    period: "每週",
     status: "進行中",
     dateCreated: "2026-06-01"
   }
