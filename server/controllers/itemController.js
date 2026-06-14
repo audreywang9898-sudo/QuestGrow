@@ -106,6 +106,45 @@ export const drawGachaCard = async (req, res) => {
     return res.status(400).json({ message: getMessage('GACHA_DRAW_FIELDS_MISSING') });
   }
 
+  // ── Server-side Gacha Validation ────────────────────────────────────
+  // 1. Enforce costTickets is a safe positive integer (prevents free draws)
+  const safeCost = Math.floor(Number(costTickets));
+  if (!Number.isInteger(safeCost) || safeCost < 1 || safeCost > 20) {
+    return res.status(400).json({ message: '無效的抽卡費用。' });
+  }
+
+  // 2. Validate card type and rarity against server-side allowlists
+  const ALLOWED_TYPES = ['裝備卡', '收藏卡', '技能卡', '資源卡'];
+  const ALLOWED_RARITIES = ['Common', 'Rare', 'Epic', 'Legendary'];
+  if (!ALLOWED_TYPES.includes(card.type)) {
+    return res.status(400).json({ message: '無效的卡片類型。' });
+  }
+  if (card.rarity && !ALLOWED_RARITIES.includes(card.rarity)) {
+    return res.status(400).json({ message: '無效的稀有度。' });
+  }
+
+  // 3. For resource cards: cap reward values to prevent economy manipulation
+  if (card.type === '資源卡' && card.value) {
+    const MAX_GOLD_REWARD      = 200;
+    const MAX_TICKETS_REWARD   = 10;
+    const MAX_EXP_REWARD       = 500;
+    const MAX_GROWTH_REWARD    = 200;
+
+    if (card.value.gold !== undefined) {
+      card.value.gold = Math.min(Math.max(0, Math.floor(Number(card.value.gold) || 0)), MAX_GOLD_REWARD);
+    }
+    if (card.value.tickets !== undefined) {
+      card.value.tickets = Math.min(Math.max(0, Math.floor(Number(card.value.tickets) || 0)), MAX_TICKETS_REWARD);
+    }
+    if (card.value.exp !== undefined) {
+      card.value.exp = Math.min(Math.max(0, Math.floor(Number(card.value.exp) || 0)), MAX_EXP_REWARD);
+    }
+    if (card.value.growthScore !== undefined) {
+      card.value.growthScore = Math.min(Math.max(0, Math.floor(Number(card.value.growthScore) || 0)), MAX_GROWTH_REWARD);
+    }
+  }
+  // ── End Validation ───────────────────────────────────────────────────
+
   try {
     await pool.query('BEGIN');
 
@@ -119,12 +158,12 @@ export const drawGachaCard = async (req, res) => {
     }
     const child = childResult.rows[0];
 
-    if (child.tickets < costTickets) {
+    if (child.tickets < safeCost) {
       throw new Error(getMessage('GACHA_INSUFFICIENT_TICKETS'));
     }
 
-    // Deduct tickets
-    let newTickets = Math.max(0, child.tickets - costTickets);
+    // Deduct tickets (using server-validated cost)
+    let newTickets = Math.max(0, child.tickets - safeCost);
     let newGold = child.gold;
     let newExp = child.exp;
     let newLevel = child.level;

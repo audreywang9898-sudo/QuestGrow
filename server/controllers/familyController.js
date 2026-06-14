@@ -1,5 +1,6 @@
 import pool from '../config/db.js';
 import { getMessage } from '../utils/messageManager.js';
+import { validateTextField, safeErrorMessage } from '../utils/validation.js';
 
 // 1. Get Family Info (Name, Growth Score)
 export const getFamilyData = async (req, res) => {
@@ -61,6 +62,10 @@ export const addWishlistItem = async (req, res) => {
   if (!title || pointsNeeded === undefined) {
     return res.status(400).json({ message: getMessage('WISHLIST_REQUIRED_FIELDS') });
   }
+
+  // Length validation
+  const titleErr = validateTextField(title, '願望標題', { required: true, maxLength: 100 });
+  if (titleErr) return res.status(400).json({ message: titleErr });
 
   try {
     const result = await pool.query(
@@ -178,7 +183,7 @@ export const redeemWishlist = async (req, res) => {
   } catch (error) {
     await pool.query('ROLLBACK');
     console.error('redeemWishlist error:', error);
-    res.status(500).json({ message: error.message || getMessage('REDEEM_WISH_ERROR') });
+    res.status(500).json({ message: safeErrorMessage(error, getMessage('REDEEM_WISH_ERROR')) });
   }
 };
 
@@ -206,6 +211,10 @@ export const addParentGoal = async (req, res) => {
   if (!category || !title) {
     return res.status(400).json({ message: getMessage('GOAL_REQUIRED_FIELDS') });
   }
+
+  // Length validation
+  const goalTitleErr = validateTextField(title, '目標標題', { required: true, maxLength: 100 });
+  if (goalTitleErr) return res.status(400).json({ message: goalTitleErr });
 
   try {
     const result = await pool.query(
@@ -274,7 +283,7 @@ export const updateGoalProgress = async (req, res) => {
   } catch (error) {
     await pool.query('ROLLBACK');
     console.error('updateGoalProgress error:', error);
-    res.status(500).json({ message: error.message || getMessage('UPDATE_GOAL_ERROR') });
+    res.status(500).json({ message: safeErrorMessage(error, getMessage('UPDATE_GOAL_ERROR')) });
   }
 };
 

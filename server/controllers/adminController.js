@@ -27,20 +27,30 @@ export const getAdminStats = async (req, res) => {
       ORDER BY u.created_at DESC
     `);
 
-    const membersList = queryResult.rows.map(row => ({
-      userId: row.userId,
-      email: row.email,
-      userName: row.userName,
-      role: row.role,
-      userAvatar: row.userAvatar,
-      createdAt: row.createdAt ? row.createdAt.toISOString().split('T')[0] : null,
-      familyId: row.familyId,
-      familyName: row.familyName,
-      familyGrowthScore: row.familyGrowthScore || 0,
-      childProfileId: row.childProfileId,
-      childLevel: row.childLevel,
-      childJobClass: row.childJobClass
-    }));
+    const membersList = queryResult.rows.map(row => {
+      // Mask email for data minimization: user@example.com → use***@example.com
+      const rawEmail = row.email || '';
+      const [localPart, domain] = rawEmail.split('@');
+      const maskedEmail = localPart
+        ? `${localPart.slice(0, 3)}***@${domain || ''}`
+        : '***';
+
+      return {
+        userId: row.userId,
+        email: maskedEmail,
+        userName: row.userName,
+        role: row.role,
+        userAvatar: row.userAvatar,
+        createdAt: row.createdAt ? row.createdAt.toISOString().split('T')[0] : null,
+        familyId: row.familyId,
+        familyName: row.familyName,
+        familyGrowthScore: row.familyGrowthScore || 0,
+        childProfileId: row.childProfileId,
+        childLevel: row.childLevel,
+        childJobClass: row.childJobClass
+      };
+    });
+
 
     res.json({
       onlineUsers: onlineCount,

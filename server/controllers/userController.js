@@ -159,10 +159,24 @@ export const deleteChild = async (req, res) => {
 export const updateChildProfile = async (req, res) => {
   const familyId = req.user.family_id;
   const { childId } = req.params;
-  const data = req.body; // attributes, gold, level, name, avatar, etc.
+  const data = req.body;
+
+  // ── Role-based field restriction ──────────────────────────────────────
+  const isKid = req.user.role === 'kid';
+
+  // Kids can only edit cosmetic/display fields on their own profile
+  if (isKid) {
+    if (String(req.user.child_id) !== String(childId)) {
+      return res.status(403).json({ message: '孩子帳號只能修改自己的資料。' });
+    }
+    // Strip all stat fields — kids cannot self-award gold, level, exp, etc.
+    const FORBIDDEN_KID_FIELDS = ['gold', 'tickets', 'level', 'exp', 'exp_needed', 'job_class', 'attributes', 'email', 'password'];
+    FORBIDDEN_KID_FIELDS.forEach(f => delete data[f]);
+  }
+  // ── End Role-based restriction ────────────────────────────────────────
 
   try {
-    // Verify permissions
+    // Verify permissions — child must belong to the same family
     const verifyChild = await pool.query(
       `SELECT c.user_id, c.id, u.email 
        FROM children c 
@@ -193,7 +207,11 @@ export const updateChildProfile = async (req, res) => {
     const childParams = [];
     let childIndex = 1;
 
-    const childAllowedFields = ['name', 'age', 'birthday', 'avatar', 'level', 'exp', 'exp_needed', 'gold', 'tickets', 'job_class', 'attributes'];
+    // Parents can update all stats; kids can only update display fields
+    const childAllowedFields = isKid
+      ? ['name', 'age', 'birthday', 'avatar']
+      : ['name', 'age', 'birthday', 'avatar', 'level', 'exp', 'exp_needed', 'gold', 'tickets', 'job_class', 'attributes'];
+
     childAllowedFields.forEach(field => {
       if (data[field] !== undefined) {
         updateChildFields.push(`${field} = $${childIndex}`);

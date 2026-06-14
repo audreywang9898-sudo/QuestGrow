@@ -1,5 +1,6 @@
 import pool from '../config/db.js';
 import { getMessage } from '../utils/messageManager.js';
+import { validateTextField, safeErrorMessage } from '../utils/validation.js';
 
 const determineJobClass = (attrs) => {
   const mapping = {
@@ -76,6 +77,12 @@ export const addTask = async (req, res) => {
   if (!name || !type || !difficulty) {
     return res.status(400).json({ message: getMessage('TASK_REQUIRED_FIELDS') });
   }
+
+  // Length validation
+  const nameErr = validateTextField(name, '任務名稱', { required: true, maxLength: 100 });
+  if (nameErr) return res.status(400).json({ message: nameErr });
+  const descErr = validateTextField(description, '任務描述', { maxLength: 1000 });
+  if (descErr) return res.status(400).json({ message: descErr });
 
   // Permission check: kids can only assign tasks to themselves
   if (req.user.role === 'kid') {
@@ -436,6 +443,6 @@ export const reviewTask = async (req, res) => {
   } catch (error) {
     await pool.query('ROLLBACK');
     console.error('reviewTask error:', error);
-    res.status(500).json({ message: error.message || '伺服器錯誤，審核任務失敗。' });
+    res.status(500).json({ message: safeErrorMessage(error, '伺服器錯誤，審核任務失敗。') });
   }
 };

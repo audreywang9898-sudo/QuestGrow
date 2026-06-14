@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -19,20 +21,79 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Enable CORS for all requests to support frontends running on different ports/domains
-app.use(cors());
-app.use(express.json());
+// ── 1. Security Headers (Helmet) ──────────────────────────────────────
+app.use(helmet({
+  contentSecurityPolicy: false, // Disabled: frontend served separately from Render static site
+  crossOriginEmbedderPolicy: false,
+}));
+
+// ── 2. CORS ───────────────────────────────────────────────────────────
+// In production: only allow origins listed in ALLOWED_ORIGINS env var.
+// In development: also allow localhost Vite dev server.
+const allowedOrigins = (() => {
+  const origins = new Set();
+  // Add origins from environment variable (comma-separated)
+  if (process.env.ALLOWED_ORIGINS) {
+    process.env.ALLOWED_ORIGINS.split(',').forEach(o => origins.add(o.trim()));
+  }
+  // Always allow localhost in development
+  if (process.env.NODE_ENV !== 'production') {
+    origins.add('http://localhost:5173');
+    origins.add('http://localhost:5000');
+  }
+  return [...origins];
+})();
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no Origin header (e.g., mobile apps, server-to-server, curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    console.warn(`CORS blocked origin: ${origin}`);
+    return callback(new Error('CORS policy violation'), false);
+  },
+  credentials: true,
+}));
+
+// ── 3. Rate Limiting ──────────────────────────────────────────────────
+// Auth endpoints: max 10 requests per 15 minutes per IP to prevent brute-force
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { message: '登入嘗試次數過多，請 15 分鐘後再試。Too many requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => process.env.NODE_ENV !== 'production', // Disable in dev/test
+});
+
+// General API limiter: max 300 requests per 15 minutes per IP
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  message: { message: '請求過於頻繁，請稍後再試。Too many requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => process.env.NODE_ENV !== 'production',
+});
+
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use('/api/auth/google', authLimiter);
+app.use('/api', generalLimiter);
+
+// ── 4. Body Parsing & i18n ────────────────────────────────────────────
+app.use(express.json({ limit: '10mb' })); // Cap request body to 10MB
 app.use(languageMiddleware);
 
-// Serve static files from the React frontend build directory
+// ── 5. Static Files ───────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, '../dist')));
 
-// API Health Check
+// ── 6. API Health Check ───────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: getMessage('SERVER_RUNNING') });
 });
 
-// Mount Routes
+// ── 7. API Routes ─────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/tasks', taskRoutes);
@@ -40,7 +101,7 @@ app.use('/api/items', itemRoutes);
 app.use('/api/family', familyRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Wildcard fallback route to serve index.html for client-side routing (excluding /api routes)
+// ── 8. SPA Fallback ───────────────────────────────────────────────────
 app.get('*', (req, res) => {
   if (req.originalUrl.startsWith('/api')) {
     return res.status(404).json({ message: 'API route not found' });
@@ -48,13 +109,28 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
-// Error handling middleware
+// ── 9. Global Error Handler ───────────────────────────────────────────
 app.use((err, req, res, next) => {
+  // Never expose stack traces to the client in production
+  const isDev = process.env.NODE_ENV !== 'production';
   console.error(err.stack);
-  res.status(500).json({ message: getMessage('UNEXPECTED_SERVER_ERROR') });
+
+  if (err.message === 'CORS policy violation') {
+    return res.status(403).json({ message: 'CORS policy violation.' });
+  }
+
+  res.status(500).json({
+    message: isDev ? err.message : getMessage('UNEXPECTED_SERVER_ERROR'),
+  });
 });
 
-// Start Server
+// ── 10. Start Server ──────────────────────────────────────────────────
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`QuestGrow Backend Server is running on port ${PORT}`);
+  if (allowedOrigins.length > 0) {
+    console.log(`CORS allowed origins: ${allowedOrigins.join(', ')}`);
+  } else {
+    console.warn('WARNING: No ALLOWED_ORIGINS configured. All cross-origin requests will be blocked in production!');
+  }
 });
+
