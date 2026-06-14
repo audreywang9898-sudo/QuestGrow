@@ -21,15 +21,22 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// ── 0. Proxy Trust (MUST be before rate-limiters) ─────────────────────
+// Render sits behind a reverse proxy. Without this, all requests appear to
+// come from the same IP, breaking per-IP rate limiting.
+app.set('trust proxy', 1);
+
 // ── 1. Security Headers (Helmet) ──────────────────────────────────────
 app.use(helmet({
-  contentSecurityPolicy: false, // Disabled: frontend served separately from Render static site
-  crossOriginEmbedderPolicy: false,
+  contentSecurityPolicy: false,     // Disabled: frontend served separately
+  crossOriginEmbedderPolicy: false, // Allow cross-origin embeds
+  crossOriginOpenerPolicy: false,   // CRITICAL: Must be false for Google OAuth popup to work.
+                                    // Default COOP: same-origin breaks postMessage from OAuth windows.
 }));
 
 // ── 2. CORS ───────────────────────────────────────────────────────────
 // If ALLOWED_ORIGINS env var is set (comma-separated), only those origins are allowed.
-// If NOT set, all origins are allowed (backward-compatible default — safe for single-tenant deploys).
+// If NOT set, all origins are allowed (backward-compatible default).
 // To enable strict mode on Render: set ALLOWED_ORIGINS=https://your-frontend.onrender.com
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()).filter(Boolean)
@@ -37,36 +44,32 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no Origin header (mobile apps, server-to-server, curl)
     if (!origin) return callback(null, true);
-    // Strict mode: only allow listed origins
     if (allowedOrigins) {
       if (allowedOrigins.includes(origin)) return callback(null, true);
       console.warn(`CORS blocked origin: ${origin}`);
       return callback(new Error('CORS policy violation'), false);
     }
-    // Open mode: allow all (when ALLOWED_ORIGINS is not configured)
     return callback(null, true);
   },
   credentials: true,
 }));
 
-
 // ── 3. Rate Limiting ──────────────────────────────────────────────────
-// Auth endpoints: max 10 requests per 15 minutes per IP to prevent brute-force
+// Auth endpoints: 30 requests per 15 minutes per real IP (trust proxy enabled above)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 30,
   message: { message: '登入嘗試次數過多，請 15 分鐘後再試。Too many requests, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: () => process.env.NODE_ENV !== 'production', // Disable in dev/test
+  skip: () => process.env.NODE_ENV !== 'production',
 });
 
-// General API limiter: max 300 requests per 15 minutes per IP
+// General API limiter: 500 requests per 15 minutes per real IP
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 300,
+  max: 500,
   message: { message: '請求過於頻繁，請稍後再試。Too many requests, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -77,6 +80,7 @@ app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 app.use('/api/auth/google', authLimiter);
 app.use('/api', generalLimiter);
+
 
 // ── 4. Body Parsing & i18n ────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' })); // Cap request body to 10MB
