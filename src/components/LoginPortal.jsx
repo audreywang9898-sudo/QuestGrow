@@ -96,11 +96,9 @@ function LoginPortal({ onLogin, googleClientId }) {
       try {
         const client_id = import.meta.env.VITE_GOOGLE_CLIENT_ID || googleClientId;
         if (!client_id) {
-          console.log("Google GSI client_id not loaded yet, waiting...");
           return;
         }
         
-        console.log("Initializing Google GSI with client_id:", client_id);
         google.accounts.id.initialize({
           client_id,
           callback: (response) => {

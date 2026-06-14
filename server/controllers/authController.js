@@ -141,11 +141,19 @@ export const googleLogin = async (req, res) => {
   try {
     let email, googleId, name, avatar;
 
-    // Sandbox Mock Bypassing for Local Testing
-    if (process.env.NODE_ENV !== 'production' && idToken.startsWith('google-mock-')) {
-      email = idToken.replace('google-mock-', '') + '@gmail.com';
+    // Sandbox Mock Bypass — ONLY when ALLOW_GOOGLE_MOCK=true is explicitly set.
+    // This env var must NEVER be set in production. NODE_ENV alone is not a reliable gate.
+    const isMockAllowed = process.env.ALLOW_GOOGLE_MOCK === 'true';
+    if (isMockAllowed && idToken.startsWith('google-mock-')) {
+      // Allowlist: only specific test account names are permitted
+      const ALLOWED_MOCK_ACCOUNTS = (process.env.GOOGLE_MOCK_ACCOUNTS || 'testuser').split(',').map(s => s.trim());
+      const mockName = idToken.replace('google-mock-', '');
+      if (!ALLOWED_MOCK_ACCOUNTS.includes(mockName)) {
+        return res.status(401).json({ message: getMessage('GOOGLE_TOKEN_INVALID') });
+      }
+      email = mockName + '@gmail.com';
       googleId = idToken;
-      name = idToken.replace('google-mock-', '').split('@')[0];
+      name = mockName;
       avatar = 'boy';
     } else {
       // Real verification
@@ -190,7 +198,9 @@ export const googleLogin = async (req, res) => {
     }
 
     // 2. Register a new user with Google login
-    const targetRole = role || 'parent';
+    // Whitelist roles: frontend cannot inject 'admin' or other elevated roles.
+    const ALLOWED_ROLES = ['parent', 'kid'];
+    const targetRole = ALLOWED_ROLES.includes(role) ? role : 'parent';
     const randomPassword = Math.random().toString(36).substring(2, 11);
     const salt = bcrypt.genSaltSync(10);
     const passwordHash = bcrypt.hashSync(randomPassword, salt);
@@ -257,8 +267,9 @@ export const linkGoogleAccount = async (req, res) => {
   try {
     let googleId, googleEmail;
 
-    // Sandbox Mock Bypassing for Local Testing
-    if (process.env.NODE_ENV !== 'production' && idToken.startsWith('google-mock-')) {
+    // Sandbox Mock Bypass — ONLY when ALLOW_GOOGLE_MOCK=true is explicitly set.
+    const isMockAllowed = process.env.ALLOW_GOOGLE_MOCK === 'true';
+    if (isMockAllowed && idToken.startsWith('google-mock-')) {
       googleEmail = idToken.replace('google-mock-', '') + '@gmail.com';
       googleId = idToken;
     } else {

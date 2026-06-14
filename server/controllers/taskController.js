@@ -262,6 +262,21 @@ export const submitTask = async (req, res) => {
     return res.status(403).json({ message: getMessage('SUBMIT_TASK_ROLE_ERROR') });
   }
 
+  // Backend validation for photo field
+  if (photo && photo !== '') {
+    // Must be a valid base64-encoded PNG or JPEG
+    const isValidBase64Image = /^data:image\/(png|jpeg|jpg);base64,/.test(photo);
+    if (!isValidBase64Image) {
+      return res.status(400).json({ message: '不支援的圖片格式，請上傳 PNG 或 JPEG。' });
+    }
+    // Limit: 5MB image ~ 6.8MB base64 string. Reject anything over 7MB.
+    const maxBase64Length = 7 * 1024 * 1024;
+    if (photo.length > maxBase64Length) {
+      return res.status(400).json({ message: '圖片檔案過大，請限制在 5MB 以內。' });
+    }
+  }
+
+
   try {
     // Verify task belongs to this family
     const verifyTask = await pool.query(

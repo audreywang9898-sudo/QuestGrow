@@ -26,11 +26,14 @@ export const authenticateToken = (req, res, next) => {
   });
 };
 
-export const requireRole = (role) => {
+// requireRole accepts one or more role strings.
+// Example: requireRole('parent') or requireRole('parent', 'admin')
+export const requireRole = (...roles) => {
   return (req, res, next) => {
-    if (!req.user || req.user.role !== role) {
-      return res.status(403).json({ message: getMessage('INSUFFICIENT_PERMISSION', { role }) });
+    if (!req.user || !roles.includes(req.user.role)) {
+      return res.status(403).json({ message: getMessage('INSUFFICIENT_PERMISSION', { role: roles.join('/') }) });
     }
     next();
   };
 };
+
