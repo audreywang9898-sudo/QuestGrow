@@ -108,6 +108,28 @@ function KidPortal({
   const activeBadgeItem = inventory.find(i => i.type === '收藏卡' && i.status === '已使用');
   const activeBadge = activeBadgeItem ? activeBadgeItem.id : null;
   const [activeSubTab, setActiveSubTab] = useState('wishlist');
+
+  // Onboarding Tour state
+  const [showTour, setShowTour] = useState(() => {
+    return localStorage.getItem('questgrow_kid_tour_seen') !== 'true';
+  });
+  const [tourStep, setTourStep] = useState(1);
+
+  React.useEffect(() => {
+    if (!showTour) return;
+    if (tourStep === 1) {
+      setActiveSubTab('character');
+    } else if (tourStep === 2) {
+      setActiveSubTab('tasks');
+    } else if (tourStep === 3) {
+      setActiveSubTab('gacha');
+    } else if (tourStep === 4) {
+      setActiveSubTab('backpack');
+    } else if (tourStep === 5) {
+      setActiveSubTab('wishlist');
+    }
+  }, [tourStep, showTour]);
+
   const [submittingTaskId, setSubmittingTaskId] = useState(null);
   const [submissionNotes, setSubmissionNotes] = useState('');
   const [submissionPhoto, setSubmissionPhoto] = useState('');
@@ -712,7 +734,7 @@ function KidPortal({
           onClick={() => setActiveSubTab('character')}
           className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
             activeSubTab === 'character' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
-          }`}
+          } ${showTour && tourStep === 1 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse rounded' : ''}`}
         >
           <User className="h-4 w-4 text-[#3661FF]" />
           {t('tabChar')}
@@ -721,7 +743,7 @@ function KidPortal({
           onClick={() => setActiveSubTab('tasks')}
           className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
             activeSubTab === 'tasks' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
-          }`}
+          } ${showTour && tourStep === 2 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse rounded' : ''}`}
         >
           <Award className="h-4 w-4 text-[#3661FF]" />
           {t('tabQuests')}
@@ -735,7 +757,7 @@ function KidPortal({
           onClick={() => setActiveSubTab('gacha')}
           className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
             activeSubTab === 'gacha' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
-          }`}
+          } ${showTour && tourStep === 3 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse rounded' : ''}`}
         >
           <Sparkles className="h-4 w-4 text-[#FF9F1C]" />
           {t('tabSummon')}
@@ -749,7 +771,7 @@ function KidPortal({
           onClick={() => setActiveSubTab('backpack')}
           className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
             activeSubTab === 'backpack' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
-          }`}
+          } ${showTour && tourStep === 4 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse rounded' : ''}`}
         >
           <Package className="h-4 w-4 text-[#3661FF]" />
           {t('tabBackpack')}
@@ -763,7 +785,7 @@ function KidPortal({
           onClick={() => setActiveSubTab('wishlist')}
           className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
             activeSubTab === 'wishlist' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
-          }`}
+          } ${showTour && tourStep === 5 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse rounded' : ''}`}
         >
           <Trophy className="h-4 w-4 text-[#FF9F1C]" />
           {t('tabKidWishlist')}
@@ -864,6 +886,20 @@ function KidPortal({
                     </button>
                   )}
                 </div>
+              )}
+              {/* Restart Guide button for kids */}
+              {!isReadOnly && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTourStep(1);
+                    setShowTour(true);
+                    localStorage.removeItem('questgrow_kid_tour_seen');
+                  }}
+                  className="w-full mt-2 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-xs font-bold rounded-lg border border-amber-500/30 transition-all active:scale-95 text-center"
+                >
+                  {t('reopenTourBtn')}
+                </button>
               )}
             </div>
           </div>
@@ -1829,6 +1865,66 @@ function KidPortal({
                 {t('cancel')}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Onboarding Tour Overlay for Kids */}
+      {showTour && (
+        <div className="fixed bottom-6 right-6 z-50 w-full max-w-sm px-4 sm:px-0">
+          <div className="bg-[#1B1B1D]/95 backdrop-blur-md border border-[#3661FF]/40 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.6)] p-5 text-white flex flex-col gap-4 animate-success">
+            
+            {/* Step Header */}
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] bg-[#3661FF] text-white px-2 py-0.5 rounded font-black uppercase tracking-wider">
+                {language === 'zh' ? `步驟 ${tourStep} / 5` : `Step ${tourStep} / 5`}
+              </span>
+              <button 
+                onClick={() => {
+                  setShowTour(false);
+                  localStorage.setItem('questgrow_kid_tour_seen', 'true');
+                }}
+                className="text-slate-400 hover:text-white transition-colors text-xs font-black"
+              >
+                {t('tourSkip')}
+              </button>
+            </div>
+
+            {/* Step Body */}
+            <div>
+              <h4 className="text-base font-black text-white mb-2 flex items-center gap-1.5">
+                {t(`kidTourStep${tourStep}Title`)}
+              </h4>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                {t(`kidTourStep${tourStep}Desc`)}
+              </p>
+            </div>
+
+            {/* Step Navigation Footer */}
+            <div className="flex justify-between items-center pt-2 border-t border-white/5">
+              <button
+                disabled={tourStep === 1}
+                onClick={() => setTourStep(prev => Math.max(1, prev - 1))}
+                className="px-3 py-1.5 rounded-[4px] text-xs font-bold bg-[#252529] border border-[#35363A] text-slate-400 hover:text-white hover:bg-[#35363A] transition-colors disabled:opacity-30 disabled:pointer-events-none"
+              >
+                {t('tourPrev')}
+              </button>
+              
+              <button
+                onClick={() => {
+                  if (tourStep === 5) {
+                    setShowTour(false);
+                    localStorage.setItem('questgrow_kid_tour_seen', 'true');
+                  } else {
+                    setTourStep(prev => prev + 1);
+                  }
+                }}
+                className="px-4 py-1.5 rounded-[4px] text-xs font-black bg-[#3661FF] hover:bg-[#254edb] text-white transition-colors shadow-md"
+              >
+                {tourStep === 5 ? t('tourFinish') : t('tourNext')}
+              </button>
+            </div>
+
           </div>
         </div>
       )}

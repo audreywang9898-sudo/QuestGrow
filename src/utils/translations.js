@@ -357,7 +357,38 @@ export const translations = {
     clickToUpload: "點擊上傳圖片 (PNG/JPEG)",
     limit2MB: "限制 2MB 以內",
     customUploadPreview: "自訂上傳預覽",
-    customImageSelected: "已選中此自訂圖片"
+    customImageSelected: "已選中此自訂圖片",
+
+    // Onboarding Tour
+    tourNext: "下一步",
+    tourPrev: "上一步",
+    tourFinish: "完成",
+    tourSkip: "跳過",
+    reopenTourBtn: "💡 重開教學引導",
+
+    // Parent Tour Steps
+    parentTourStep1Title: "👋 歡迎來到家長冒險總部！",
+    parentTourStep1Desc: "QuestGrow 是一款把「全人成長」與「家庭理財」變成 RPG 冒險遊戲的系統。孩子可以藉由完成您的任務來獲得金幣、經驗與冒險獎勵！",
+    parentTourStep2Title: "📥 審核工作台 (Audit Desk)",
+    parentTourStep2Desc: "當孩子提交任務（如寫好日記、做完家事並上傳照片）或想要使用他們抽到的特權券（如 30 分鐘遊戲時間）時，會在此處顯示。核准後，系統會自動發放金幣、經驗與家庭成長點數！",
+    parentTourStep3Title: "🛠️ 任務工坊 (Quest Factory)",
+    parentTourStep3Desc: "您可以在此新增自訂任務，或是「快速匯入」系統預設的模板任務（包括最新推出的 10 大財商任務）。您可以自由設定難度、週期、指派對象，並提供德、智、體、群、美等全人屬性獎勵！",
+    parentTourStep4Title: "📊 成長報表與 AI 教練 (Reports)",
+    parentTourStep4Desc: "系統會以雷達圖呈現孩子的德智體群美發展。AI 家庭教練會根據本週的數據遙測日誌，分析孩子的成長亮點，並在每週日誌中給予您個性化的下週任務指派建議！",
+    parentTourStep5Title: "🎯 設定與願望清單 (Settings & Wishlist)",
+    parentTourStep5Desc: "在這裡可以新增家庭的共同大願望（如購買 Switch 遊戲或全家日本行）。當孩子完成任務累積足夠的家庭成長點數時，即可在這裡兌換，增進全家人的凝聚力！",
+
+    // Kid Tour Steps
+    kidTourStep1Title: "⚔️ 歡迎，小小冒險者！",
+    kidTourStep1Desc: "這是你的角色狀態面板。你可以查看自己的等級、經驗值、金幣與抽卡券。你的職業（如探索者、智者、守護者）會根據你最高的能力屬性自動轉換喔！",
+    kidTourStep2Title: "📜 冒險任務庫 (Quest Board)",
+    kidTourStep2Desc: "在這裡查看你所有進行中的任務。點擊「提交」按鈕，可以留下給爸媽的心得留言，甚至拍下完成的照片，上傳給爸媽進行覆核審批！",
+    kidTourStep3Title: "🔮 召喚殿堂 (Summon Hall)",
+    kidTourStep3Desc: "在這裡花費你在任務中賺到的「抽卡券」，召喚神秘寶箱！你可以抽到特權卡（如多玩 30 分鐘平板）、體驗卡（與爸媽單獨約會吃冰淇淋）、或是酷炫的角色稱號與徽章！",
+    kidTourStep4Title: "🎒 神秘背包 (Backpack)",
+    kidTourStep4Desc: "這裡會存放你所抽到的所有道具卡與徽章。點擊卡片可以「申請使用」它（需要爸媽審核同意），或者「裝備」你的收藏稱號，讓你的狀態欄變得超級酷炫！",
+    kidTourStep5Title: "🎁 家庭願望清單 (Wishlist)",
+    kidTourStep5Desc: "這是全家人的共同大願望！每次你完成任務，都會增加全家的「家庭總積分」。當積分集滿時，就可以兌換全家人的大願望囉！快去接任務，和小隊員們一起努力吧！"
   },
   en: {
     // Header
@@ -715,6 +746,37 @@ export const translations = {
     clickToUpload: "Click to upload image (PNG/JPEG)",
     limit2MB: "Under 2MB limit",
     customUploadPreview: "Custom Upload Preview",
-    customImageSelected: "This custom image has been selected"
+    customImageSelected: "This custom image has been selected",
+
+    // Onboarding Tour
+    tourNext: "Next",
+    tourPrev: "Back",
+    tourFinish: "Got it!",
+    tourSkip: "Skip",
+    reopenTourBtn: "💡 Restart Guide",
+
+    // Parent Tour Steps
+    parentTourStep1Title: "👋 Welcome to Parent HQ!",
+    parentTourStep1Desc: "QuestGrow is a family growth system that turns character building and financial literacy into an RPG adventure. Children complete quests assigned by you to earn gold, EXP, and rewards!",
+    parentTourStep2Title: "📥 Audit Desk",
+    parentTourStep2Desc: "When your child submits a quest (with notes and proof photos) or requests to redeem a gacha card (e.g. 30 mins of screen time), it will show up here. Approving grants them rewards and adds points to the Family Score!",
+    parentTourStep3Title: "🛠️ Quest Workshop",
+    parentTourStep3Desc: "Create custom quests or 'Quick Import' pre-configured templates (including our new financial quotient quests). Customize difficulty, assignment, and award attributes like Wisdom, Responsibility, Courage, Empathy, or Creativity!",
+    parentTourStep4Title: "📊 Reports & AI Coach",
+    parentTourStep4Desc: "Track your child's developmental balance with a beautiful radar chart. Our AI Coach analyzes weekly interaction logs to highlight achievements and suggest specific areas to focus on next week!",
+    parentTourStep5Title: "🎯 Settings & Wishlist",
+    parentTourStep5Desc: "Configure ultimate family rewards (e.g., family trips, new games) that require Family Score points to unlock. Encourage cooperation as children complete quests to power up the family score!",
+
+    // Kid Tour Steps
+    kidTourStep1Title: "⚔️ Welcome, Little Explorer!",
+    kidTourStep1Desc: "This is your character status panel. View your level, EXP, gold, and summon tickets. Your job class (Explorer, Sage, Guardian, Creator, or Companion) dynamically shifts based on your highest attribute!",
+    kidTourStep2Title: "📜 Quest Board",
+    kidTourStep2Desc: "Check all your active and pending quests here. Click 'Submit' to write a message to your parents or upload a photo of your work to get it approved!",
+    kidTourStep3Title: "🔮 Summon Hall",
+    kidTourStep3Desc: "Spend your hard-earned tickets here to summon chest rewards! You can draw Privilege Cards (e.g., extra game time), Experience Cards (ice cream date with parents), or rare badges and titles!",
+    kidTourStep4Title: "🎒 Mysterious Backpack",
+    kidTourStep4Desc: "This holds all cards and badges you've summoned. Click a card to 'Request Use' (pending parent approval), or 'Equip' titles/badges to make your profile stand out!",
+    kidTourStep5Title: "🎁 Family Wishlist",
+    kidTourStep5Desc: "These are the family's big goals! Completing tasks increases the Family Score. Once it is fully charged, the family reward can be claimed. Pick up your sword and start adventuring!"
   }
 };
