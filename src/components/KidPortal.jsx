@@ -1979,10 +1979,10 @@ function KidPortal({
             <div className="flex gap-4 items-start">
               <div className="flex-1">
                 <h4 className="text-base font-extrabold text-slate-950 mb-2 flex items-center gap-1.5">
-                  {t(`kidTourStep${tourStep}Title`)}
+                  {renderTextWithZhuyin(t(`kidTourStep${tourStep}Title`))}
                 </h4>
                 <p className="text-sm text-slate-650 font-medium leading-relaxed font-sans">
-                  {t(`kidTourStep${tourStep}Desc`)}
+                  {renderTextWithZhuyin(t(`kidTourStep${tourStep}Desc`))}
                 </p>
               </div>
 
