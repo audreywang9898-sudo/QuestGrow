@@ -189,8 +189,42 @@ function KidPortal({
 
     const utterance = new SpeechSynthesisUtterance(textToSpeak);
     utterance.lang = language === 'zh' ? 'zh-TW' : 'en-US';
-    utterance.rate = 0.95;
-    utterance.pitch = 1.15;
+    utterance.rate = 0.92; // Slightly slower, gentler and sweeter
+    utterance.pitch = 1.25; // Higher pitch for a sweeter child/female voice
+
+    // Attempt to select a sweet female/child voice from system voices
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      const voices = window.speechSynthesis.getVoices();
+      let selectedVoice = null;
+      if (language === 'zh') {
+        const preferredZhNames = ['hanhan', 'yating', 'ting-ting', 'tingting', 'google 國語', 'google 臺灣', 'xiaoxiao', 'hsiaoyu', 'yaoyao', 'mei-jia', 'sin-ji'];
+        for (const name of preferredZhNames) {
+          const found = voices.find(v => v.name.toLowerCase().includes(name) && (v.lang.includes('zh') || v.lang.includes('zho')));
+          if (found) {
+            selectedVoice = found;
+            break;
+          }
+        }
+        if (!selectedVoice) {
+          selectedVoice = voices.find(v => v.lang.toLowerCase().includes('zh'));
+        }
+      } else {
+        const preferredEnNames = ['zira', 'samantha', 'aria', 'jenny', 'google us english'];
+        for (const name of preferredEnNames) {
+          const found = voices.find(v => v.name.toLowerCase().includes(name) && v.lang.includes('en'));
+          if (found) {
+            selectedVoice = found;
+            break;
+          }
+        }
+        if (!selectedVoice) {
+          selectedVoice = voices.find(v => v.lang.toLowerCase().includes('en'));
+        }
+      }
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
+    }
 
     utterance.onend = () => {
       setTourSpeaking(false);
