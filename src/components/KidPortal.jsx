@@ -1872,11 +1872,11 @@ function KidPortal({
       {/* Onboarding Tour Overlay for Kids */}
       {showTour && (
         <div className="fixed bottom-6 right-6 z-50 w-full max-w-sm px-4 sm:px-0">
-          <div className="bg-[#1B1B1D]/95 backdrop-blur-md border border-[#3661FF]/40 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.6)] p-5 text-white flex flex-col gap-4 animate-success">
+          <div className="bg-white border-2 border-[#3661FF] rounded-2xl shadow-[0_12px_45px_rgba(0,0,0,0.18)] p-6 text-slate-800 flex flex-col gap-4 animate-success">
             
             {/* Step Header */}
             <div className="flex justify-between items-center">
-              <span className="text-[10px] bg-[#3661FF] text-white px-2 py-0.5 rounded font-black uppercase tracking-wider">
+              <span className="text-xs bg-[#3661FF] text-white px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider">
                 {language === 'zh' ? `步驟 ${tourStep} / 5` : `Step ${tourStep} / 5`}
               </span>
               <button 
@@ -1884,7 +1884,7 @@ function KidPortal({
                   setShowTour(false);
                   localStorage.setItem('questgrow_kid_tour_seen', 'true');
                 }}
-                className="text-slate-400 hover:text-white transition-colors text-xs font-black"
+                className="text-slate-400 hover:text-slate-600 transition-colors text-xs font-black"
               >
                 {t('tourSkip')}
               </button>
@@ -1892,20 +1892,20 @@ function KidPortal({
 
             {/* Step Body */}
             <div>
-              <h4 className="text-base font-black text-white mb-2 flex items-center gap-1.5">
+              <h4 className="text-base font-extrabold text-slate-950 mb-2 flex items-center gap-1.5">
                 {t(`kidTourStep${tourStep}Title`)}
               </h4>
-              <p className="text-xs text-slate-300 leading-relaxed">
+              <p className="text-sm text-slate-650 font-medium leading-relaxed">
                 {t(`kidTourStep${tourStep}Desc`)}
               </p>
             </div>
 
             {/* Step Navigation Footer */}
-            <div className="flex justify-between items-center pt-2 border-t border-white/5">
+            <div className="flex justify-between items-center pt-3 border-t border-slate-100">
               <button
                 disabled={tourStep === 1}
                 onClick={() => setTourStep(prev => Math.max(1, prev - 1))}
-                className="px-3 py-1.5 rounded-[4px] text-xs font-bold bg-[#252529] border border-[#35363A] text-slate-400 hover:text-white hover:bg-[#35363A] transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                className="px-3 py-1.5 rounded-[4px] text-xs font-bold bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors disabled:opacity-30 disabled:pointer-events-none"
               >
                 {t('tourPrev')}
               </button>
