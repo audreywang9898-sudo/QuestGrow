@@ -700,6 +700,23 @@ function KidPortal({
         <span className="text-xs text-slate-500 font-medium">{t('simulatedDateLabel')} {simulatedDate}</span>
       </div>
 
+      {/* Restart Tour button */}
+      {!isReadOnly && (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => {
+              setTourStep(1);
+              setShowTour(true);
+              localStorage.removeItem('questgrow_kid_tour_seen');
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold transition-all active:scale-95 whitespace-nowrap"
+          >
+            {t('reopenTourBtn')}
+          </button>
+        </div>
+      )}
+
       {/* FCM Notifications Panel */}
       {showNotifications && (
         <div className="glass-panel p-4 border-indigo-500/30 bg-slate-950/90 space-y-3 max-w-md animate-success">
@@ -886,20 +903,6 @@ function KidPortal({
                     </button>
                   )}
                 </div>
-              )}
-              {/* Restart Guide button for kids */}
-              {!isReadOnly && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTourStep(1);
-                    setShowTour(true);
-                    localStorage.removeItem('questgrow_kid_tour_seen');
-                  }}
-                  className="w-full mt-2 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-xs font-bold rounded-lg border border-amber-500/30 transition-all active:scale-95 text-center"
-                >
-                  {t('reopenTourBtn')}
-                </button>
               )}
             </div>
           </div>

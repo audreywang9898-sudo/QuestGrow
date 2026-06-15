@@ -544,6 +544,21 @@ function ParentPortal({
         <span className="text-xs text-slate-500 font-medium">{t('simulatedDateLabel')} {simulatedDate}</span>
       </div>
 
+      {/* Restart Tour button */}
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => {
+            setTourStep(1);
+            setShowTour(true);
+            localStorage.removeItem('questgrow_parent_tour_seen');
+          }}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold transition-all active:scale-95 whitespace-nowrap"
+        >
+          {t('reopenTourBtn')}
+        </button>
+      </div>
+
       <div className="flex border-b border-[#35363A] gap-1 pb-px overflow-x-auto">
         <button
           onClick={() => setActiveTab('audit')}
@@ -1419,55 +1434,42 @@ function ParentPortal({
 
       {/* --- Consolidated Settings Sub-tabs --- */}
       {activeTab === 'settings' && (
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-white/5 pb-2 gap-2">
-          <div className="flex gap-2 pb-px overflow-x-auto">
-            <button
-              type="button"
-              onClick={() => setSettingsSubTab('wishlist')}
-              className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap active:scale-95 duration-100 ${
-                settingsSubTab === 'wishlist' 
-                  ? 'border-[#FF9F1C] text-[#FF9F1C] bg-[#FF9F1C]/10 shadow-md shadow-[#FF9F1C]/5' 
-                  : 'border-transparent text-slate-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Trophy className={`h-4 w-4 transition-colors ${settingsSubTab === 'wishlist' ? 'text-[#FF9F1C]' : 'text-slate-500'}`} />
-              {t('tabWishlist')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setSettingsSubTab('parent')}
-              className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap active:scale-95 duration-100 ${
-                settingsSubTab === 'parent' 
-                  ? 'border-[#3661FF] text-[#3661FF] bg-[#3661FF]/10 shadow-md shadow-[#3661FF]/5' 
-                  : 'border-transparent text-slate-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Award className={`h-4 w-4 transition-colors ${settingsSubTab === 'parent' ? 'text-[#3661FF]' : 'text-slate-500'}`} />
-              {t('tabParent')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setSettingsSubTab('child')}
-              className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap active:scale-95 duration-100 ${
-                settingsSubTab === 'child' 
-                  ? 'border-[#00E676] text-[#00E676] bg-[#00E676]/10 shadow-md shadow-[#00E676]/5' 
-                  : 'border-transparent text-slate-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Users className={`h-4 w-4 transition-colors ${settingsSubTab === 'child' ? 'text-[#00E676]' : 'text-slate-500'}`} />
-              {t('tabChild')}
-            </button>
-          </div>
+        <div className="flex border-b border-white/5 gap-2 pb-px overflow-x-auto">
           <button
             type="button"
-            onClick={() => {
-              setTourStep(1);
-              setShowTour(true);
-              localStorage.removeItem('questgrow_parent_tour_seen');
-            }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold transition-all active:scale-95 whitespace-nowrap self-end sm:self-auto"
+            onClick={() => setSettingsSubTab('wishlist')}
+            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap active:scale-95 duration-100 ${
+              settingsSubTab === 'wishlist' 
+                ? 'border-[#FF9F1C] text-[#FF9F1C] bg-[#FF9F1C]/10 shadow-md shadow-[#FF9F1C]/5' 
+                : 'border-transparent text-slate-400 hover:text-white hover:bg-white/5'
+            }`}
           >
-            {t('reopenTourBtn')}
+            <Trophy className={`h-4 w-4 transition-colors ${settingsSubTab === 'wishlist' ? 'text-[#FF9F1C]' : 'text-slate-500'}`} />
+            {t('tabWishlist')}
+          </button>
+          <button
+            type="button"
+            onClick={() => setSettingsSubTab('parent')}
+            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap active:scale-95 duration-100 ${
+              settingsSubTab === 'parent' 
+                ? 'border-[#3661FF] text-[#3661FF] bg-[#3661FF]/10 shadow-md shadow-[#3661FF]/5' 
+                : 'border-transparent text-slate-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Award className={`h-4 w-4 transition-colors ${settingsSubTab === 'parent' ? 'text-[#3661FF]' : 'text-slate-500'}`} />
+            {t('tabParent')}
+          </button>
+          <button
+            type="button"
+            onClick={() => setSettingsSubTab('child')}
+            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap active:scale-95 duration-100 ${
+              settingsSubTab === 'child' 
+                ? 'border-[#00E676] text-[#00E676] bg-[#00E676]/10 shadow-md shadow-[#00E676]/5' 
+                : 'border-transparent text-slate-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Users className={`h-4 w-4 transition-colors ${settingsSubTab === 'child' ? 'text-[#00E676]' : 'text-slate-500'}`} />
+            {t('tabChild')}
           </button>
         </div>
       )}
