@@ -662,3 +662,14 @@ ruby.ruby-char rt {
   vertical-align: middle !important;
   padding: 0 !important;
 }
+
+/* Gentle bounce and pulsing animations for Kid Onboarding Guide TTS Voice Button */
+@keyframes bounce-gentle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.animate-bounce-gentle {
+  animation: bounce-gentle 2.4s ease-in-out infinite;
+}
+

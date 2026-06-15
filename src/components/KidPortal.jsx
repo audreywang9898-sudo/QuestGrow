@@ -116,6 +116,11 @@ function KidPortal({
   const [tourStep, setTourStep] = useState(1);
 
   React.useEffect(() => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    setTourSpeaking(false);
+
     if (!showTour) return;
     if (tourStep === 1) {
       setActiveSubTab('character');
@@ -153,8 +158,51 @@ function KidPortal({
 
   // TTS Voice Synthesis States and Functions
   const [speakingTaskId, setSpeakingTaskId] = useState(null);
+  const [tourSpeaking, setTourSpeaking] = useState(false);
   const [showCompletedHistory, setShowCompletedHistory] = useState(false);
   const [showBackpackHistory, setShowBackpackHistory] = useState(false);
+
+  const handleSpeakTourStep = (stepNum) => {
+    if (!('speechSynthesis' in window)) {
+      alert(language === 'zh' ? '您的瀏覽器不支援語音播放功能。' : 'Your browser does not support voice playback.');
+      return;
+    }
+
+    if (tourSpeaking) {
+      window.speechSynthesis.cancel();
+      setTourSpeaking(false);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    setSpeakingTaskId(null); // Clear task speech status if any
+
+    const title = t(`kidTourStep${stepNum}Title`);
+    const desc = t(`kidTourStep${stepNum}Desc`);
+    
+    let textToSpeak = '';
+    if (language === 'zh') {
+      textToSpeak = `引導教學，第 ${stepNum} 步：${title}。說明：${desc}`;
+    } else {
+      textToSpeak = `Tutorial guide, step ${stepNum}: ${title}. Description: ${desc}`;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    utterance.lang = language === 'zh' ? 'zh-TW' : 'en-US';
+    utterance.rate = 0.95;
+    utterance.pitch = 1.15;
+
+    utterance.onend = () => {
+      setTourSpeaking(false);
+    };
+
+    utterance.onerror = () => {
+      setTourSpeaking(false);
+    };
+
+    setTourSpeaking(true);
+    window.speechSynthesis.speak(utterance);
+  };
 
   const handleSpeak = (item, type = 'task') => {
     if (!('speechSynthesis' in window)) {
@@ -1894,13 +1942,38 @@ function KidPortal({
             </div>
 
             {/* Step Body */}
-            <div>
-              <h4 className="text-base font-extrabold text-slate-950 mb-2 flex items-center gap-1.5">
-                {t(`kidTourStep${tourStep}Title`)}
-              </h4>
-              <p className="text-sm text-slate-650 font-medium leading-relaxed">
-                {t(`kidTourStep${tourStep}Desc`)}
-              </p>
+            <div className="flex gap-4 items-start">
+              <div className="flex-1">
+                <h4 className="text-base font-extrabold text-slate-950 mb-2 flex items-center gap-1.5">
+                  {t(`kidTourStep${tourStep}Title`)}
+                </h4>
+                <p className="text-sm text-slate-650 font-medium leading-relaxed font-sans">
+                  {t(`kidTourStep${tourStep}Desc`)}
+                </p>
+              </div>
+
+              {/* Enhanced Voice Playback Button */}
+              <button
+                type="button"
+                onClick={() => handleSpeakTourStep(tourStep)}
+                className={`relative shrink-0 p-3 rounded-full shadow-lg transition-all duration-300 transform active:scale-90 flex items-center justify-center border-2 border-white ${
+                  tourSpeaking
+                    ? 'bg-rose-500 text-white animate-pulse shadow-rose-500/50 scale-105'
+                    : 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-900 hover:from-amber-300 hover:to-amber-400 shadow-amber-500/40 hover:scale-105 animate-bounce-gentle'
+                }`}
+                style={{ minWidth: '46px', minHeight: '46px' }}
+                title={language === 'zh' ? '語音導讀' : 'Read Out Loud'}
+              >
+                {/* Pulsing ring around the button */}
+                {!tourSpeaking && (
+                  <span className="absolute -inset-1 rounded-full border-2 border-amber-400/60 animate-ping pointer-events-none"></span>
+                )}
+                {tourSpeaking ? (
+                  <VolumeX className="h-5 w-5" />
+                ) : (
+                  <Volume2 className="h-5 w-5" />
+                )}
+              </button>
             </div>
 
             {/* Step Navigation Footer */}
