@@ -15,7 +15,7 @@ export const translations = {
     // Parent Portal Tabs
     tabAudit: "審核工作台",
     tabWorkshop: "任務工坊",
-    tabReports: "成長報表與日誌",
+    tabReports: "AI成長分析與日誌",
     tabWishlist: "願望許願池",
     tabParent: "家長設定",
     tabChild: "兒童設定",
@@ -440,7 +440,7 @@ export const translations = {
     // Parent Portal Tabs
     tabAudit: "Audit Center",
     tabWorkshop: "Quest Workshop",
-    tabReports: "Reports & Logs",
+    tabReports: "AI Growth Analysis & Logs",
     tabWishlist: "Wishlist Pool",
     tabParent: "Parent Settings",
     tabChild: "Child Settings",
