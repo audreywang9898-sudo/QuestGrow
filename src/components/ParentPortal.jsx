@@ -17,6 +17,45 @@ const difficultyRewardsMap = {
   "終極": { exp: 800, gold: 400, ticket: 3 }
 };
 
+const STARTER_QUESTS_TEMPLATES = [
+  { name: '📖 閱讀好書 20 分鐘', description: '閱讀一本自己喜歡的課外書20分鐘，並與爸爸媽媽分享心得。', type: '智', difficulty: '簡單', expReward: 100, goldReward: 50, ticketReward: 1, attributeReward: 'Wisdom', period: '每日' },
+  { name: '🧹 自主整理個人物品與書包', description: '自己整理書包、書桌以及個人物品，維持環境乾淨。', type: '德', difficulty: '中等', expReward: 200, goldReward: 100, ticketReward: 1, attributeReward: 'Responsibility', period: '每日' },
+  { name: '👁️ 眼球保健體操與拉筋', description: '看螢幕或看書後，進行眼球舒緩操並做全身伸展拉筋。', type: '體', difficulty: '簡單', expReward: 100, goldReward: 50, ticketReward: 1, attributeReward: 'Courage', period: '每日' },
+  { name: '🍽️ 主動協助餐後收拾與擦餐桌', description: '吃完飯後，主動把碗盤拿到水槽，並幫忙擦乾淨餐桌。', type: '群', difficulty: '簡單', expReward: 100, goldReward: 50, ticketReward: 1, attributeReward: 'Empathy', period: '每日' },
+  { name: '🎨 畫一幅畫或手作一件創意作品', description: '發揮創意，動手畫一幅畫或者利用家中材料做出創意手作品。', type: '美', difficulty: '較難', expReward: 400, goldReward: 200, ticketReward: 2, attributeReward: 'Creativity', period: '每日' }
+];
+
+const JOB_CLASSES = {
+  Explorer: {
+    nameZh: '⚔️ 探索者 (Explorer)',
+    nameEn: '⚔️ Explorer',
+    descZh: '能力完全均衡。初始屬性：德+10、智+10、體+10、群+10、美+10',
+    descEn: 'Perfect balance. Initial attributes: Responsibility: 10, Wisdom: 10, Courage: 10, Empathy: 10, Creativity: 10',
+    attributes: { Wisdom: 10, Responsibility: 10, Courage: 10, Empathy: 10, Creativity: 10 }
+  },
+  Sage: {
+    nameZh: '🔮 智者 (Sage)',
+    nameEn: '🔮 Sage',
+    descZh: '偏重智力學習。初始屬性：智+18、德+10、體+10、群+10、美+12',
+    descEn: 'Focused on learning. Initial attributes: Wisdom: 18, Responsibility: 10, Courage: 10, Empathy: 10, Creativity: 12',
+    attributes: { Wisdom: 18, Responsibility: 10, Courage: 10, Empathy: 10, Creativity: 12 }
+  },
+  Guardian: {
+    nameZh: '🛡️ 守護者 (Guardian)',
+    nameEn: '🛡️ Guardian',
+    descZh: '偏重責任與體能。初始屬性：德+18、體+18、智+8、群+10、美+6',
+    descEn: 'Focused on responsibility & physics. Initial attributes: Responsibility: 18, Courage: 18, Wisdom: 8, Empathy: 10, Creativity: 6',
+    attributes: { Wisdom: 8, Responsibility: 18, Courage: 18, Empathy: 10, Creativity: 6 }
+  },
+  Creator: {
+    nameZh: '🎨 創造者 (Creator)',
+    nameEn: '🎨 Creator',
+    descZh: '偏重藝術與創意。初始屬性：美+18、智+12、德+10、體+8、群+12',
+    descEn: 'Focused on art & creativity. Initial attributes: Creativity: 18, Wisdom: 12, Responsibility: 10, Courage: 8, Empathy: 12',
+    attributes: { Wisdom: 12, Responsibility: 10, Courage: 8, Empathy: 12, Creativity: 18 }
+  }
+};
+
 function ParentPortal({
   stats,
   tasks,
@@ -110,6 +149,11 @@ function ParentPortal({
   const [newChildAvatar, setNewChildAvatar] = useState('boy');
   const [newChildEmail, setNewChildEmail] = useState('');
   const [newChildPassword, setNewChildPassword] = useState('password123');
+
+  // Wizard Setup States
+  const [wizardStep, setWizardStep] = useState(1);
+  const [selectedJobClass, setSelectedJobClass] = useState('Explorer');
+  const [selectedStarterQuests, setSelectedStarterQuests] = useState([]);
 
   const [editingChildId, setEditingChildId] = useState(null);
   const [editChildName, setEditChildName] = useState('');
@@ -371,20 +415,25 @@ function ParentPortal({
     setWorkshopSubTab('manage');
   };
 
-  const submitAddChild = (e) => {
+  const submitAddChild = async (e) => {
     e.preventDefault();
     if (!newChildName) return;
     
     const suggestedEmail = newChildEmail || `${newChildName.toLowerCase().replace(/[^a-z0-9]/g, '')}@questgrow.com`;
     const suggestedPassword = newChildPassword || 'password123';
 
-    const success = onAddChild({
+    const initialTasks = selectedStarterQuests.map(idx => STARTER_QUESTS_TEMPLATES[idx]);
+
+    const success = await onAddChild({
       name: newChildName,
       age: parseInt(newChildAge, 10) || 10,
       birthday: newChildBirthday || '',
       avatar: newChildAvatar || 'boy',
       email: suggestedEmail,
-      password: suggestedPassword
+      password: suggestedPassword,
+      jobClass: selectedJobClass,
+      attributes: JOB_CLASSES[selectedJobClass].attributes,
+      initialTasks: initialTasks
     });
 
     if (success !== false) {
@@ -394,6 +443,9 @@ function ParentPortal({
       setNewChildAvatar('boy');
       setNewChildEmail('');
       setNewChildPassword('password123');
+      setWizardStep(1);
+      setSelectedJobClass('Explorer');
+      setSelectedStarterQuests([]);
       setShowAddChildForm(false);
     }
   };
@@ -2144,100 +2196,410 @@ function ParentPortal({
             </div>
           </div>
 
-          {/* Right Column: Add Child form */}
+          {/* Right Column: Add Child form (Wizard stepper) */}
           <div className="glass-panel p-6 space-y-6">
             <div>
-              <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
-                <Plus className="h-5 w-5 text-emerald-400" />
-                {t('addNewChildTitle')}
+              <h3 className="text-lg font-black text-slate-200 flex items-center gap-2">
+                <span className="text-2xl">🧙‍♂️</span>
+                {language === 'zh' ? '兒童角色設定嚮導' : 'Adventurer Setup Wizard'}
               </h3>
               <p className="text-xs text-slate-400 mt-1">
-                {t('addNewChildDesc')}
+                {language === 'zh' ? '跟著五步驟，輕鬆又趣味地為孩子建立專屬角色與起步任務！' : '5 steps to set up your child\'s RPG profile & starter quests!'}
               </p>
             </div>
 
             {children.length < 8 ? (
-              <form onSubmit={submitAddChild} className="bg-white/5 border border-white/5 p-4 rounded-xl space-y-4 animate-success">
-                <h4 className="text-xs font-black text-violet-300 uppercase tracking-widest flex items-center gap-1.5">
-                  <Plus className="h-4 w-4" /> {t('fillChildData')}
-                </h4>
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1">{t('childNameLabel')}</label>
-                    <input 
-                      type="text" required value={newChildName} 
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setNewChildName(val);
-                        const clean = val.toLowerCase().replace(/[^a-z0-9]/g, '');
-                        if (clean) {
-                          setNewChildEmail(`${clean}@questgrow.com`);
-                        } else {
-                          setNewChildEmail('');
-                        }
-                      }}
-                      placeholder="e.g. Michelle"
-                      className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1">{t('childAgeLabel')}</label>
-                    <input 
-                      type="number" required min="1" max="18" value={newChildAge} onChange={(e) => setNewChildAge(e.target.value)}
-                      className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1">{t('childBirthdayLabel')}</label>
-                    <input 
-                      type="text" required value={newChildBirthday} onChange={(e) => setNewChildBirthday(e.target.value)}
-                      placeholder="e.g. 10/24"
-                      className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1">{t('emailLabelChild')}</label>
-                    <input 
-                      type="email" required value={newChildEmail} onChange={(e) => setNewChildEmail(e.target.value)}
-                      placeholder="e.g. michelle@questgrow.com"
-                      className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1">{t('passwordLabelChild')}</label>
-                    <input 
-                      type="text" required value={newChildPassword} onChange={(e) => setNewChildPassword(e.target.value)}
-                      placeholder="密碼"
-                      className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-2">{t('avatarSelectLabel')}</label>
-                    <div className="flex gap-4">
-                      <button
-                        type="button"
-                        onClick={() => setNewChildAvatar('boy')}
-                        className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl border transition-all ${
-                          newChildAvatar === 'boy' ? 'border-violet-500 bg-violet-600/20' : 'border-white/5 bg-white/5'
-                        }`}
-                      >
-                        👦
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setNewChildAvatar('girl')}
-                        className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl border transition-all ${
-                          newChildAvatar === 'girl' ? 'border-violet-500 bg-violet-600/20' : 'border-white/5 bg-white/5'
-                        }`}
-                      >
-                        👧
-                      </button>
+              <form onSubmit={(e) => e.preventDefault()} className="bg-white/5 border border-white/5 p-5 rounded-2xl space-y-6 animate-success">
+                
+                {/* Stepper progress indicator */}
+                <div className="flex items-center justify-between mb-6">
+                  {[1, 2, 3, 4, 5].map((step) => (
+                    <React.Fragment key={step}>
+                      <div className="flex flex-col items-center relative">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 ${
+                          wizardStep === step 
+                            ? 'bg-[#3661FF] text-white ring-4 ring-[#3661FF]/20 shadow-[0_0_10px_rgba(54,97,255,0.4)]' 
+                            : wizardStep > step 
+                              ? 'bg-emerald-500 text-white' 
+                              : 'bg-slate-800 text-slate-400 border border-white/10'
+                        }`}>
+                          {wizardStep > step ? <Check className="h-4 w-4" /> : step}
+                        </div>
+                        <span className="text-[9px] font-bold text-slate-400 mt-1 whitespace-nowrap">
+                          {step === 1 ? (language === 'zh' ? '暱稱頭像' : 'Profile') :
+                           step === 2 ? (language === 'zh' ? '成長個資' : 'Consent') :
+                           step === 3 ? (language === 'zh' ? '初始職業' : 'Job Class') :
+                           step === 4 ? (language === 'zh' ? '登入設定' : 'Login Key') :
+                           (language === 'zh' ? '起步任務' : 'Quests')}
+                        </span>
+                      </div>
+                      {step < 5 && (
+                        <div className="flex-1 h-0.5 mx-1.5 bg-slate-850 relative">
+                          <div 
+                            className="absolute top-0 left-0 h-full bg-[#3661FF] transition-all duration-300" 
+                            style={{ width: wizardStep > step ? '100%' : '0%' }} 
+                          />
+                        </div>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </div>
+
+                {/* Step 1: Profile & Avatar */}
+                {wizardStep === 1 && (
+                  <div className="space-y-4 animate-success">
+                    <h4 className="text-xs font-black text-violet-300 uppercase tracking-widest flex items-center gap-1.5">
+                      🎭 {language === 'zh' ? '步驟 1：暱稱與外觀角色' : 'Step 1: Profile Name & Avatar'}
+                    </h4>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1.5">
+                          {language === 'zh' ? '冒險者暱稱' : 'Child Nickname'} <span className="text-rose-500">*</span>
+                        </label>
+                        <input 
+                          type="text" 
+                          required 
+                          value={newChildName} 
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setNewChildName(val);
+                            const clean = val.toLowerCase().replace(/[^a-z0-9]/g, '');
+                            if (clean) {
+                              setNewChildEmail(`${clean}@questgrow.com`);
+                            } else {
+                              setNewChildEmail('');
+                            }
+                          }}
+                          placeholder={language === 'zh' ? '例如：小明' : 'e.g. Leo'}
+                          className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#3661FF] focus:border-[#3661FF] transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-slate-455 font-bold uppercase mb-2">
+                          {language === 'zh' ? '選擇外觀頭像' : 'Select Avatar'}
+                        </label>
+                        <div className="grid grid-cols-2 gap-4">
+                          <button
+                            type="button"
+                            onClick={() => setNewChildAvatar('boy')}
+                            className={`p-3 rounded-xl flex flex-col items-center justify-center border transition-all hover:scale-105 active:scale-95 ${
+                              newChildAvatar === 'boy' 
+                                ? 'border-cyan-500 bg-cyan-600/10 shadow-[0_0_12px_rgba(6,182,212,0.15)]' 
+                                : 'border-white/5 bg-white/5 hover:border-white/20'
+                            }`}
+                          >
+                            <span className="text-3xl mb-1.5">👦</span>
+                            <span className="text-[10px] font-bold text-slate-300">
+                              {language === 'zh' ? '小男孩 (Boy)' : 'Boy'}
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setNewChildAvatar('girl')}
+                            className={`p-3 rounded-xl flex flex-col items-center justify-center border transition-all hover:scale-105 active:scale-95 ${
+                              newChildAvatar === 'girl' 
+                                ? 'border-pink-500 bg-pink-600/10 shadow-[0_0_12px_rgba(236,72,153,0.15)]' 
+                                : 'border-white/5 bg-white/5 hover:border-white/20'
+                            }`}
+                          >
+                            <span className="text-3xl mb-1.5">👧</span>
+                            <span className="text-[10px] font-bold text-slate-300">
+                              {language === 'zh' ? '小女孩 (Girl)' : 'Girl'}
+                            </span>
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
+                )}
+
+                {/* Step 2: Demographics & Consent */}
+                {wizardStep === 2 && (
+                  <div className="space-y-4 animate-success">
+                    <h4 className="text-xs font-black text-violet-300 uppercase tracking-widest flex items-center gap-1.5">
+                      🎂 {language === 'zh' ? '步驟 2：成長印記與個資授權' : 'Step 2: Demographics & Consent'}
+                    </h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1.5">
+                          {language === 'zh' ? '年齡' : 'Age'} <span className="text-rose-500">*</span>
+                        </label>
+                        <input 
+                          type="number" 
+                          required 
+                          min="1" 
+                          max="18" 
+                          value={newChildAge} 
+                          onChange={(e) => setNewChildAge(parseInt(e.target.value, 10))}
+                          className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#3661FF] focus:border-[#3661FF] transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1.5">
+                          {language === 'zh' ? '生日' : 'Birthday'} <span className="text-rose-500">*</span>
+                        </label>
+                        <input 
+                          type="text" 
+                          required 
+                          value={newChildBirthday} 
+                          onChange={(e) => setNewChildBirthday(e.target.value)}
+                          placeholder="e.g. 10/24"
+                          className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#3661FF] focus:border-[#3661FF] transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Taiwan PDPA/Consent Warning box */}
+                    <div className={`p-4 rounded-xl border text-[11px] leading-relaxed transition-all duration-300 ${
+                      newChildAge < 8 
+                        ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' 
+                        : 'bg-[#3661FF]/10 border-[#3661FF]/20 text-[#4e75ff]'
+                    }`}>
+                      <div className="flex gap-2 items-start">
+                        <ShieldAlert className="h-5 w-5 shrink-0 mt-0.5" />
+                        <div>
+                          <h5 className="font-bold mb-1">
+                            {language === 'zh' ? '🛡️ 個資與隱私保護說明' : '🛡️ Child Data Protection & Privacy Consent'}
+                          </h5>
+                          <p className="text-[10px] text-slate-355">
+                            {language === 'zh' 
+                              ? `QuestGrow 依據年齡適配冒險任務。符合台灣個資法第8條規範：` 
+                              : `QuestGrow adapts adventure tasks based on age. In compliance with Taiwan PDPA:`}
+                          </p>
+                          <ul className="list-disc list-inside mt-1 space-y-1 text-[9px] text-slate-400">
+                            <li>
+                              {language === 'zh'
+                                ? '僅收集暱稱、生日、年齡以計算全人均衡指數，且數據經加密與雜湊保護。'
+                                : 'Only nickname, birthday, age are collected. All data is encrypted.'}
+                            </li>
+                            {newChildAge < 8 && (
+                              <li className="text-amber-400 font-bold">
+                                {language === 'zh'
+                                  ? '⚠️ 偵測到小孩小於 8 歲：系統將在孩子登入時自動啟用【注音輔助模式】，協助孩子順暢識字成長！'
+                                  : '⚠️ Under 8 detected: System will automatically enable [Zhuyin Assistive Mode] to help them read!'}
+                              </li>
+                            )}
+                          </ul>
+                          <p className="mt-2 text-[9px] text-slate-500 border-t border-white/5 pt-1.5">
+                            {language === 'zh'
+                              ? '點擊下一步代表您（法定代理人）已閱讀並授權同意上述個資聲明與使用範圍。'
+                              : 'By proceeding, you (the legal guardian) authorized the above consent & data scope.'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 3: Starting Job Class */}
+                {wizardStep === 3 && (
+                  <div className="space-y-4 animate-success">
+                    <h4 className="text-xs font-black text-violet-300 uppercase tracking-widest flex items-center gap-1.5">
+                      ⚔️ {language === 'zh' ? '步驟 3：初始職業與屬性傾向' : 'Step 3: Starting Job Class'}
+                    </h4>
+                    <div className="grid grid-cols-1 gap-2.5 max-h-[300px] overflow-y-auto pr-1">
+                      {Object.entries(JOB_CLASSES).map(([key, config]) => {
+                        const isSelected = selectedJobClass === key;
+                        return (
+                          <button
+                            key={key}
+                            type="button"
+                            onClick={() => setSelectedJobClass(key)}
+                            className={`p-3 rounded-xl border text-left transition-all hover:scale-[1.01] active:scale-95 ${
+                              isSelected 
+                                ? 'border-violet-500 bg-violet-600/10 shadow-[0_0_12px_rgba(124,58,237,0.15)]' 
+                                : 'border-white/5 bg-white/5 hover:border-white/10'
+                            }`}
+                          >
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="text-xs font-black text-slate-200">
+                                {language === 'zh' ? config.nameZh : config.nameEn}
+                              </span>
+                              {isSelected && (
+                                <span className="bg-violet-500 text-white rounded-full p-0.5">
+                                  <Check className="h-3 w-3" />
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-slate-400 mb-2 leading-relaxed">
+                              {language === 'zh' ? config.descZh : config.descEn}
+                            </p>
+                            <div className="flex flex-wrap gap-1">
+                              {Object.entries(config.attributes).map(([attr, val]) => {
+                                const attrName = attr === 'Wisdom' ? (language === 'zh' ? '智' : 'WIS') :
+                                                 attr === 'Responsibility' ? (language === 'zh' ? '德' : 'RES') :
+                                                 attr === 'Courage' ? (language === 'zh' ? '體' : 'COU') :
+                                                 attr === 'Empathy' ? (language === 'zh' ? '群' : 'EMP') :
+                                                 (language === 'zh' ? '美' : 'CRE');
+                                return (
+                                  <span key={attr} className="text-[8px] px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-300 font-bold">
+                                    {attrName} +{val}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 4: Login Account Setup */}
+                {wizardStep === 4 && (
+                  <div className="space-y-4 animate-success">
+                    <h4 className="text-xs font-black text-violet-300 uppercase tracking-widest flex items-center gap-1.5">
+                      🔑 {language === 'zh' ? '步驟 4：傳送門鑰匙 (帳號密碼)' : 'Step 4: Login Account Key'}
+                    </h4>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1.5">
+                          {language === 'zh' ? '登入信箱 (Email)' : 'Login Email'} <span className="text-rose-500">*</span>
+                        </label>
+                        <input 
+                          type="email" 
+                          required 
+                          value={newChildEmail} 
+                          onChange={(e) => setNewChildEmail(e.target.value)}
+                          placeholder="e.g. michelle@questgrow.com"
+                          className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#3661FF] focus:border-[#3661FF] transition-all"
+                        />
+                        <p className="text-[9px] text-slate-500 mt-1">
+                          {language === 'zh' ? '💡 小孩登入兒童模式所用的帳號，依暱稱自動產生，亦可自由修改。' : '💡 Child\'s login account, auto-generated and editable.'}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1.5">
+                          {language === 'zh' ? '密碼' : 'Password'} <span className="text-rose-500">*</span>
+                        </label>
+                        <input 
+                          type="text" 
+                          required 
+                          value={newChildPassword} 
+                          onChange={(e) => setNewChildPassword(e.target.value)}
+                          placeholder="密碼"
+                          className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#3661FF] focus:border-[#3661FF] transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 5: Starter Quests assignment */}
+                {wizardStep === 5 && (
+                  <div className="space-y-4 animate-success">
+                    <h4 className="text-xs font-black text-violet-300 uppercase tracking-widest flex items-center gap-1.5">
+                      🚀 {language === 'zh' ? '步驟 5：第一份冒險合約 (起步任務)' : 'Step 5: Starter Quests Contract'}
+                    </h4>
+                    <p className="text-[10px] text-slate-400">
+                      {language === 'zh' ? '可直接勾選下方任務，建立成功時會立即指派給孩子，讓孩子第 1 天就有目標挑戰！' : 'Select starting quests to assign immediately on creation.'}
+                    </p>
+                    <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
+                      {STARTER_QUESTS_TEMPLATES.map((quest, index) => {
+                        const isChecked = selectedStarterQuests.includes(index);
+                        return (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => {
+                              if (isChecked) {
+                                setSelectedStarterQuests(prev => prev.filter(i => i !== index));
+                              } else {
+                                setSelectedStarterQuests(prev => [...prev, index]);
+                              }
+                            }}
+                            className={`w-full p-2.5 rounded-xl border text-left transition-all flex items-start gap-2.5 hover:scale-[1.01] active:scale-95 ${
+                              isChecked 
+                                ? 'border-emerald-500 bg-emerald-600/10' 
+                                : 'border-white/5 bg-white/5 hover:border-white/10'
+                            }`}
+                          >
+                            <div className="pt-0.5">
+                              <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-all ${
+                                isChecked ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-white/20'
+                              }`}>
+                                {isChecked && <Check className="h-2.5 w-2.5" />}
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex justify-between items-center gap-2 mb-0.5">
+                                <span className="text-[11px] font-black text-slate-200 truncate">
+                                  {quest.name}
+                                </span>
+                                <span className={`text-[8px] px-1.5 py-0.5 rounded-full border shrink-0 ${getAttributeColor(quest.type)}`}>
+                                  {translateType(quest.type)} • {translateDifficulty(quest.difficulty)}
+                                </span>
+                              </div>
+                              <p className="text-[9px] text-slate-400 leading-normal truncate">
+                                {quest.description}
+                              </p>
+                              <div className="flex items-center gap-2 mt-1 text-[8px] font-bold text-amber-400">
+                                <span>🪙 +{quest.goldReward}</span>
+                                <span className="text-violet-400">🔮 +{quest.expReward} XP</span>
+                                <span className="text-cyan-400">🎫 +{quest.ticketReward}</span>
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Back / Next buttons */}
+                <div className="flex gap-2 justify-between border-t border-white/5 pt-4">
+                  {wizardStep > 1 ? (
+                    <button
+                      type="button"
+                      onClick={() => setWizardStep(prev => prev - 1)}
+                      className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white transition-all active:scale-95"
+                    >
+                      {language === 'zh' ? '上一步' : 'Back'}
+                    </button>
+                  ) : (
+                    <div />
+                  )}
+
+                  {wizardStep < 5 ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        // Validation
+                        if (wizardStep === 1) {
+                          if (!newChildName.trim()) {
+                            alert(language === 'zh' ? '請輸入冒險者暱稱！' : 'Please enter nickname!');
+                            return;
+                          }
+                        }
+                        if (wizardStep === 2) {
+                          if (!newChildBirthday.trim()) {
+                            alert(language === 'zh' ? '請輸入誕生紀念日！' : 'Please enter birthday!');
+                            return;
+                          }
+                        }
+                        if (wizardStep === 4) {
+                          if (!newChildEmail.trim() || !newChildPassword.trim()) {
+                            alert(language === 'zh' ? '請輸入登入帳號及密碼！' : 'Please enter login credentials!');
+                            return;
+                          }
+                        }
+                        setWizardStep(prev => prev + 1);
+                      }}
+                      className="px-3.5 py-1.5 rounded-lg text-xs font-black bg-[#3661FF] text-white hover:bg-[#4e75ff] transition-all active:scale-95"
+                    >
+                      {language === 'zh' ? '下一步' : 'Next'}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={submitAddChild}
+                      className="px-5 py-1.5 rounded-lg text-xs font-black bg-gradient-to-r from-emerald-500 to-cyan-500 text-[#111216] hover:from-emerald-400 hover:to-cyan-400 shadow-[0_0_12px_rgba(16,185,129,0.2)] transition-all active:scale-95"
+                    >
+                      {language === 'zh' ? '完成建立並出發 🚀' : 'Complete & Launch 🚀'}
+                    </button>
+                  )}
                 </div>
-                <button type="submit" className="w-full py-2 rounded text-xs font-black bg-[#00E676] text-[#111216] hover:bg-[#00c867] transition-all">
-                  {t('confirmAdd')}
-                </button>
               </form>
             ) : (
               <div className="p-6 bg-rose-500/5 border border-rose-500/10 rounded-xl text-center space-y-2">

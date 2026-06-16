@@ -296,7 +296,44 @@ function App() {
   // --- Family Member Management ---
   const handleAddChild = async (newChildData) => {
     try {
-      await api.addChild(newChildData);
+      const res = await api.addChild({
+        name: newChildData.name,
+        age: newChildData.age,
+        birthday: newChildData.birthday,
+        avatar: newChildData.avatar,
+        email: newChildData.email,
+        password: newChildData.password
+      });
+
+      const createdChild = res.child;
+
+      // Update custom starting job class and attributes if selected in wizard
+      if (createdChild && (newChildData.jobClass || newChildData.attributes)) {
+        await api.updateChildProfile(createdChild.id, {
+          job_class: newChildData.jobClass,
+          attributes: newChildData.attributes
+        });
+      }
+
+      // Automatically assign selected initial starter quests
+      if (createdChild && newChildData.initialTasks && newChildData.initialTasks.length > 0) {
+        await Promise.all(newChildData.initialTasks.map(task => {
+          return api.addTask({
+            name: task.name,
+            description: task.description,
+            type: task.type,
+            difficulty: task.difficulty,
+            expReward: task.expReward,
+            goldReward: task.goldReward,
+            ticketReward: task.ticketReward,
+            attributeReward: task.attributeReward,
+            period: task.period,
+            assignedTo: createdChild.id,
+            status: '進行中'
+          });
+        }));
+      }
+
       showToast(`成功新增冒險者「${newChildData.name}」！`, 'success');
       fetchAllData();
       return true;
