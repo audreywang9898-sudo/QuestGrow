@@ -700,8 +700,8 @@ function App() {
     const DIFFICULTY_WEIGHTS = {
       "簡單": 1,
       "中等": 2,
-      "較難": 4,
-      "終極": 8
+      "較難": 3,
+      "終極": 4
     };
 
     const dimensions = ['德', '智', '體', '群', '美'];
