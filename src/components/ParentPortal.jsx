@@ -73,9 +73,14 @@ function ParentPortal({
     } else if (tourStep === 3) {
       setActiveTab('workshop');
     } else if (tourStep === 4) {
-      setActiveTab('reports');
+      setActiveTab('gacha');
     } else if (tourStep === 5) {
       setActiveTab('wishlist');
+    } else if (tourStep === 6) {
+      setActiveTab('reports');
+    } else if (tourStep === 7) {
+      setActiveTab('settings');
+      setSettingsSubTab('parent');
     }
   }, [tourStep, showTour]);
 
@@ -671,7 +676,7 @@ function ParentPortal({
           onClick={() => setActiveTab('gacha')}
           className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
             activeTab === 'gacha' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
-          }`}
+          } ${showTour && tourStep === 4 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse rounded' : ''}`}
         >
           <Sparkles className="h-4 w-4 text-violet-400" />
           {t('tabGachaPool')}
@@ -689,7 +694,7 @@ function ParentPortal({
           onClick={() => setActiveTab('reports')}
           className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
             activeTab === 'reports' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
-          } ${showTour && tourStep === 4 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse rounded' : ''}`}
+          } ${showTour && tourStep === 6 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse rounded' : ''}`}
         >
           <BarChart3 className="h-4 w-4 text-[#FF9F1C]" />
           {t('tabReports')}
@@ -698,7 +703,7 @@ function ParentPortal({
           onClick={() => setActiveTab('settings')}
           className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
             activeTab === 'settings' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
-          }`}
+          } ${showTour && tourStep === 7 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse rounded' : ''}`}
         >
           <Settings className="h-4 w-4 text-[#00E676]" />
           {t('tabSettings')}
@@ -3042,7 +3047,7 @@ function ParentPortal({
             {/* Step Header */}
             <div className="flex justify-between items-center">
               <span className="text-xs bg-[#3661FF] text-white px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider">
-                {language === 'zh' ? `步驟 ${tourStep} / 5` : `Step ${tourStep} / 5`}
+                {language === 'zh' ? `步驟 ${tourStep} / 7` : `Step ${tourStep} / 7`}
               </span>
               <button 
                 onClick={() => {
@@ -3077,7 +3082,7 @@ function ParentPortal({
               
               <button
                 onClick={() => {
-                  if (tourStep === 5) {
+                  if (tourStep === 7) {
                     setShowTour(false);
                     localStorage.setItem('questgrow_parent_tour_seen', 'true');
                   } else {
@@ -3086,7 +3091,7 @@ function ParentPortal({
                 }}
                 className="px-4 py-1.5 rounded-[4px] text-xs font-black bg-[#3661FF] hover:bg-[#254edb] text-white transition-colors shadow-md"
               >
-                {tourStep === 5 ? t('tourFinish') : t('tourNext')}
+                {tourStep === 7 ? t('tourFinish') : t('tourNext')}
               </button>
             </div>
 

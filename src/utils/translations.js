@@ -381,10 +381,14 @@ export const translations = {
     parentTourStep2Desc: "當孩子提交任務（如寫好日記、做完家事並上傳照片）或想要使用他們抽到的特權券（如 30 分鐘遊戲時間）時，會在此處顯示。核准後，系統會自動發放金幣、經驗與家庭成長點數！",
     parentTourStep3Title: "🛠️ 任務工坊 (Quest Factory)",
     parentTourStep3Desc: "您可以在此新增自訂任務，或是「快速匯入」系統預設的模板任務（包括最新推出的 10 大財商任務）。您可以自由設定難度、週期、指派對象，並提供德、智、體、群、美等全人屬性獎勵！",
-    parentTourStep4Title: "📊 成長報表與 AI 教練 (Reports)",
-    parentTourStep4Desc: "系統會以雷達圖呈現孩子的德智體群美發展。AI 家庭教練會根據本週的數據遙測日誌，分析孩子的成長亮點，並在每週日誌中給予您個性化的下週任務指派建議！",
+    parentTourStep4Title: "🔮 獎勵卡片池 (Reward Card Pool)",
+    parentTourStep4Desc: "這是最新推出的自訂獎勵池。您可以新增自訂的道具卡、特權卡、體驗卡與收藏卡，並且指派給不同的小孩，讓孩子可以用在任務中賺到的抽卡券進行抽獎，激勵他們的學習動力！",
     parentTourStep5Title: "🎯 願望許願池 (Wishlist Pool)",
     parentTourStep5Desc: "在這裡可以新增家庭的共同大願望（如購買 Switch 遊戲或全家日本行）。當孩子完成任務累積足夠的家庭成長點數時，即可在這裡兌換，增進全家人的凝聚力！",
+    parentTourStep6Title: "📊 成長報表與 AI 教練 (Reports)",
+    parentTourStep6Desc: "系統會以雷達圖呈現孩子的德智體群美發展。AI 家庭教練會根據本週的數據遙測日誌，分析孩子的成長亮點，並在每週日誌中給予您個性化的下週任務指派建議！",
+    parentTourStep7Title: "⚙️ 系統與共同設定 (Settings)",
+    parentTourStep7Desc: "在這裡可以管理家長及兒童角色。新推出的「共同設定」還支援開啟/關閉 8 歲以下注音符號模式，以及一鍵銷毀與導出兒童個資，確保符合歐美兒童隱私法規！",
 
     // Kid Tour Steps
     kidTourStep1Title: "⚔️ 歡迎，小小冒險者！",
@@ -802,10 +806,14 @@ export const translations = {
     parentTourStep2Desc: "When your child submits a quest (with notes and proof photos) or requests to redeem a gacha card (e.g. 30 mins of screen time), it will show up here. Approving grants them rewards and adds points to the Family Score!",
     parentTourStep3Title: "🛠️ Quest Workshop",
     parentTourStep3Desc: "Create custom quests or 'Quick Import' pre-configured templates (including our new financial quotient quests). Customize difficulty, assignment, and award attributes like Wisdom, Responsibility, Courage, Empathy, or Creativity!",
-    parentTourStep4Title: "📊 Reports & AI Coach",
-    parentTourStep4Desc: "Track your child's developmental balance with a beautiful radar chart. Our AI Coach analyzes weekly interaction logs to highlight achievements and suggest specific areas to focus on next week!",
+    parentTourStep4Title: "🔮 Reward Card Pool",
+    parentTourStep4Desc: "Customize gacha reward cards and draw rates that children can summon with their ticket rewards. Add Resource, Privilege, Experience, or Collection cards to make their progress extra fun!",
     parentTourStep5Title: "🎯 Wishlist Pool",
     parentTourStep5Desc: "Configure ultimate family rewards (e.g., family trips, new games) that require Family Score points to unlock. Encourage cooperation as children complete quests to power up the family score!",
+    parentTourStep6Title: "📊 Reports & AI Coach",
+    parentTourStep6Desc: "Track your child's developmental balance with a beautiful radar chart. Our AI Coach analyzes weekly interaction logs to highlight achievements and suggest specific areas to focus on next week!",
+    parentTourStep7Title: "⚙️ System & Common Settings",
+    parentTourStep7Desc: "Manage parent and kid profiles. Our new 'Common Settings' page allows toggling Bopomofo/Zhuyin guides for kids under 8 and handles data privacy actions like complete data destruction under COPPA & GDPR-K.",
 
     // Kid Tour Steps
     kidTourStep1Title: "⚔️ Welcome, Little Explorer!",
