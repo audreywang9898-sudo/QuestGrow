@@ -695,8 +695,27 @@ function App() {
   const getBalancedDevelopmentIndex = (childId) => {
     const targetId = childId || activeChildId;
     const completedTasks = tasks.filter(t => t.status === '已完成' && (!t.assignedTo || t.assignedTo === targetId));
-    const completedTypes = new Set(completedTasks.map(t => t.type));
-    return (completedTypes.size / 5) * 100;
+    
+    // Weight map based on difficulty
+    const DIFFICULTY_WEIGHTS = {
+      "簡單": 1,
+      "中等": 2,
+      "較難": 4,
+      "終極": 8
+    };
+
+    const dimensions = ['德', '智', '體', '群', '美'];
+    const TARGET_POINTS = 4; // Weekly target score per dimension
+
+    let totalCappedScore = 0;
+    dimensions.forEach(dim => {
+      const dimTasks = completedTasks.filter(t => t.type === dim);
+      const score = dimTasks.reduce((sum, t) => sum + (DIFFICULTY_WEIGHTS[t.difficulty] || 1), 0);
+      const capped = Math.min(TARGET_POINTS, score);
+      totalCappedScore += (capped / TARGET_POINTS);
+    });
+
+    return Math.round((totalCappedScore / 5) * 100);
   };
 
   if (!currentUser) {
