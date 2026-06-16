@@ -1982,26 +1982,6 @@ function ParentPortal({
                 </div>
               )}
             </div>
-
-            {/* V2 COPPA & GDPR-K Compliance Settings */}
-            <div className="glass-panel p-6 border border-rose-500/20 bg-rose-500/5 space-y-4">
-              <h3 className="text-md font-bold text-rose-300 flex items-center gap-2">
-                <ShieldAlert className="h-5 w-5" />
-                {t('coppaTitle')}
-              </h3>
-              <p className="text-xs text-slate-400 leading-normal">
-                {t('coppaDesc')}
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={onClearData}
-                  className="w-full py-2 bg-[#FF4747] hover:bg-[#ff3030] text-white text-xs font-black rounded-[4px] transition-colors border border-rose-500/30 flex items-center justify-center gap-1.5 shadow-md shadow-rose-950/20"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  {t('destroyDataBtn')}
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       )}
@@ -2302,6 +2282,27 @@ function ParentPortal({
                   <div className="custom-toggle-slider"></div>
                 </label>
               </div>
+            </div>
+          </div>
+
+          {/* V2 COPPA & GDPR-K Compliance Settings */}
+          <div className="glass-panel p-6 border border-rose-500/20 bg-rose-500/5 space-y-4">
+            <h3 className="text-md font-bold text-rose-300 flex items-center gap-2">
+              <ShieldAlert className="h-5 w-5" />
+              {t('coppaTitle')}
+            </h3>
+            <p className="text-xs text-slate-400 leading-normal">
+              {t('coppaDesc')}
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={onClearData}
+                type="button"
+                className="w-full py-2 bg-[#FF4747] hover:bg-[#ff3030] text-white text-xs font-black rounded-[4px] transition-colors border border-rose-500/30 flex items-center justify-center gap-1.5 shadow-md shadow-rose-950/20"
+              >
+                <Trash2 className="h-4 w-4" />
+                {t('destroyDataBtn')}
+              </button>
             </div>
           </div>
         </div>
