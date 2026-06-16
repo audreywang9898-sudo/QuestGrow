@@ -667,6 +667,15 @@ function ParentPortal({
           {t('tabWorkshop')}
         </button>
         <button
+          onClick={() => setActiveTab('gacha')}
+          className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
+            activeTab === 'gacha' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
+          }`}
+        >
+          <Sparkles className="h-4 w-4 text-violet-400" />
+          {t('tabGachaPool')}
+        </button>
+        <button
           onClick={() => setActiveTab('reports')}
           className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
             activeTab === 'reports' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
@@ -1555,18 +1564,6 @@ function ParentPortal({
             <Users className={`h-4 w-4 transition-colors ${settingsSubTab === 'child' ? 'text-[#00E676]' : 'text-slate-500'}`} />
             {t('tabChild')}
           </button>
-          <button
-            type="button"
-            onClick={() => setSettingsSubTab('gacha')}
-            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap active:scale-95 duration-100 ${
-              settingsSubTab === 'gacha' 
-                ? 'border-violet-400 text-violet-400 bg-violet-500/10 shadow-md shadow-violet-500/5' 
-                : 'border-transparent text-slate-400 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <Sparkles className={`h-4 w-4 transition-colors ${settingsSubTab === 'gacha' ? 'text-violet-400' : 'text-slate-500'}`} />
-            {t('tabGachaPool')}
-          </button>
         </div>
       )}
 
@@ -2261,7 +2258,7 @@ function ParentPortal({
       )}
 
       {/* --- Tab 3.6: Gacha Pool Settings panel --- */}
-      {activeTab === 'settings' && settingsSubTab === 'gacha' && gachaPoolEdit && (
+      {activeTab === 'gacha' && gachaPoolEdit && (
         <div className="space-y-6 animate-success">
           {/* Header Panel */}
           <div className="glass-panel p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

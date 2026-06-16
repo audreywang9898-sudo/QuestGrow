@@ -19,7 +19,7 @@ export const translations = {
     tabWishlist: "願望清單設定",
     tabParent: "家長設定",
     tabChild: "兒童設定",
-    tabGachaPool: "轉蛋池設定",
+    tabGachaPool: "獎勵卡片池",
     tabSettings: "系統設定",
 
     // Kid Portal Tabs
@@ -433,7 +433,7 @@ export const translations = {
     tabWishlist: "Wishlist Settings",
     tabParent: "Parent Settings",
     tabChild: "Child Settings",
-    tabGachaPool: "Gacha Pool Settings",
+    tabGachaPool: "Reward Card Pool",
     tabSettings: "System Settings",
 
     // Kid Portal Tabs
