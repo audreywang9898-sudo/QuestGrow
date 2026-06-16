@@ -689,7 +689,7 @@ function KidPortal({
       };
 
       if (onAddTask) {
-        onAddTask([newTaskObj]);
+        onAddTask(newTaskObj);
       }
       
       const newDrawnTaskIds = drawnTaskIds.map(id => id === taskIdToSwap ? newId : id);

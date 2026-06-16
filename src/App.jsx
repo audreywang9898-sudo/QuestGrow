@@ -396,12 +396,14 @@ function App() {
 
       const results = await Promise.all(promises);
 
-      if (role === 'kid' && isArray) {
+      if (role === 'kid' && isArray && tasksToAdd.length > 1) {
         showToast('🎉 抽選成功！德、智、體、群、美各 1 張任務已加入你的冒險任務庫。', 'success');
         const newDrawnIds = results.map(r => r.task.id);
         setDrawnTasksMap(prev => ({ ...prev, [activeChildId]: newDrawnIds }));
       } else {
-        showToast('任務指派成功！', 'success');
+        if (role !== 'kid') {
+          showToast('任務指派成功！', 'success');
+        }
       }
 
       fetchAllData();
