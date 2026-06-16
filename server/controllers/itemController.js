@@ -114,8 +114,8 @@ export const drawGachaCard = async (req, res) => {
   }
 
   // 2. Validate card type and rarity against server-side allowlists
-  const ALLOWED_TYPES = ['裝備卡', '收藏卡', '技能卡', '資源卡'];
-  const ALLOWED_RARITIES = ['Common', 'Rare', 'Epic', 'Legendary'];
+  const ALLOWED_TYPES = ['裝備卡', '收藏卡', '技能卡', '資源卡', '特權卡', '體驗卡'];
+  const ALLOWED_RARITIES = ['Common', 'Rare', 'Epic', 'Legendary', 'Mythic'];
   if (!ALLOWED_TYPES.includes(card.type)) {
     return res.status(400).json({ message: '無效的卡片類型。' });
   }
