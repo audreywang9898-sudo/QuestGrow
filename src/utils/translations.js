@@ -179,9 +179,9 @@ export const translations = {
     googleLinkedSuccessText: "✓ 已成功連結 Google 帳號，您可以使用 Google 一鍵快速登入。",
     googleLinkPrompt: "連結 Google 帳號後，您即可使用 Google 第三方登入服務直接存取您的家長管理面板。",
     googleLinkLabel: "🔗 聯動連結 Google 帳號 (模擬)",
-    coppaTitle: "隱私安全與兒童個資保護 (COPPA & GDPR-K)",
-    coppaDesc: "QuestGrow 平台推行之兒童隱私政策。家長擁有隨時訪問、更新、導出或完全抹除子女個人資料與成長日誌的合法權利。",
-    destroyDataBtn: "完全銷毀與刪除孩子帳號個資",
+    coppaTitle: "隱私安全、台灣個資法與兒少保護規範 (PDPA / COPPA / GDPR-K)",
+    coppaDesc: "QuestGrow 致力維護家庭隱私政策，全面符合台灣《個人資料保護法》第 3 條規範。家長擁有隨時查閱、更新、複製、要求停止處理或『完全抹除與銷毀』子女個人資料與所有成長日誌的權利。",
+    destroyDataBtn: "完全銷毀與刪除孩子帳號個資 (刪除請求權)",
 
     // Child Settings Tab
     childManagementTitle: "兒童角色管理",

@@ -11,6 +11,8 @@ function LoginPortal({ onLogin, googleClientId }) {
   const [regRole, setRegRole] = useState('parent'); // parent or kid
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
   // Google Sandbox Simulator States
   const [showGoogleSandbox, setShowGoogleSandbox] = useState(false);
@@ -155,6 +157,10 @@ function LoginPortal({ onLogin, googleClientId }) {
     } else {
       if (!name) {
         setErrorMsg(t('fillNameError'));
+        return;
+      }
+      if (!agreeTerms) {
+        setErrorMsg(language === 'zh' ? '您必須同意服務條款與個資法告知事項才能進行註冊。' : 'You must agree to the Terms of Service and Privacy Policy to register.');
         return;
       }
       const success = await onLogin({ email, password, name, role: regRole, isRegister: true });
@@ -326,6 +332,43 @@ function LoginPortal({ onLogin, googleClientId }) {
                 >
                   👦 {t('kidExplorerRole')}
                 </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'register' && (
+            <div className="space-y-3 pt-1 text-left">
+              {regRole === 'kid' && (
+                <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-800 text-[10px] leading-relaxed font-bold rounded-xl space-y-1">
+                  <div className="flex items-center gap-1.5 text-amber-700">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    <span>⚠️ 台灣兒少個資保護提醒</span>
+                  </div>
+                  <p className="font-medium">
+                    依兒少法及個資法規範，兒童獨立註冊需由家長全程陪同確認。建議先由家長註冊帳號，再至「家長主控台」直接建立子角色，以確保最安全完整的個資隱私防護。
+                  </p>
+                </div>
+              )}
+
+              <div className="flex items-start gap-2.5">
+                <input
+                  id="agree-terms"
+                  type="checkbox"
+                  checked={agreeTerms}
+                  onChange={(e) => setAgreeTerms(e.target.checked)}
+                  className="mt-0.5 rounded border-slate-300 text-indigo-650 focus:ring-indigo-500 shrink-0 w-4 h-4 cursor-pointer"
+                />
+                <label htmlFor="agree-terms" className="text-[11px] font-medium text-slate-500 leading-normal select-none">
+                  我已閱讀並同意 QuestGrow 的{' '}
+                  <button
+                    type="button"
+                    onClick={() => setShowPrivacyModal(true)}
+                    className="text-indigo-600 hover:text-indigo-800 font-bold underline inline-block"
+                  >
+                    《服務條款、隱私權政策與個資保護告知事項》
+                  </button>
+                  。
+                </label>
               </div>
             </div>
           )}
@@ -579,6 +622,112 @@ function LoginPortal({ onLogin, googleClientId }) {
         </div>
       )}
       */}
+
+      {showPrivacyModal && (
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="glass-panel p-6 border border-white/50 bg-white/95 max-w-2xl w-full rounded-2xl shadow-2xl flex flex-col max-h-[85vh]">
+            
+            {/* Modal Header */}
+            <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+              <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
+                <Shield className="h-5 w-5 text-indigo-600 animate-pulse" />
+                QuestGrow 隱私權政策與個資法告知事項
+              </h3>
+              <button 
+                type="button"
+                onClick={() => setShowPrivacyModal(false)} 
+                className="text-slate-400 hover:text-slate-650 font-black transition-colors text-base"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Body (Scrollable) */}
+            <div className="flex-1 overflow-y-auto my-4 pr-1 text-xs text-slate-600 space-y-4 text-left leading-relaxed font-medium">
+              <p className="font-bold text-slate-700">
+                歡迎使用 QuestGrow 系統（以下簡稱「本平台」）。本平台專為家庭與兒少成長追蹤設計。為了維護您的個人隱私並符合中華民國《個人資料保護法》（個資法）及《兒童及少年福利與權益保障法》（兒少法）之規範，特此向您告知並說明本平台之個資收集與隱私權保護政策：
+              </p>
+
+              <div className="space-y-1.5">
+                <h4 className="font-black text-slate-800 text-xs">一、個資蒐集之主體與目的</h4>
+                <p>
+                  蒐集主體為 QuestGrow 開發營運團隊。蒐集目的為協助家長與兒童進行數位化、遊戲化之每日成長任務追蹤、特權卡片獎勵兌換及 AI 成長分析報告。
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <h4 className="font-black text-slate-800 text-xs">二、蒐集之個人資料類別</h4>
+                <ul className="list-decimal pl-4 space-y-1">
+                  <li>家長帳號：註冊電子郵件信箱（Email）、密碼、姓名/暱稱、設定頭像。</li>
+                  <li>兒童帳號：家長建立或陪同註冊之兒童姓名/暱稱、年齡、生日（僅用以在系統內為8歲以下兒童啟用注音引導模式與難度自適應）、角色頭像。</li>
+                  <li>系統活動數據：任務內容、心得文字、照片佐證（由兒童上傳提供家長覆核）、成長積分、金幣、抽卡券與背包卡片紀錄。</li>
+                </ul>
+              </div>
+
+              <div className="space-y-1.5">
+                <h4 className="font-black text-slate-800 text-xs">三、個人資料利用之期間、地區、對象及方式</h4>
+                <ul className="list-decimal pl-4 space-y-1">
+                  <li>期間：自您註冊帳戶之日起，至您申請註銷帳戶、刪除所有家庭成員數據或本平台終止營運之日止。</li>
+                  <li>地區：本平台伺服器所在地及提供雲端服務託管之區域。</li>
+                  <li>對象：本系統之個資及活動數據，其閱覽權限僅嚴格限於您同一個家庭群組（Family ID）之成員（您的家長或您的小孩），任何人均無法跨家庭查閱他人 log 紀錄。本平台絕不將個資向任何外部無關第三方提供、出售或共用。</li>
+                  <li>利用方式：系統將個資用於登入驗證、任務審核、背包道具裝備、徽章展示及 AI 成長報表摘要之運算生成。</li>
+                </ul>
+              </div>
+
+              <div className="space-y-1.5">
+                <h4 className="font-black text-slate-800 text-xs">四、兒少隱私特別保護條款（家長同意）</h4>
+                <p>
+                  為落實兒少保護，本平台限制 12 歲以下之兒童不得單獨建立獨立帳戶，應由家長（法定代理人）於「家長主控台」直接為其新增子角色。若兒童直接於登入頁面進行註冊，必須在獲得法定代理人現場指導及明示同意下進行，且家長隨時可依個資法對其子女個資行使查閱或刪除權利。
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <h4 className="font-black text-slate-800 text-xs">五、當事人權利之行使（個資法第 3 條）</h4>
+                <p>
+                  您與您的子女就其個資依法享有以下權利：
+                </p>
+                <ul className="list-disc pl-4 space-y-1">
+                  <li>查詢或請求閱覽、請求製給複製本。</li>
+                  <li>請求補充或更正。</li>
+                  <li>請求停止蒐集、處理或利用。</li>
+                  <li>
+                    <strong>請求刪除（個資銷毀權/Right to be Forgotten）</strong>：家長帳號隨時有權至「系統設定」分頁中使用「完全銷毀家庭所有資料」功能，一鍵自伺服器資料庫中將您家庭、孩子帳號、任務、日誌等所有資料做物理性徹底刪除，絕不留存任何備份。
+                  </li>
+                </ul>
+              </div>
+
+              <div className="space-y-1.5">
+                <h4 className="font-black text-slate-800 text-xs">六、不提供個人資料所致之影響</h4>
+                <p>
+                  本平台為完全實名註冊與家庭綁定之系統，若您選擇不提供上述必要個資（如註冊 Email、成員暱稱），系統將無法為您建立帳戶並提供成長任務追蹤及 AI 成長日誌分析服務。
+                </p>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex gap-2 justify-end border-t border-slate-200 pt-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setAgreeTerms(true);
+                  setShowPrivacyModal(false);
+                }}
+                className="px-5 py-2 rounded-xl text-xs font-black bg-[#3661FF] text-white hover:bg-[#4e75ff] transition-all shadow-md hover:shadow-lg"
+              >
+                我已閱讀並同意
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowPrivacyModal(false)}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+              >
+                關閉
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
     </div>
   );

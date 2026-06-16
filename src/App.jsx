@@ -922,7 +922,7 @@ function App() {
       </main>
 
       <footer className="py-6 text-center text-xs text-slate-500 border-t border-white/5 mt-auto">
-        <p>© 2026 QuestGrow Family Growth OS. 符合 PWA, COPPA & GDPR-K 隱私合規規範。</p>
+        <p>© 2026 QuestGrow Family Growth OS. 符合台灣個資法、兒少權益保障法及 PWA, COPPA & GDPR-K 隱私合規規範。</p>
       </footer>
     </div>
   );
