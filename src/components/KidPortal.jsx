@@ -71,7 +71,8 @@ function KidPortal({
   googleClientId,
   onToggleEquip,
   gachaPool,
-  familySettings = { zhuyinUnder8: true }
+  familySettings = { zhuyinUnder8: true },
+  onBuyTicketWithGold
 }) {
   const { t, language } = useLanguage();
 
@@ -289,6 +290,9 @@ function KidPortal({
   // Gacha animation states
   const [gachaState, setGachaState] = useState('idle'); // idle, shaking, revealing, shown
   const [drawnCard, setDrawnCard] = useState(null);
+
+  // Gold Vending Machine state
+  const [isBuyingTicket, setIsBuyingTicket] = useState(false);
 
   // Mock Notification Drawer
   const [showNotifications, setShowNotifications] = useState(false);
@@ -863,6 +867,18 @@ function KidPortal({
         setIsDrawingGacha(false); // unlock drawing state
       }, 800);
     }, 1200);
+  };
+
+  // Buy 1 Summon Ticket for 300 Gold
+  const handleBuyTicket = async () => {
+    if (isBuyingTicket || isReadOnly) return;
+    if (stats.gold < 300) return;
+    setIsBuyingTicket(true);
+    try {
+      await onBuyTicketWithGold();
+    } finally {
+      setIsBuyingTicket(false);
+    }
   };
 
   // Submit task with simulated network latency to test disabled spinner states
@@ -1592,29 +1608,64 @@ function KidPortal({
         <div className="glass-panel p-6 flex flex-col items-center justify-center min-h-[400px] text-center relative overflow-hidden animate-success">
           
           {gachaState === 'idle' && (
-            <div className="space-y-6 max-w-sm">
-              <div className="text-6xl animate-float">🎁</div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-black text-amber-400">{t('summonTitle')}</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  {t('summonDesc')}
-                </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
+              {/* Left Column: Mystery Chest Summon */}
+              <div className="space-y-5 flex flex-col items-center text-center p-5 bg-white/[0.02] border border-white/5 rounded-2xl">
+                <div className="text-6xl animate-float">🎁</div>
+                <div className="space-y-2">
+                  <h3 className="text-lg font-black text-amber-400">{t('summonTitle')}</h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {t('summonDesc')}
+                  </p>
+                </div>
+                <div className="p-3 bg-white/5 border border-white/5 rounded-xl font-bold text-sm w-full">
+                  {t('availableTickets')}：<span className="text-cyan-400 text-lg">🎫 {stats.tickets}</span>
+                </div>
+                <button
+                  onClick={startDrawCard}
+                  disabled={stats.tickets < 1 || isDrawingGacha || isReadOnly}
+                  className={`w-full py-3 rounded-[4px] font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                    stats.tickets >= 1 && !isDrawingGacha && !isReadOnly
+                      ? 'bg-[#00E676] text-[#111216] hover:bg-[#00c867] shadow-md border-t border-white/20' 
+                      : 'bg-[#252529] border border-[#35363A] text-slate-500 cursor-not-allowed'
+                  }`}
+                >
+                  {isDrawingGacha && <span className="spinner-inline"></span>}
+                  {isReadOnly ? t('readOnlyGachaBlock') : isDrawingGacha ? t('summoning') : stats.tickets >= 1 ? t('openMysteryChest') : t('insufficientTickets')}
+                </button>
               </div>
-              <div className="p-3 bg-white/5 border border-white/5 rounded-xl font-bold text-sm">
-                {t('availableTickets')}：<span className="text-cyan-400 text-lg">🎫 {stats.tickets}</span>
+
+              {/* Right Column: Gold Vending Machine */}
+              <div className="space-y-5 flex flex-col items-center text-center p-5 bg-gradient-to-b from-amber-950/20 to-transparent border border-amber-500/10 rounded-2xl relative overflow-hidden">
+                {/* Decorative shimmer */}
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-400/5 via-transparent to-amber-400/5 pointer-events-none"></div>
+                
+                <div className="text-6xl relative z-10" style={{ animation: 'float 3s ease-in-out infinite 0.5s' }}>🏪</div>
+                <div className="space-y-2 relative z-10">
+                  <h3 className="text-lg font-black text-amber-300">{t('vendingMachineTitle')}</h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {t('vendingMachineDesc')}
+                  </p>
+                </div>
+                <div className="p-3 bg-white/5 border border-white/5 rounded-xl font-bold text-sm w-full relative z-10">
+                  <div className="flex items-center justify-between">
+                    <span>{t('goldLabel')}：<span className="text-amber-400 text-lg">🪙 {stats.gold}</span></span>
+                    <span className="text-[10px] text-slate-500 font-bold uppercase">300 🪙 = 1 🎫</span>
+                  </div>
+                </div>
+                <button
+                  onClick={handleBuyTicket}
+                  disabled={stats.gold < 300 || isBuyingTicket || isReadOnly}
+                  className={`w-full py-3 rounded-[4px] font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 relative z-10 ${
+                    stats.gold >= 300 && !isBuyingTicket && !isReadOnly
+                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-[#111216] hover:from-amber-400 hover:to-amber-500 shadow-md shadow-amber-500/20 border-t border-white/20' 
+                      : 'bg-[#252529] border border-[#35363A] text-slate-500 cursor-not-allowed'
+                  }`}
+                >
+                  {isBuyingTicket && <span className="spinner-inline"></span>}
+                  {isReadOnly ? t('readOnlyGachaBlock') : isBuyingTicket ? '...' : stats.gold >= 300 ? t('buyTicketBtn') : t('insufficientGold')}
+                </button>
               </div>
-              <button
-                onClick={startDrawCard}
-                disabled={stats.tickets < 1 || isDrawingGacha || isReadOnly}
-                className={`w-full py-3 rounded-[4px] font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
-                  stats.tickets >= 1 && !isDrawingGacha && !isReadOnly
-                    ? 'bg-[#00E676] text-[#111216] hover:bg-[#00c867] shadow-md border-t border-white/20' 
-                    : 'bg-[#252529] border border-[#35363A] text-slate-500 cursor-not-allowed'
-                }`}
-              >
-                {isDrawingGacha && <span className="spinner-inline"></span>}
-                {isReadOnly ? t('readOnlyGachaBlock') : isDrawingGacha ? t('summoning') : stats.tickets >= 1 ? t('openMysteryChest') : t('insufficientTickets')}
-              </button>
             </div>
           )}
 

@@ -270,6 +270,14 @@ export const api = {
     return handleResponse(res);
   },
 
+  buyTicketWithGold: async () => {
+    const res = await fetch(`${API_URL}/items/buy-ticket`, {
+      method: 'POST',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
   requestRedeem: async (inventoryId) => {
     const res = await fetch(`${API_URL}/items/inventory/${inventoryId}/redeem-request`, {
       method: 'POST',

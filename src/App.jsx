@@ -571,6 +571,17 @@ function App() {
     }
   };
 
+  // --- Buy Ticket with Gold (Vending Machine) ---
+  const handleBuyTicketWithGold = async () => {
+    try {
+      await api.buyTicketWithGold();
+      showToast('🎉 成功使用 300 金幣兌換 1 張抽卡券！', 'success');
+      fetchAllData();
+    } catch (error) {
+      showToast(error.message || '兌換失敗，請稍後再試。', 'error');
+    }
+  };
+
   // --- Card Redemption ---
   const handleRequestRedeem = async (inventoryId) => {
     try {
@@ -865,6 +876,7 @@ function App() {
             onToggleEquip={handleToggleEquip}
             gachaPool={gachaPool}
             familySettings={familySettings}
+            onBuyTicketWithGold={handleBuyTicketWithGold}
           />
         ) : (
           <ParentPortal 

@@ -436,3 +436,76 @@ export const toggleEquipItem = async (req, res) => {
   }
 };
 
+// 7. Buy Summon Ticket with Gold (300 Gold = 1 Ticket) - Kid only
+export const buyTicketWithGold = async (req, res) => {
+  const childId = req.user.child_id;
+  const familyId = req.user.family_id;
+  const userId = req.user.id;
+
+  if (!childId) {
+    return res.status(403).json({ message: '此操作僅限小孩帳號執行。 | This operation is only allowed for kid accounts.' });
+  }
+
+  try {
+    await pool.query('BEGIN');
+
+    // 1. Fetch child status
+    const childResult = await pool.query(
+      'SELECT id, name, tickets, gold FROM children WHERE id = $1',
+      [childId]
+    );
+    if (childResult.rows.length === 0) {
+      throw new Error('找不到小孩角色狀態。 | Child profile not found.');
+    }
+    const child = childResult.rows[0];
+
+    const COST_GOLD = 300;
+    if (child.gold < COST_GOLD) {
+      throw new Error('金幣不足，無法兌換抽卡券。 | Insufficient gold to buy ticket.');
+    }
+
+    const newGold = child.gold - COST_GOLD;
+    const newTickets = child.tickets + 1;
+
+    // 2. Update child status in DB
+    await pool.query(
+      'UPDATE children SET gold = $1, tickets = $2 WHERE id = $3',
+      [newGold, newTickets, childId]
+    );
+
+    // 3. Write event log for telemetry
+    await pool.query(
+      `INSERT INTO event_logs (family_id, user_id, event_type, metadata)
+       VALUES ($1, $2, $3, $4)`,
+      [
+        familyId,
+        userId,
+        'SHOP_BUY_TICKET',
+        JSON.stringify({
+          childName: child.name,
+          costGold: COST_GOLD,
+          quantity: 1
+        })
+      ]
+    );
+
+    await pool.query('COMMIT');
+
+    // Fetch updated child profile to send back
+    const updatedChildResult = await pool.query(
+      'SELECT id, name, age, birthday, avatar, level, exp, exp_needed, gold, tickets, job_class, attributes FROM children WHERE id = $1',
+      [childId]
+    );
+
+    res.json({
+      message: '成功使用 300 金幣兌換 1 張抽卡券！ | Successfully exchanged 300 gold for 1 summon ticket!',
+      child: updatedChildResult.rows[0]
+    });
+  } catch (error) {
+    await pool.query('ROLLBACK');
+    console.error('buyTicketWithGold error:', error);
+    res.status(400).json({ message: error.message || '兌換失敗，請稍後再試。' });
+  }
+};
+
+
