@@ -69,7 +69,8 @@ function KidPortal({
   onAddTask,
   isReadOnly = false,
   googleClientId,
-  onToggleEquip
+  onToggleEquip,
+  gachaPool
 }) {
   const { t, language } = useLanguage();
 
@@ -847,7 +848,7 @@ function KidPortal({
     else if (rand < 0.15) raritySelected = 'Epic';
     else if (rand < 0.40) raritySelected = 'Rare';
     
-    const pool = GACHA_POOL[raritySelected].cards;
+    const pool = (gachaPool || GACHA_POOL)[raritySelected].cards;
     const cardSelected = pool[Math.floor(Math.random() * pool.length)];
 
     setTimeout(() => {

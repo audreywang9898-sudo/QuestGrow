@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TASK_TEMPLATES } from '../utils/mockData';
+import { TASK_TEMPLATES, GACHA_POOL } from '../utils/mockData';
 import Avatar from './Avatar';
 import { useLanguage } from './LanguageContext';
 import { 
@@ -50,7 +50,9 @@ function ParentPortal({
   usersDB = [],
   onAddParent,
   onDeleteParent,
-  onUpdateParent
+  onUpdateParent,
+  gachaPool,
+  onUpdateGachaPool
 }) {
   const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState('audit');
@@ -134,6 +136,87 @@ function ParentPortal({
 
   // Delete Confirmation State
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, type: '', id: null, title: '' });
+
+  // Custom Gacha Pool States
+  const [gachaPoolEdit, setGachaPoolEdit] = useState(null);
+  const [activeGachaRarity, setActiveGachaRarity] = useState('Common');
+  
+  const [newGachaName, setNewGachaName] = useState('');
+  const [newGachaType, setNewGachaType] = useState('資源卡'); // 資源卡, 特權卡, 體驗卡, 收藏卡
+  const [newGachaDesc, setNewGachaDesc] = useState('');
+  const [newGachaDuration, setNewGachaDuration] = useState('');
+  const [newGachaStyle, setNewGachaStyle] = useState('neon-orange');
+  const [newGachaGold, setNewGachaGold] = useState(100);
+  const [newGachaExp, setNewGachaExp] = useState(150);
+  const [newGachaTickets, setNewGachaTickets] = useState(1);
+  const [newGachaGrowthScore, setNewGachaGrowthScore] = useState(100);
+
+  // Sync state with prop
+  React.useEffect(() => {
+    if (gachaPool) {
+      setGachaPoolEdit(JSON.parse(JSON.stringify(gachaPool)));
+    }
+  }, [gachaPool]);
+
+  const handleDeleteGachaCard = (rarity, cardId) => {
+    if (!gachaPoolEdit) return;
+    const updated = { ...gachaPoolEdit };
+    updated[rarity].cards = updated[rarity].cards.filter(c => c.id !== cardId);
+    setGachaPoolEdit(updated);
+  };
+
+  const handleAddGachaCardSubmit = (e) => {
+    e.preventDefault();
+    if (!gachaPoolEdit || !newGachaName || !newGachaDesc) return;
+
+    const newCard = {
+      id: `custom_${newGachaType === '資源卡' ? 'c' : newGachaType === '特權卡' ? 'r' : newGachaType === '體驗卡' ? 'e' : 'l'}_${Date.now()}`,
+      name: newGachaName,
+      type: newGachaType,
+      rarity: activeGachaRarity,
+      desc: newGachaDesc
+    };
+
+    if (newGachaType === '資源卡') {
+      const val = {};
+      if (newGachaGold) val.gold = parseInt(newGachaGold, 10);
+      if (newGachaExp) val.exp = parseInt(newGachaExp, 10);
+      if (newGachaTickets) val.tickets = parseInt(newGachaTickets, 10);
+      if (newGachaGrowthScore) val.growthScore = parseInt(newGachaGrowthScore, 10);
+      newCard.value = val;
+    } else if (newGachaType === '特權卡' || newGachaType === '體驗卡') {
+      newCard.duration = newGachaDuration || '7天內有效';
+    } else if (newGachaType === '收藏卡') {
+      newCard.style = newGachaStyle || 'neon-orange';
+    }
+
+    const updated = { ...gachaPoolEdit };
+    updated[activeGachaRarity].cards = [...updated[activeGachaRarity].cards, newCard];
+    setGachaPoolEdit(updated);
+
+    // Reset Form
+    setNewGachaName('');
+    setNewGachaDesc('');
+    setNewGachaDuration('');
+    setNewGachaGold(100);
+    setNewGachaExp(150);
+    setNewGachaTickets(1);
+    setNewGachaGrowthScore(100);
+  };
+
+  const handleSaveGachaPool = () => {
+    if (onUpdateGachaPool && gachaPoolEdit) {
+      onUpdateGachaPool(gachaPoolEdit);
+    }
+  };
+
+  const handleResetGachaPool = () => {
+    if (window.confirm(language === 'zh' ? "確定要重設轉蛋池為系統預設值嗎？這將會覆蓋您自訂的所有卡片。" : "Are you sure you want to reset the gacha pool to system defaults? This will overwrite your custom cards.")) {
+      if (onUpdateGachaPool) {
+        onUpdateGachaPool(GACHA_POOL);
+      }
+    }
+  };
 
   React.useEffect(() => {
     if (stats) {
@@ -1472,6 +1555,18 @@ function ParentPortal({
             <Users className={`h-4 w-4 transition-colors ${settingsSubTab === 'child' ? 'text-[#00E676]' : 'text-slate-500'}`} />
             {t('tabChild')}
           </button>
+          <button
+            type="button"
+            onClick={() => setSettingsSubTab('gacha')}
+            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap active:scale-95 duration-100 ${
+              settingsSubTab === 'gacha' 
+                ? 'border-violet-400 text-violet-400 bg-violet-500/10 shadow-md shadow-violet-500/5' 
+                : 'border-transparent text-slate-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Sparkles className={`h-4 w-4 transition-colors ${settingsSubTab === 'gacha' ? 'text-violet-400' : 'text-slate-500'}`} />
+            {t('tabGachaPool')}
+          </button>
         </div>
       )}
 
@@ -2161,6 +2256,262 @@ function ParentPortal({
                 </p>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* --- Tab 3.6: Gacha Pool Settings panel --- */}
+      {activeTab === 'settings' && settingsSubTab === 'gacha' && gachaPoolEdit && (
+        <div className="space-y-6 animate-success">
+          {/* Header Panel */}
+          <div className="glass-panel p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-violet-400" />
+                {t('gachaPoolConfigTitle')}
+              </h3>
+              <p className="text-xs text-slate-400 mt-1">
+                {t('gachaPoolConfigDesc')}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleResetGachaPool}
+                className="px-4 py-2 bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/30 hover:border-rose-500/50 text-rose-300 text-xs font-black rounded-[4px] transition-all flex items-center gap-1.5 shadow-md shadow-rose-950/20"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                {t('gachaPoolResetBtn')}
+              </button>
+              <button
+                onClick={handleSaveGachaPool}
+                className="px-4 py-2 bg-[#00E676] hover:bg-[#00c867] text-[#111216] text-xs font-black rounded-[4px] transition-all flex items-center gap-1.5 shadow-md shadow-emerald-950/20"
+              >
+                <Check className="h-3.5 w-3.5" />
+                {t('gachaPoolSaveBtn')}
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column: Gacha rarity tabs & card list */}
+            <div className="lg:col-span-2 glass-panel p-6 space-y-6">
+              {/* Rarity Tabs */}
+              <div className="flex border-b border-white/5 gap-2 pb-px overflow-x-auto">
+                {Object.keys(gachaPoolEdit).map(rarity => {
+                  const data = gachaPoolEdit[rarity];
+                  const isActive = activeGachaRarity === rarity;
+                  const labelMap = {
+                    Common: language === 'zh' ? '普通 (60%)' : 'Common (60%)',
+                    Rare: language === 'zh' ? '稀有 (25%)' : 'Rare (25%)',
+                    Epic: language === 'zh' ? '史詩 (10%)' : 'Epic (10%)',
+                    Legendary: language === 'zh' ? '傳說 (4%)' : 'Legendary (4%)',
+                    Mythic: language === 'zh' ? '神話 (1%)' : 'Mythic (1%)'
+                  };
+                  return (
+                    <button
+                      key={rarity}
+                      type="button"
+                      onClick={() => setActiveGachaRarity(rarity)}
+                      className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold border-b-2 transition-all whitespace-nowrap active:scale-95 duration-100 ${
+                        isActive 
+                          ? 'border-violet-400 text-violet-400 bg-violet-500/10' 
+                          : 'border-transparent text-slate-400 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: data.color }} />
+                      {labelMap[rarity]}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Cards List */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-black text-violet-300 uppercase tracking-widest">
+                  {t('gachaCurrentCardsTitle')} ({gachaPoolEdit[activeGachaRarity].cards.length})
+                </h4>
+                
+                {gachaPoolEdit[activeGachaRarity].cards.length === 0 ? (
+                  <div className="p-8 text-center text-xs text-slate-500 border border-dashed border-white/10 rounded-xl">
+                    {t('gachaNoCardsText')}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {gachaPoolEdit[activeGachaRarity].cards.map(card => {
+                      const getRarityTextAndStyle = (rarity) => {
+                        const styleMap = {
+                          Common: 'text-slate-400 bg-slate-500/10 border-slate-500/25',
+                          Rare: 'text-blue-400 bg-blue-500/10 border-blue-500/25',
+                          Epic: 'text-purple-400 bg-purple-500/10 border-purple-500/25',
+                          Legendary: 'text-amber-400 bg-amber-500/10 border-amber-500/25',
+                          Mythic: 'text-rose-400 bg-rose-500/10 border-rose-500/25'
+                        };
+                        return styleMap[rarity] || styleMap.Common;
+                      };
+
+                      return (
+                        <div 
+                          key={card.id}
+                          className="bg-white/5 border border-white/5 hover:border-white/10 rounded-2xl p-4 flex flex-col justify-between gap-3 transition-all relative group"
+                        >
+                          <button
+                            onClick={() => handleDeleteGachaCard(activeGachaRarity, card.id)}
+                            className="absolute top-3 right-3 p-1.5 text-slate-500 hover:text-[#FF4747] bg-white/0 hover:bg-white/5 rounded-lg transition-all"
+                            title={t('deleteCardBtn') || '刪除卡片'}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                          
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className={`text-[9px] font-bold px-1.5 py-0.5 border rounded uppercase ${getRarityTextAndStyle(card.rarity)}`}>
+                                {card.rarity}
+                              </span>
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 bg-white/5 border border-white/5 rounded text-slate-300">
+                                {card.type}
+                              </span>
+                            </div>
+                            <h5 className="text-sm font-black text-slate-200 mt-1">{card.name}</h5>
+                            <p className="text-xs text-slate-400 leading-relaxed mt-0.5 pr-6">{card.desc}</p>
+                          </div>
+
+                          <div className="text-[10px] font-semibold text-slate-400 border-t border-white/5 pt-2.5 flex items-center justify-between">
+                            {card.type === '資源卡' && card.value && (
+                              <span className="flex flex-wrap gap-2 text-violet-400 font-bold">
+                                {card.value.gold !== undefined && <span>🪙 {card.value.gold}</span>}
+                                {card.value.exp !== undefined && <span>+{card.value.exp} EXP</span>}
+                                {card.value.tickets !== undefined && <span>🎫 {card.value.tickets}</span>}
+                                {card.value.growthScore !== undefined && <span>📈 {card.value.growthScore} Pts</span>}
+                              </span>
+                            )}
+                            {(card.type === '特權卡' || card.type === '體驗卡') && (
+                              <span>{t('cardValidityLabel')}：<span className="text-slate-300 font-bold">{card.duration}</span></span>
+                            )}
+                            {card.type === '收藏卡' && (
+                              <span>{t('cardStyleLabel')}：<span className="text-amber-400 font-bold font-mono">{card.style}</span></span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right Column: Add Card form */}
+            <div className="glass-panel p-6 space-y-6">
+              <div>
+                <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
+                  <Plus className="h-5 w-5 text-emerald-400" />
+                  {t('addGachaCardTitle')}
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  {t('addGachaCardDesc') && t('addGachaCardDesc').replace('{rarity}', activeGachaRarity)}
+                </p>
+              </div>
+
+              <form onSubmit={handleAddGachaCardSubmit} className="bg-white/5 border border-white/5 p-4 rounded-xl space-y-4 animate-success">
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-[10px] text-slate-400 font-bold uppercase mb-1">{t('gachaCardNameLabel')}</label>
+                    <input 
+                      type="text" required value={newGachaName} onChange={(e) => setNewGachaName(e.target.value)}
+                      placeholder={t('gachaCardNamePlaceholder')}
+                      className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-slate-400 font-bold uppercase mb-1">{t('gachaCardTypeLabel')}</label>
+                    <select 
+                      value={newGachaType} onChange={(e) => setNewGachaType(e.target.value)}
+                      className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none"
+                    >
+                      <option value="資源卡">{t('cardTypeResource')}</option>
+                      <option value="特權卡">{t('cardTypePrivilege')}</option>
+                      <option value="體驗卡">{t('cardTypeExperience')}</option>
+                      <option value="收藏卡">{t('cardTypeCollection')}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-slate-400 font-bold uppercase mb-1">{t('gachaCardDescLabel')}</label>
+                    <textarea 
+                      required value={newGachaDesc} onChange={(e) => setNewGachaDesc(e.target.value)}
+                      placeholder={t('gachaCardDescPlaceholder')}
+                      rows={3}
+                      className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none"
+                    />
+                  </div>
+
+                  {/* Contextual parameters */}
+                  {newGachaType === '資源卡' && (
+                    <div className="space-y-2.5 p-3 bg-white/5 border border-white/5 rounded-lg">
+                      <h5 className="text-[9px] font-black text-violet-300 uppercase tracking-wider mb-2">{t('resourceValuesTitle')}</h5>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[9px] text-slate-500 font-bold uppercase mb-0.5">{t('goldLabel')}</label>
+                          <input 
+                            type="number" min="0" max="200" value={newGachaGold} onChange={(e) => setNewGachaGold(e.target.value)}
+                            className="w-full bg-slate-900 border border-white/10 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] text-slate-500 font-bold uppercase mb-0.5">EXP</label>
+                          <input 
+                            type="number" min="0" max="500" value={newGachaExp} onChange={(e) => setNewGachaExp(e.target.value)}
+                            className="w-full bg-slate-900 border border-white/10 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] text-slate-500 font-bold uppercase mb-0.5">{t('ticketsLabel')}</label>
+                          <input 
+                            type="number" min="0" max="10" value={newGachaTickets} onChange={(e) => setNewGachaTickets(e.target.value)}
+                            className="w-full bg-slate-900 border border-white/10 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] text-slate-500 font-bold uppercase mb-0.5">{t('familyScoreLabel') || '家庭成長積分'}</label>
+                          <input 
+                            type="number" min="0" max="200" value={newGachaGrowthScore} onChange={(e) => setNewGachaGrowthScore(e.target.value)}
+                            className="w-full bg-slate-900 border border-white/10 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {(newGachaType === '特權卡' || newGachaType === '體驗卡') && (
+                    <div>
+                      <label className="block text-[10px] text-slate-400 font-bold uppercase mb-1">{t('cardValidityLabel')}</label>
+                      <input 
+                        type="text" value={newGachaDuration} onChange={(e) => setNewGachaDuration(e.target.value)}
+                        placeholder="e.g. 7天內有效 / 30天內有效"
+                        className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none"
+                      />
+                    </div>
+                  )}
+
+                  {newGachaType === '收藏卡' && (
+                    <div>
+                      <label className="block text-[10px] text-slate-400 font-bold uppercase mb-1">{t('cardStyleLabel')}</label>
+                      <select 
+                        value={newGachaStyle} onChange={(e) => setNewGachaStyle(e.target.value)}
+                        className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none"
+                      >
+                        <option value="neon-orange">橘光霓虹 (Neon Orange)</option>
+                        <option value="neon-gold">金光霓虹 (Neon Gold)</option>
+                        <option value="rainbow">七彩幻境 (Rainbow)</option>
+                        <option value="cyan-pulse">脈衝青光 (Cyan Pulse)</option>
+                      </select>
+                    </div>
+                  )}
+                </div>
+                <button type="submit" className="w-full py-2 rounded text-xs font-black bg-[#00E676] text-[#111216] hover:bg-[#00c867] transition-all flex items-center justify-center gap-1.5">
+                  <Plus className="h-4 w-4" />
+                  {t('addCardBtn') || '新增卡片至此分組'}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       )}

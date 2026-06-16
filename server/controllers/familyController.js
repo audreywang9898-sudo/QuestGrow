@@ -8,7 +8,7 @@ export const getFamilyData = async (req, res) => {
 
   try {
     const result = await pool.query(
-      'SELECT id, name, growth_score FROM families WHERE id = $1',
+      'SELECT id, name, growth_score, gacha_pool FROM families WHERE id = $1',
       [familyId]
     );
 
@@ -20,7 +20,8 @@ export const getFamilyData = async (req, res) => {
     res.json({
       id: row.id,
       name: row.name,
-      growthScore: row.growth_score
+      growthScore: row.growth_score,
+      gachaPool: row.gacha_pool
     });
   } catch (error) {
     console.error('getFamilyData error:', error);
@@ -390,5 +391,26 @@ export const addEventLog = async (req, res) => {
   } catch (error) {
     console.error('addEventLog error:', error);
     res.status(500).json({ message: getMessage('EVENT_LOG_ERROR') });
+  }
+};
+
+// 14. Update Family Gacha Pool (Parent only)
+export const updateFamilyGachaPool = async (req, res) => {
+  const familyId = req.user.family_id;
+  const { gachaPool } = req.body;
+
+  if (!gachaPool) {
+    return res.status(400).json({ message: '轉蛋池內容不能為空。' });
+  }
+
+  try {
+    await pool.query(
+      'UPDATE families SET gacha_pool = $1 WHERE id = $2',
+      [JSON.stringify(gachaPool), familyId]
+    );
+    res.json({ message: '轉蛋獎勵卡片更新成功！', gachaPool });
+  } catch (error) {
+    console.error('updateFamilyGachaPool error:', error);
+    res.status(500).json({ message: '更新轉蛋池失敗。' });
   }
 };

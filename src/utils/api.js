@@ -305,6 +305,15 @@ export const api = {
     return handleResponse(res);
   },
 
+  updateGachaPool: async (gachaPool) => {
+    const res = await fetch(`${API_URL}/family/gacha-pool`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify({ gachaPool }),
+    });
+    return handleResponse(res);
+  },
+
   getWishlist: async () => {
     const res = await fetch(`${API_URL}/family/wishlist`, {
       method: 'GET',

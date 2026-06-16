@@ -19,6 +19,7 @@ export const translations = {
     tabWishlist: "願望清單設定",
     tabParent: "家長設定",
     tabChild: "兒童設定",
+    tabGachaPool: "轉蛋池設定",
     tabSettings: "系統設定",
 
     // Kid Portal Tabs
@@ -388,7 +389,31 @@ export const translations = {
     kidTourStep4Title: "🎒 神秘背包 (Backpack)",
     kidTourStep4Desc: "這裡會存放你所抽到的所有道具卡與徽章。點擊卡片可以「申請使用」它（需要爸媽審核同意），或者「裝備」你的收藏稱號，讓你的狀態欄變得超級酷炫！",
     kidTourStep5Title: "🎁 家庭願望清單 (Wishlist)",
-    kidTourStep5Desc: "這是全家人的共同大願望！每次你完成任務，都會增加全家的「家庭總積分」。當積分集滿時，就可以兌換全家人的大願望囉！快去接任務，和小隊員們一起努力吧！"
+    kidTourStep5Desc: "這是全家人的共同大願望！每次你完成任務，都會增加全家的「家庭總積分」。當積分集滿時，就可以兌換全家人的大願望囉！快去接任務，和小隊員們一起努力吧！",
+
+    // Gacha Config
+    gachaPoolConfigTitle: "轉蛋獎勵卡片池配置",
+    gachaPoolConfigDesc: "自訂兒童完成任務獲得抽卡券後，可抽取的轉蛋獎勵內容與機率權重。",
+    gachaPoolResetBtn: "重設為預設",
+    gachaPoolSaveBtn: "儲存轉蛋池配置",
+    gachaCurrentCardsTitle: "目前獎勵卡清單",
+    gachaNoCardsText: "此稀有度目前沒有卡片，請在右側表單新增！",
+    addGachaCardTitle: "新增獎勵卡片",
+    addGachaCardDesc: "將新卡片新增至【{rarity}】機率分組中。",
+    gachaCardNameLabel: "卡片名稱",
+    gachaCardNamePlaceholder: "e.g. 晚餐選擇權 / 金幣紅包",
+    gachaCardTypeLabel: "卡片類型",
+    gachaCardDescLabel: "卡片功能描述",
+    gachaCardDescPlaceholder: "e.g. 獲得週末 30 分鐘平板額外遊戲時間，或增加 100 經驗值！",
+    resourceValuesTitle: "資源回饋值（僅資源卡有效）",
+    cardTypeResource: "資源卡 (加金幣/經驗/積分)",
+    cardTypePrivilege: "特權卡 (免做家事/額外螢幕時間)",
+    cardTypeExperience: "體驗卡 (單獨約會/戶外冒險)",
+    cardTypeCollection: "收藏卡 (酷炫頭銜/徽章)",
+    cardValidityLabel: "使用有效期限",
+    cardStyleLabel: "展示特效/樣式",
+    deleteCardBtn: "刪除卡片",
+    addCardBtn: "新增卡片至此分組"
   },
   en: {
     // Header
@@ -408,6 +433,7 @@ export const translations = {
     tabWishlist: "Wishlist Settings",
     tabParent: "Parent Settings",
     tabChild: "Child Settings",
+    tabGachaPool: "Gacha Pool Settings",
     tabSettings: "System Settings",
 
     // Kid Portal Tabs
@@ -777,6 +803,30 @@ export const translations = {
     kidTourStep4Title: "🎒 Mysterious Backpack",
     kidTourStep4Desc: "This holds all cards and badges you've summoned. Click a card to 'Request Use' (pending parent approval), or 'Equip' titles/badges to make your profile stand out!",
     kidTourStep5Title: "🎁 Family Wishlist",
-    kidTourStep5Desc: "These are the family's big goals! Completing tasks increases the Family Score. Once it is fully charged, the family reward can be claimed. Pick up your sword and start adventuring!"
+    kidTourStep5Desc: "These are the family's big goals! Completing tasks increases the Family Score. Once it is fully charged, the family reward can be claimed. Pick up your sword and start adventuring!",
+
+    // Gacha Config
+    gachaPoolConfigTitle: "Gacha Reward Pool Configuration",
+    gachaPoolConfigDesc: "Customize gacha reward cards and drop values drawn by kids using summon tickets.",
+    gachaPoolResetBtn: "Reset to Default",
+    gachaPoolSaveBtn: "Save Gacha Pool",
+    gachaCurrentCardsTitle: "Current Reward Cards List",
+    gachaNoCardsText: "No cards configured for this rarity. Add one using the form on the right!",
+    addGachaCardTitle: "Add New Card",
+    addGachaCardDesc: "Add a new card into the [{rarity}] probability group.",
+    gachaCardNameLabel: "Card Name",
+    gachaCardNamePlaceholder: "e.g. Dinner choice coupon / Gold envelope",
+    gachaCardTypeLabel: "Card Type",
+    gachaCardDescLabel: "Card Effect Description",
+    gachaCardDescPlaceholder: "e.g. Get 30 minutes of extra Switch time or add 100 EXP!",
+    resourceValuesTitle: "Resource Reward Amounts (Resource Cards Only)",
+    cardTypeResource: "Resource Card (Gold / EXP / Points)",
+    cardTypePrivilege: "Privilege Card (No chores / Screen time)",
+    cardTypeExperience: "Experience Card (One-on-one outing / Adventure)",
+    cardTypeCollection: "Collection Card (Special titles / Badges)",
+    cardValidityLabel: "Expiration / Validity",
+    cardStyleLabel: "Display Style / Effects",
+    deleteCardBtn: "Delete Card",
+    addCardBtn: "Add Card to Group"
   }
 };

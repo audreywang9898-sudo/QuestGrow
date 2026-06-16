@@ -6,7 +6,8 @@ import {
   INITIAL_PARENT_GOALS, 
   INITIAL_WISHLIST, 
   INITIAL_REDEEM_LOGS, 
-  INITIAL_WEEKLY_COMPETITION 
+  INITIAL_WEEKLY_COMPETITION,
+  GACHA_POOL
 } from './utils/mockData';
 import ParentPortal from './components/ParentPortal';
 import KidPortal from './components/KidPortal';
@@ -106,6 +107,7 @@ function App() {
   const [weeklyComp, setWeeklyComp] = useState(INITIAL_WEEKLY_COMPETITION);
   const [eventLogs, setEventLogs] = useState([]);
   const [members, setMembers] = useState([]); // Replaces usersDB
+  const [gachaPool, setGachaPool] = useState(GACHA_POOL);
   
   // --- Toast State ---
   const [toasts, setToasts] = useState([]);
@@ -129,7 +131,14 @@ function App() {
     if (!currentUser) return;
     try {
       const familyData = await api.getFamilyData();
-      if (familyData) setFamilyScore(familyData.growthScore);
+      if (familyData) {
+        setFamilyScore(familyData.growthScore);
+        if (familyData.gachaPool) {
+          setGachaPool(familyData.gachaPool);
+        } else {
+          setGachaPool(GACHA_POOL);
+        }
+      }
 
       const childrenData = await api.getChildren();
       setChildren(childrenData);
@@ -438,6 +447,17 @@ function App() {
       fetchAllData();
     } catch (error) {
       showToast(error.message || '刪除任務失敗。', 'error');
+    }
+  };
+
+  const handleUpdateGachaPool = async (newPool) => {
+    try {
+      await api.updateGachaPool(newPool);
+      setGachaPool(newPool);
+      showToast('轉蛋獎勵卡片更新成功！', 'success');
+      fetchAllData();
+    } catch (error) {
+      showToast(error.message || '更新轉蛋池失敗。', 'error');
     }
   };
 
@@ -826,6 +846,7 @@ function App() {
             isReadOnly={currentUser && currentUser.role === 'kid' && activeChildId !== currentUser.childId}
             googleClientId={googleClientId}
             onToggleEquip={handleToggleEquip}
+            gachaPool={gachaPool}
           />
         ) : (
           <ParentPortal 
@@ -862,6 +883,8 @@ function App() {
             onAddParent={handleAddParent}
             onDeleteParent={handleDeleteParent}
             onUpdateParent={handleUpdateParent}
+            gachaPool={gachaPool}
+            onUpdateGachaPool={handleUpdateGachaPool}
           />
         )}
       </main>
