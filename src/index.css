@@ -640,27 +640,64 @@ th[class*="bg-white/5"] {
 }
 
 /* Bopomofo / Zhuyin Typography & Positioning Rules */
-ruby.ruby-char {
+/* span-based layout: [char][zy-annotation: [zy-base vertical][tone top-right]] */
+.zhuyin-char-wrap {
   display: inline-flex !important;
   flex-direction: row !important;
-  align-items: center !important;
-  vertical-align: middle !important;
-  margin: 0 0.15em !important;
+  align-items: flex-end !important;
+  margin: 0 0.12em !important;
+  vertical-align: bottom !important;
+  line-height: 1.4 !important;
 }
 
-ruby.ruby-char rt {
+.zhuyin-char {
+  display: inline-block !important;
+  line-height: 1 !important;
+}
+
+/* The annotation block sits to the right of the Chinese character */
+.zhuyin-annotation {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  margin-left: 1px !important;
+  margin-bottom: 0.05em !important;
+}
+
+/* Vertical bopomofo phonetic characters */
+.zhuyin-base {
   display: inline-block !important;
   writing-mode: vertical-rl !important;
   -webkit-writing-mode: vertical-rl !important;
-  font-size: 0.45em !important;
-  line-height: 1 !important;
-  letter-spacing: -0.05em !important;
-  color: #64748B !important; /* Muted slate gray */
+  text-orientation: upright !important;
+  font-size: 0.42em !important;
+  line-height: 1.05 !important;
+  letter-spacing: 0em !important;
+  color: #64748B !important;
   font-weight: 600 !important;
   user-select: none !important;
-  margin-left: 2px !important;
-  vertical-align: middle !important;
-  padding: 0 !important;
+  min-height: 1em !important;
+}
+
+/* Tone mark: to the RIGHT of the vertical base, anchored at the TOP */
+.zhuyin-tone {
+  display: inline-flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+  font-size: 0.36em !important;
+  font-weight: 800 !important;
+  color: #64748B !important;
+  user-select: none !important;
+  line-height: 1 !important;
+  margin-left: 1px !important;
+  padding-top: 0.05em !important;
+  min-width: 0.6em !important;
+}
+
+/* Neutral tone (˙) is always at the top */
+.zhuyin-tone.tone-neutral {
+  justify-content: flex-start !important;
 }
 
 /* Gentle bounce and pulsing animations for Kid Onboarding Guide TTS Voice Button */

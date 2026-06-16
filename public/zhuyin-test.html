@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>注音符號排列測試</title>
+<style>
+body { font-family: sans-serif; font-size: 20px; padding: 2rem; background: #0f172a; color: #e2e8f0; }
+h1 { color: #38bdf8; }
+.row { display: flex; flex-wrap: wrap; gap: 1rem; margin: 1rem 0; align-items: flex-end; }
+.label { color: #94a3b8; font-size: 0.8rem; margin-bottom: 4px; }
+
+/* Same CSS as index.css */
+.zhuyin-char-wrap {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: flex-end !important;
+  margin: 0 0.12em !important;
+  vertical-align: bottom !important;
+  line-height: 1.4 !important;
+}
+.zhuyin-char {
+  display: inline-block !important;
+  line-height: 1 !important;
+}
+.zhuyin-annotation {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  margin-left: 1px !important;
+  margin-bottom: 0.05em !important;
+}
+.zhuyin-base {
+  display: inline-block !important;
+  writing-mode: vertical-rl !important;
+  -webkit-writing-mode: vertical-rl !important;
+  text-orientation: upright !important;
+  font-size: 0.42em !important;
+  line-height: 1.05 !important;
+  letter-spacing: 0em !important;
+  color: #94a3b8 !important;
+  font-weight: 600 !important;
+  user-select: none !important;
+  min-height: 1em !important;
+}
+.zhuyin-tone {
+  display: inline-flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+  font-size: 0.36em !important;
+  font-weight: 800 !important;
+  color: #f59e0b !important;
+  user-select: none !important;
+  line-height: 1 !important;
+  margin-left: 1px !important;
+  padding-top: 0.05em !important;
+  min-width: 0.6em !important;
+}
+.inline-flex { display: inline-flex !important; }
+.flex-wrap { flex-wrap: wrap !important; }
+.items-end { align-items: flex-end !important; }
+.leading-relaxed { line-height: 1.625 !important; }
+</style>
+</head>
+<body>
+<h1>注音符號排列測試</h1>
+<p>聲調應出現在注音符號的<strong style="color:#fbbf24">右方</strong>（不是下方）</p>
+
+<div class="label">一聲（陰平）— 無標記</div>
+<div class="row">
+  <span class="zhuyin-char-wrap"><span class="zhuyin-char">媽</span><span class="zhuyin-annotation"><span class="zhuyin-base">ㄇㄚ</span></span></span>
+  <span class="zhuyin-char-wrap"><span class="zhuyin-char">金</span><span class="zhuyin-annotation"><span class="zhuyin-base">ㄐㄧㄣ</span></span></span>
+  <span class="zhuyin-char-wrap"><span class="zhuyin-char">花</span><span class="zhuyin-annotation"><span class="zhuyin-base">ㄏㄨㄚ</span></span></span>
+</div>
+
+<div class="label">二聲（陽平）— ˊ 在右上</div>
+<div class="row">
+  <span class="zhuyin-char-wrap"><span class="zhuyin-char">完</span><span class="zhuyin-annotation"><span class="zhuyin-base">ㄨㄢ</span><span class="zhuyin-tone tone-2">ˊ</span></span></span>
+  <span class="zhuyin-char-wrap"><span class="zhuyin-char">成</span><span class="zhuyin-annotation"><span class="zhuyin-base">ㄔㄥ</span><span class="zhuyin-tone tone-2">ˊ</span></span></span>
+  <span class="zhuyin-char-wrap"><span class="zhuyin-char">賺</span><span class="zhuyin-annotation"><span class="zhuyin-base">ㄓㄨㄢ</span><span class="zhuyin-tone tone-4">ˋ</span></span></span>
+  <span class="zhuyin-char-wrap"><span class="zhuyin-char">錢</span><span class="zhuyin-annotation"><span class="zhuyin-base">ㄑㄧㄢ</span><span class="zhuyin-tone tone-2">ˊ</span></span></span>
+</div>
+
+<div class="label">三聲（上聲）— ˇ 在右上</div>
+<div class="row">
+  <span class="zhuyin-char-wrap"><span class="zhuyin-char">取</span><span class="zhuyin-annotation"><span class="zhuyin-base">ㄑㄩ</span><span class="zhuyin-tone tone-3">ˇ</span></span></span>
+  <span class="zhuyin-char-wrap"><span class="zhuyin-char">買</span><span class="zhuyin-annotation"><span class="zhuyin-base">ㄇㄞ</span><span class="zhuyin-tone tone-3">ˇ</span></span></span>
+  <span class="zhuyin-char-wrap"><span class="zhuyin-char">本</span><span class="zhuyin-annotation"><span class="zhuyin-base">ㄅㄣ</span><span class="zhuyin-tone tone-3">ˇ</span></span></span>
+</div>
+
+<div class="label">四聲（去聲）— ˋ 在右上</div>
+<div class="row">
+  <span class="zhuyin-char-wrap"><span class="zhuyin-char">任</span><span class="zhuyin-annotation"><span class="zhuyin-base">ㄖㄣ</span><span class="zhuyin-tone tone-4">ˋ</span></span></span>
+  <span class="zhuyin-char-wrap"><span class="zhuyin-char">務</span><span class="zhuyin-annotation"><span class="zhuyin-base">ㄨ</span><span class="zhuyin-tone tone-4">ˋ</span></span></span>
+  <span class="zhuyin-char-wrap"><span class="zhuyin-char">賣</span><span class="zhuyin-annotation"><span class="zhuyin-base">ㄇㄞ</span><span class="zhuyin-tone tone-4">ˋ</span></span></span>
+  <span class="zhuyin-char-wrap"><span class="zhuyin-char">費</span><span class="zhuyin-annotation"><span class="zhuyin-base">ㄈㄟ</span><span class="zhuyin-tone tone-4">ˋ</span></span></span>
+</div>
+
+<div class="label">輕聲 — ˙ 在右上</div>
+<div class="row">
+  <span class="zhuyin-char-wrap"><span class="zhuyin-char">的</span><span class="zhuyin-annotation"><span class="zhuyin-base">ㄉㄜ</span><span class="zhuyin-tone tone-neutral">˙</span></span></span>
+  <span class="zhuyin-char-wrap"><span class="zhuyin-char">了</span><span class="zhuyin-annotation"><span class="zhuyin-base">ㄌㄜ</span><span class="zhuyin-tone tone-neutral">˙</span></span></span>
+</div>
+
+<hr style="border-color:#334155; margin: 1.5rem 0;">
+<div class="label">完整句子「完成任務賺取金幣」</div>
+<div class="row" style="font-size:24px">
+  <span class="zhuyin-char-wrap"><span class="zhuyin-char">完</span><span class="zhuyin-annotation"><span class="zhuyin-base">ㄨㄢ</span><span class="zhuyin-tone tone-2">ˊ</span></span></span>
+  <span class="zhuyin-char-wrap"><span class="zhuyin-char">成</span><span class="zhuyin-annotation"><span class="zhuyin-base">ㄔㄥ</span><span class="zhuyin-tone tone-2">ˊ</span></span></span>
+  <span class="zhuyin-char-wrap"><span class="zhuyin-char">任</span><span class="zhuyin-annotation"><span class="zhuyin-base">ㄖㄣ</span><span class="zhuyin-tone tone-4">ˋ</span></span></span>
+  <span class="zhuyin-char-wrap"><span class="zhuyin-char">務</span><span class="zhuyin-annotation"><span class="zhuyin-base">ㄨ</span><span class="zhuyin-tone tone-4">ˋ</span></span></span>
+  <span class="zhuyin-char-wrap"><span class="zhuyin-char">賺</span><span class="zhuyin-annotation"><span class="zhuyin-base">ㄓㄨㄢ</span><span class="zhuyin-tone tone-4">ˋ</span></span></span>
+  <span class="zhuyin-char-wrap"><span class="zhuyin-char">取</span><span class="zhuyin-annotation"><span class="zhuyin-base">ㄑㄩ</span><span class="zhuyin-tone tone-3">ˇ</span></span></span>
+  <span class="zhuyin-char-wrap"><span class="zhuyin-char">金</span><span class="zhuyin-annotation"><span class="zhuyin-base">ㄐㄧㄣ</span></span></span>
+  <span class="zhuyin-char-wrap"><span class="zhuyin-char">幣</span><span class="zhuyin-annotation"><span class="zhuyin-base">ㄅㄧ</span><span class="zhuyin-tone tone-4">ˋ</span></span></span>
+</div>
+</body>
+</html>
