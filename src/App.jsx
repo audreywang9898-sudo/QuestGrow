@@ -103,7 +103,7 @@ function App() {
   const [parentGoals, setParentGoals] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [redeemLogs, setRedeemLogs] = useState([]);
-  const [familyScore, setFamilyScore] = useState(6420);
+  const [familyScore, setFamilyScore] = useState(0);
   const [weeklyComp, setWeeklyComp] = useState(INITIAL_WEEKLY_COMPETITION);
   const [eventLogs, setEventLogs] = useState([]);
   const [members, setMembers] = useState([]); // Replaces usersDB

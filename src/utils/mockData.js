@@ -1668,7 +1668,7 @@ export const INITIAL_PARENT_GOALS = [
 ];
 
 export const INITIAL_WISHLIST = [
-  { id: "wl-1", title: "全家日本自由行五天四夜", pointsNeeded: 10000, pointsCurrent: 6420, isUltimate: true },
+  { id: "wl-1", title: "全家日本自由行五天四夜", pointsNeeded: 10000, pointsCurrent: 0, isUltimate: true },
   { id: "wl-2", title: "週末森林野奢露營體驗", pointsNeeded: 2000, pointsCurrent: 2000, isUltimate: false, isRedeemed: true },
   { id: "wl-3", title: "購買家庭同樂 Switch 遊戲", pointsNeeded: 800, pointsCurrent: 800, isUltimate: false, isRedeemed: false }
 ];
