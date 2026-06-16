@@ -372,7 +372,7 @@ function App() {
   };
 
   // --- Task Operations ---
-  const handleAddTask = async (newTaskOrTasks) => {
+  const handleAddTask = async (newTaskOrTasks, taskIdToSwap) => {
     try {
       const isArray = Array.isArray(newTaskOrTasks);
       const tasksToAdd = isArray ? newTaskOrTasks : [newTaskOrTasks];
@@ -395,20 +395,30 @@ function App() {
       });
 
       const results = await Promise.all(promises);
+      const createdTasks = results.map(r => r.task);
 
-      if (role === 'kid' && isArray && tasksToAdd.length > 1) {
-        showToast('🎉 抽選成功！德、智、體、群、美各 1 張任務已加入你的冒險任務庫。', 'success');
-        const newDrawnIds = results.map(r => r.task.id);
-        setDrawnTasksMap(prev => ({ ...prev, [activeChildId]: newDrawnIds }));
-      } else {
-        if (role !== 'kid') {
-          showToast('任務指派成功！', 'success');
+      if (role === 'kid') {
+        if (isArray && tasksToAdd.length > 1) {
+          showToast('🎉 抽選成功！德、智、體、群、美各 1 張任務已加入你的冒險任務庫。', 'success');
+          const newDrawnIds = createdTasks.map(t => t.id);
+          setDrawnTasksMap(prev => ({ ...prev, [activeChildId]: newDrawnIds }));
+        } else if (taskIdToSwap) {
+          const realNewId = createdTasks[0].id;
+          setDrawnTasksMap(prev => {
+            const currentIds = prev[activeChildId] || [];
+            const updatedIds = currentIds.map(id => id === taskIdToSwap ? realNewId : id);
+            return { ...prev, [activeChildId]: updatedIds };
+          });
         }
+      } else {
+        showToast('任務指派成功！', 'success');
       }
 
-      fetchAllData();
+      await fetchAllData();
+      return createdTasks;
     } catch (error) {
       showToast(error.message || '任務指派失敗。', 'error');
+      return null;
     }
   };
 

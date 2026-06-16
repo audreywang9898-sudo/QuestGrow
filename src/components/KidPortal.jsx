@@ -300,6 +300,7 @@ function KidPortal({
   const [tourSpeaking, setTourSpeaking] = useState(false);
   const [showCompletedHistory, setShowCompletedHistory] = useState(false);
   const [showBackpackHistory, setShowBackpackHistory] = useState(false);
+  const [swappingTaskId, setSwappingTaskId] = useState(null);
 
   const handleSpeakTourStep = (stepNum) => {
     if (!('speechSynthesis' in window)) {
@@ -648,7 +649,9 @@ function KidPortal({
   };
 
   // Reroll a single task - swap it for a random different available task
-  const handleRerollTask = (taskIdToSwap) => {
+  const handleRerollTask = async (taskIdToSwap) => {
+    if (swappingTaskId !== null) return;
+
     const childTasks = tasks.filter(t => !t.assignedTo || t.assignedTo === stats.id);
     
     // Pool: available tasks not currently in the drawn list
@@ -671,9 +674,7 @@ function KidPortal({
       const templatesToUse = catTemplates.length > 0 ? catTemplates : TASK_TEMPLATES;
       const randomTpl = templatesToUse[Math.floor(Math.random() * templatesToUse.length)];
       
-      const newId = `task-tpl-self-swap-${Date.now()}-${Math.random().toString(36).substr(2, 5)}-${stats.id}`;
       const newTaskObj = {
-        id: newId,
         name: randomTpl.name,
         description: randomTpl.description,
         type: randomTpl.type,
@@ -688,12 +689,16 @@ function KidPortal({
         dateCreated: simulatedDate || new Date().toISOString().split('T')[0]
       };
 
-      if (onAddTask) {
-        onAddTask(newTaskObj);
+      setSwappingTaskId(taskIdToSwap);
+      try {
+        if (onAddTask) {
+          await onAddTask(newTaskObj, taskIdToSwap);
+        }
+      } catch (error) {
+        console.error("Failed to swap task:", error);
+      } finally {
+        setSwappingTaskId(null);
       }
-      
-      const newDrawnTaskIds = drawnTaskIds.map(id => id === taskIdToSwap ? newId : id);
-      onUpdateDrawnTasks(newDrawnTaskIds);
     }
   };
   
@@ -1380,13 +1385,28 @@ function KidPortal({
                           <span className={`text-xs font-bold border px-2 py-0.5 rounded-full whitespace-nowrap ${getTypeBadgeColor(task.type)}`}>
                             {translateType(task.type)} | {t('taskDifficultyLabel')} {translateDifficulty(task.difficulty)}
                           </span>
-                          {!isReadOnly && task.status === '進行中' && !task.rejectionReason && (
+                           {!isReadOnly && task.status === '進行中' && !task.rejectionReason && (
                             <button
                               onClick={() => handleRerollTask(task.id)}
+                              disabled={swappingTaskId !== null}
                               title={language === 'zh' ? '換一個任務' : 'Swap this quest'}
-                              className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-slate-400 hover:text-violet-300 bg-white/5 hover:bg-violet-500/15 border border-white/10 hover:border-violet-500/30 rounded-lg transition-all shrink-0"
+                              className={`flex items-center gap-1 px-2 py-1 text-[10px] font-bold rounded-lg transition-all shrink-0 ${
+                                swappingTaskId !== null 
+                                  ? 'opacity-50 cursor-not-allowed text-slate-500 bg-white/5 border border-white/5' 
+                                  : 'text-slate-400 hover:text-violet-300 bg-white/5 hover:bg-violet-500/15 border border-white/10 hover:border-violet-500/30'
+                              }`}
                             >
-                              🔄 {language === 'zh' ? '換一個' : 'Swap'}
+                              {swappingTaskId === task.id ? (
+                                <>
+                                  <span className="animate-spin mr-1">⏳</span>
+                                  {language === 'zh' ? '更換中...' : 'Swapping...'}
+                                </>
+                              ) : (
+                                <>
+                                  <span>🔄</span>
+                                  {language === 'zh' ? '換一個' : 'Swap'}
+                                </>
+                              )}
                             </button>
                           )}
                         </div>
