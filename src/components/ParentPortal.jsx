@@ -7,7 +7,7 @@ import {
   HelpCircle, Trash2, Award, ClipboardCheck, LayoutGrid, 
   Eye, Heart, MessageSquare, Compass, BarChart3, AlertCircle,
   Database, ShieldCheck, HelpCircle as HelpIcon, Trophy, Users,
-  ListTodo, Settings
+  ListTodo, Settings, ChevronDown
 } from 'lucide-react';
 
 const difficultyRewardsMap = {
@@ -975,9 +975,10 @@ function ParentPortal({
               <button
                 type="button"
                 onClick={() => setShowHistoryLogs(prev => !prev)}
-                className="px-4.5 py-2 bg-gradient-to-r from-violet-600 to-indigo-650 hover:from-violet-550 hover:to-indigo-550 text-white text-xs font-black rounded-lg shadow-md hover:shadow-violet-600/25 active:scale-95 transition-all uppercase tracking-wider"
+                className="flex items-center gap-1.5 px-4 py-1.5 bg-white/5 hover:bg-white/10 active:bg-white/15 border border-white/15 hover:border-white/20 text-slate-200 text-xs font-bold rounded-full shadow-sm transition-all duration-200 active:scale-95"
               >
-                {showHistoryLogs ? (language === 'zh' ? '隱藏 ❌' : 'Hide ❌') : (language === 'zh' ? '展開 📂' : 'Expand 📂')}
+                <span>{showHistoryLogs ? (language === 'zh' ? '收起記錄' : 'Hide History') : (language === 'zh' ? '展開記錄' : 'Show History')}</span>
+                <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-300 ${showHistoryLogs ? 'rotate-180' : ''}`} />
               </button>
             </div>
 

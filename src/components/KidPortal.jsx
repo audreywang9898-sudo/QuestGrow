@@ -8,7 +8,7 @@ import {
   Sparkles, Award, Compass, Shield, BookOpen, Heart, 
   Wallet, Trophy, Send, User, ChevronRight, Package, 
   CheckCircle2, Clock, Ban, Eye, AlertTriangle, Bell, Trash2,
-  Camera, Upload, Volume2, VolumeX
+  Camera, Upload, Volume2, VolumeX, ChevronDown
 } from 'lucide-react';
 
 const compressImage = (base64Str, maxWidth = 400, maxHeight = 400) => {
@@ -1511,9 +1511,10 @@ function KidPortal({
                 <button
                   type="button"
                   onClick={() => setShowCompletedHistory(prev => !prev)}
-                  className="px-4.5 py-1.5 bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-550 hover:to-cyan-400 text-white text-xs font-black rounded-full shadow-lg shadow-violet-600/20 active:scale-95 transition-all"
+                  className="flex items-center gap-1.5 px-4 py-1.5 bg-white/5 hover:bg-white/10 active:bg-white/15 border border-white/15 hover:border-white/20 text-slate-200 text-xs font-bold rounded-full shadow-sm transition-all duration-200 active:scale-95"
                 >
-                  {showCompletedHistory ? (language === 'zh' ? '隱藏 ❌' : 'Hide ❌') : (language === 'zh' ? '展開 📂' : 'Expand 📂')}
+                  <span>{showCompletedHistory ? (language === 'zh' ? '收起記錄' : 'Hide History') : (language === 'zh' ? '展開記錄' : 'Show History')}</span>
+                  <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-300 ${showCompletedHistory ? 'rotate-180' : ''}`} />
                 </button>
               </div>
 
@@ -1806,9 +1807,10 @@ function KidPortal({
                 <button
                   type="button"
                   onClick={() => setShowBackpackHistory(prev => !prev)}
-                  className="px-4.5 py-1.5 bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-550 hover:to-cyan-400 text-white text-xs font-black rounded-full shadow-lg shadow-violet-600/20 active:scale-95 transition-all"
+                  className="flex items-center gap-1.5 px-4 py-1.5 bg-white/5 hover:bg-white/10 active:bg-white/15 border border-white/15 hover:border-white/20 text-slate-200 text-xs font-bold rounded-full shadow-sm transition-all duration-200 active:scale-95"
                 >
-                  {showBackpackHistory ? (language === 'zh' ? '隱藏 ❌' : 'Hide ❌') : (language === 'zh' ? '展開 📂' : 'Expand 📂')}
+                  <span>{showBackpackHistory ? (language === 'zh' ? '收起記錄' : 'Hide History') : (language === 'zh' ? '展開記錄' : 'Show History')}</span>
+                  <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-300 ${showBackpackHistory ? 'rotate-180' : ''}`} />
                 </button>
               </div>
 
