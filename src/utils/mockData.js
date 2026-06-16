@@ -1588,34 +1588,58 @@ export const GACHA_POOL = {
     color: "#a0aec0",
     cards: [
       { id: "c_gold_1", name: "金幣紅包", type: "資源卡", rarity: "Common", desc: "立即獲得 100 金幣", value: { gold: 100 } },
+      { id: "c_gold_2", name: "微光小金袋", type: "資源卡", rarity: "Common", desc: "立即獲得 150 金幣", value: { gold: 150 } },
       { id: "c_exp_1", name: "微光經驗瓶", type: "資源卡", rarity: "Common", desc: "立即獲得 150 經驗值", value: { exp: 150 } },
-      { id: "c_ticket_1", name: "好運抽卡券", type: "資源卡", rarity: "Common", desc: "額外獲得 1 張抽卡券", value: { tickets: 1 } }
+      { id: "c_exp_2", name: "清泉經驗水", type: "資源卡", rarity: "Common", desc: "立即獲得 250 經驗值", value: { exp: 250 } },
+      { id: "c_ticket_1", name: "好運抽卡券", type: "資源卡", rarity: "Common", desc: "額外獲得 1 張抽卡券", value: { tickets: 1 } },
+      { id: "r_dessert", name: "課後甜點選擇權", type: "特權卡", rarity: "Common", desc: "放學後可以挑選自己最想吃的一份甜點！", duration: "3天內有效" }
     ]
   },
   Rare: {
     chance: 0.25,
     color: "#4299e1",
     cards: [
+      { id: "c_gold_3", name: "黃金寶箱", type: "資源卡", rarity: "Rare", desc: "立即獲得 200 金幣", value: { gold: 200 } },
+      { id: "c_exp_3", name: "聖光經驗藥水", type: "資源卡", rarity: "Rare", desc: "立即獲得 400 經驗值", value: { exp: 400 } },
+      { id: "c_ticket_2", name: "雙重抽卡券", type: "資源卡", rarity: "Rare", desc: "額外獲得 2 張抽卡券", value: { tickets: 2 } },
       { id: "r_dinner", name: "晚餐選擇權", type: "特權卡", rarity: "Rare", desc: "今晚吃什麼？由你來做主！", duration: "7天內有效" },
       { id: "r_movie", name: "週末電影選擇權", type: "特權卡", rarity: "Rare", desc: "全家週末看什麼電影由你挑選！", duration: "14天內有效" },
-      { id: "r_game", name: "額外遊戲時間 30 分鐘", type: "特權卡", rarity: "Rare", desc: "可折抵一次 30 分鐘 the Switch/平板時間", duration: "7天內有效" }
+      { id: "r_game", name: "額外遊戲時間 30 分鐘", type: "特權卡", rarity: "Rare", desc: "可折抵一次 30 分鐘 the Switch/平板時間", duration: "7天內有效" },
+      { id: "r_no_chore_1", name: "家事免除一次券", type: "特權卡", rarity: "Rare", desc: "今天可以免除一次洗碗或倒垃圾的家事！", duration: "7天內有效" },
+      { id: "r_sleep_late", name: "週末賴床券", type: "特權卡", rarity: "Rare", desc: "週末早上可以睡到自然醒，爸媽不催床！", duration: "7天內有效" },
+      { id: "r_stay_up", name: "晚睡 30 分鐘許可證", type: "特權卡", rarity: "Rare", desc: "今天晚上可以晚睡 30 分鐘，聽故事或看書！", duration: "7天內有效" },
+      { id: "e_museum", name: "科學博物館探險", type: "體驗卡", rarity: "Rare", desc: "週末全家一起去科學博物館探險！", duration: "30天內有效" },
+      { id: "e_cooking", name: "親子烘焙大師體驗", type: "體驗卡", rarity: "Rare", desc: "與爸爸或媽媽一起動手烤餅乾或做小披薩！", duration: "14天內有效" },
+      { id: "e_picnic", name: "草地野餐派對", type: "體驗卡", rarity: "Rare", desc: "準備美味三明治，一起到公園草地野餐放風箏！", duration: "30天內有效" }
     ]
   },
   Epic: {
     chance: 0.10,
     color: "#9f7aea",
     cards: [
+      { id: "c_ticket_3", name: "皇家抽卡券袋", type: "資源卡", rarity: "Epic", desc: "額外獲得 5 張抽卡券", value: { tickets: 5 } },
+      { id: "r_game_60", name: "額外遊戲時間 60 分鐘", type: "特權卡", rarity: "Epic", desc: "可折抵一次 60 分鐘 the Switch/平板時間", duration: "14天內有效" },
+      { id: "r_no_chore_all", name: "家事豁免一日券", type: "特權卡", rarity: "Epic", desc: "今天所有指派的日常家事都可以休息一天！", duration: "14天內有效" },
+      { id: "r_toy", name: "玩具心願達成卡", type: "特權卡", rarity: "Epic", desc: "可以向家長挑選一件 300 元以內的小玩具！", duration: "30天內有效" },
       { id: "e_date", name: "爸爸媽媽單獨約會券", type: "體驗卡", rarity: "Epic", desc: "獲得與爸爸或媽媽單獨出門吃冰淇淋/逛街的下午！", duration: "30天內有效" },
       { id: "e_park", name: "室內攀岩館體驗", type: "體驗卡", rarity: "Epic", desc: "全家一起去攀岩館冒險體驗一次！", duration: "60天內有效" },
-      { id: "e_camping", name: "星空露營之夜", type: "體驗卡", rarity: "Epic", desc: "約定一次週末帳篷露營或後陽台野營！", duration: "90天內有效" }
+      { id: "e_camping", name: "星空露營之夜", type: "體驗卡", rarity: "Epic", desc: "約定一次週末帳篷露營或後陽台野營！", duration: "90天內有效" },
+      { id: "e_zoo", name: "動物園一日遊", type: "體驗卡", rarity: "Epic", desc: "週末全家一起去動物園，看大貓熊與無尾熊！", duration: "45天內有效" },
+      { id: "e_star", name: "夜間觀星賞螢火蟲", type: "體驗卡", rarity: "Epic", desc: "夏日夜晚全家出發山區，賞螢火蟲或用望遠鏡看星星！", duration: "60天內有效" },
+      { id: "l_title_ranger", name: "稱號：風暴行者", type: "收藏卡", rarity: "Epic", desc: "解鎖如風一般迅捷的稱號，提升個人主頁動態特效！", style: "neon-green" },
+      { id: "l_badge_courage", name: "徽章：勇氣之盾", type: "收藏卡", rarity: "Epic", desc: "頒發給勇於嘗試新挑戰、克服挑戰的勇士！", style: "neon-red" }
     ]
   },
   Legendary: {
     chance: 0.04,
     color: "#ed8936",
     cards: [
+      { id: "e_hotel", name: "溫泉或親子飯店之旅", type: "體驗卡", rarity: "Legendary", desc: "規劃一次家庭溫泉或親子主題飯店度假之旅！", duration: "90天內有效" },
+      { id: "e_aquarium", name: "夜宿海生館奇妙夜", type: "體驗卡", rarity: "Legendary", desc: "全家約定一次夜宿海洋生物博物館的奇妙體驗！", duration: "90天內有效" },
       { id: "l_title_dragon", name: "稱號：屠龍勇士", type: "收藏卡", rarity: "Legendary", desc: "解鎖酷炫角色稱號，展示於個人面板！", style: "neon-orange" },
-      { id: "l_badge_persistence", name: "徽章：不屈之意志", type: "收藏卡", rarity: "Legendary", desc: "頒發給極度自律的冒險者，家長共同見證！", style: "neon-gold" }
+      { id: "l_badge_persistence", name: "徽章：不屈之意志", type: "收藏卡", rarity: "Legendary", desc: "頒發給極度自律的冒險者，家長共同見證！", style: "neon-gold" },
+      { id: "l_title_sage", name: "稱號：奧秘賢者", type: "收藏卡", rarity: "Legendary", desc: "象徵智慧過人，解鎖智慧之光角色背景主題！", style: "neon-blue" },
+      { id: "l_badge_wisdom", name: "徽章：智慧啟迪者", type: "收藏卡", rarity: "Legendary", desc: "表彰在學習任務上展現出非凡恆心與好奇心！", style: "neon-purple" }
     ]
   },
   Mythic: {
@@ -1623,7 +1647,10 @@ export const GACHA_POOL = {
     color: "#f56565",
     cards: [
       { id: "m_wish", name: "終極願望大獎助力卡", type: "資源卡", rarity: "Mythic", desc: "家庭成長積分大幅增加 500 分！", value: { growthScore: 500 } },
-      { id: "m_companion", name: "神秘幻獸徽章：格林之星", type: "收藏卡", rarity: "Mythic", desc: "百萬中無一的至尊徽章，解鎖神秘背景主題！", style: "rainbow" }
+      { id: "m_companion", name: "神秘幻獸徽章：格林之星", type: "收藏卡", rarity: "Mythic", desc: "百萬中無一的至尊徽章，解鎖神秘背景主題！", style: "rainbow" },
+      { id: "m_title_champion", name: "稱號：全域冒險大師", type: "收藏卡", rarity: "Mythic", desc: "至高無上的稱號，只有五育完全平衡的強者才能佩戴！", style: "rainbow-neon" },
+      { id: "m_badge_angel", name: "徽章：守護天使的祝福", type: "收藏卡", rarity: "Mythic", desc: "代表極高的共情與同理心，主頁解鎖羽翼特效！", style: "rainbow-wings" },
+      { id: "m_badge_creator", name: "徽章：創世之工匠", type: "收藏卡", rarity: "Mythic", desc: "代表極致的創造力，主頁解鎖炫彩流砂粒子特效！", style: "neon-gold-glitter" }
     ]
   }
 };
