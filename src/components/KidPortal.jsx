@@ -1507,16 +1507,6 @@ function KidPortal({
                 <span className="text-xs text-slate-400 font-semibold">
                   {t('weeklyBalanceIndex')}：<span className="text-[#00E676] font-bold">{balancedIndex} 分</span>
                 </span>
-                {!isReadOnly && totalAvailableTasks > 0 && (
-                  <button
-                    disabled={true}
-                    onClick={handleDrawOrRefresh}
-                    className="flex items-center gap-1.5 px-3 py-1 bg-[#252529] border border-[#35363A] rounded-[4px] text-xs font-black text-slate-400 opacity-50 cursor-not-allowed transition-all"
-                    title="重新抽取/刷新進行中的任務（目前已停用）"
-                  >
-                    {t('refreshQuestsBtn')}
-                  </button>
-                )}
               </div>
             </div>
 
