@@ -1511,9 +1511,9 @@ function KidPortal({
                 <button
                   type="button"
                   onClick={() => setShowCompletedHistory(prev => !prev)}
-                  className="px-3 py-1 bg-white/5 border border-white/10 hover:bg-white/10 text-xs font-bold rounded-lg text-slate-350 transition-all"
+                  className="px-4.5 py-1.5 bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-550 hover:to-cyan-400 text-white text-xs font-black rounded-full shadow-lg shadow-violet-600/20 active:scale-95 transition-all"
                 >
-                  {showCompletedHistory ? (language === 'zh' ? '隱藏' : 'Hide') : (language === 'zh' ? '展開' : 'Expand')}
+                  {showCompletedHistory ? (language === 'zh' ? '隱藏 ❌' : 'Hide ❌') : (language === 'zh' ? '展開 📂' : 'Expand 📂')}
                 </button>
               </div>
 
@@ -1806,9 +1806,9 @@ function KidPortal({
                 <button
                   type="button"
                   onClick={() => setShowBackpackHistory(prev => !prev)}
-                  className="px-3 py-1 bg-white/5 border border-white/10 hover:bg-white/10 text-xs font-bold rounded-lg text-slate-350 transition-all"
+                  className="px-4.5 py-1.5 bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-550 hover:to-cyan-400 text-white text-xs font-black rounded-full shadow-lg shadow-violet-600/20 active:scale-95 transition-all"
                 >
-                  {showBackpackHistory ? (language === 'zh' ? '隱藏' : 'Hide') : (language === 'zh' ? '展開' : 'Expand')}
+                  {showBackpackHistory ? (language === 'zh' ? '隱藏 ❌' : 'Hide ❌') : (language === 'zh' ? '展開 📂' : 'Expand 📂')}
                 </button>
               </div>
 
