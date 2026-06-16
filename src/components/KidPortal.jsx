@@ -1322,17 +1322,15 @@ function KidPortal({
                               <button
                                 type="button"
                                 onClick={() => handleSpeak(task)}
-                                className={`p-1.5 rounded-full border transition-all ${
-                                  speakingTaskId === task.id
-                                    ? 'bg-rose-500/20 border-rose-500 text-rose-450 animate-pulse'
-                                    : 'bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10'
+                                className={`kid-speak-btn p-1.5 ml-1 ${
+                                  speakingTaskId === task.id ? 'is-speaking' : ''
                                 }`}
                                 title={language === 'zh' ? '語音讀任務' : 'Read Quest Out Loud'}
                               >
                                 {speakingTaskId === task.id ? (
-                                  <VolumeX className="h-3.5 w-3.5" />
+                                  <VolumeX className="h-4 w-4" />
                                 ) : (
-                                  <Volume2 className="h-3.5 w-3.5" />
+                                  <Volume2 className="h-4 w-4" />
                                 )}
                               </button>
                               {hasCorrection && (
@@ -1612,17 +1610,15 @@ function KidPortal({
                     <button
                       type="button"
                       onClick={() => handleSpeak(drawnCard, 'card')}
-                      className={`p-1.5 rounded-full border transition-all ${
-                        speakingTaskId === (drawnCard.id || 'custom-drawn')
-                          ? 'bg-rose-500/20 border-rose-500 text-rose-450 animate-pulse'
-                          : 'bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10'
+                      className={`kid-speak-btn p-1.5 ml-1 ${
+                        speakingTaskId === (drawnCard.id || 'custom-drawn') ? 'is-speaking' : ''
                       }`}
                       title={language === 'zh' ? '語音讀卡片' : 'Read Card Out Loud'}
                     >
                       {speakingTaskId === (drawnCard.id || 'custom-drawn') ? (
-                        <VolumeX className="h-3.5 w-3.5" />
+                        <VolumeX className="h-4 w-4" />
                       ) : (
-                        <Volume2 className="h-3.5 w-3.5" />
+                        <Volume2 className="h-4 w-4" />
                       )}
                     </button>
                   </h4>
@@ -1712,17 +1708,15 @@ function KidPortal({
                           <button
                             type="button"
                             onClick={() => handleSpeak(item, 'backpack')}
-                            className={`p-1 rounded-full border transition-all ${
-                              speakingTaskId === item.inventoryId
-                                ? 'bg-rose-500/20 border-rose-500 text-rose-450 animate-pulse'
-                                : 'bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10'
+                            className={`kid-speak-btn p-1.5 ml-1 ${
+                              speakingTaskId === item.inventoryId ? 'is-speaking' : ''
                             }`}
                             title={language === 'zh' ? '語音讀道具卡' : 'Read Card Out Loud'}
                           >
                             {speakingTaskId === item.inventoryId ? (
-                              <VolumeX className="h-3 w-3" />
+                              <VolumeX className="h-4 w-4" />
                             ) : (
-                              <Volume2 className="h-3 w-3" />
+                              <Volume2 className="h-4 w-4" />
                             )}
                           </button>
                         </h4>
@@ -1836,17 +1830,15 @@ function KidPortal({
                                 <button
                                   type="button"
                                   onClick={() => handleSpeak(item, 'backpack')}
-                                  className={`p-1 rounded-full border transition-all ${
-                                    speakingTaskId === item.inventoryId
-                                      ? 'bg-rose-500/20 border-rose-500 text-rose-450 animate-pulse'
-                                      : 'bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10'
+                                  className={`kid-speak-btn p-1.5 ml-1 ${
+                                    speakingTaskId === item.inventoryId ? 'is-speaking' : ''
                                   }`}
                                   title={language === 'zh' ? '語音讀道具卡' : 'Read Card Out Loud'}
                                 >
                                   {speakingTaskId === item.inventoryId ? (
-                                    <VolumeX className="h-3 w-3" />
+                                    <VolumeX className="h-4 w-4" />
                                   ) : (
-                                    <Volume2 className="h-3 w-3" />
+                                    <Volume2 className="h-4 w-4" />
                                   )}
                                 </button>
                               </span>

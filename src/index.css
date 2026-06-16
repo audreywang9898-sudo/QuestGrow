@@ -710,3 +710,40 @@ th[class*="bg-white/5"] {
   animation: bounce-gentle 2.4s ease-in-out infinite;
 }
 
+/* Premium Kid Portal Speak Button */
+.kid-speak-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 9999px !important;
+  border: 1.5px solid #FCD34D !important; /* border-amber-300 */
+  background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%) !important; /* amber-400 to amber-500 */
+  color: #0F172A !important; /* slate-900 */
+  box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  cursor: pointer !important;
+}
+
+.kid-speak-btn:hover {
+  transform: scale(1.12) !important;
+  background: linear-gradient(135deg, #FFE066 0%, #F59E0B 100%) !important;
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.45) !important;
+}
+
+.kid-speak-btn:active {
+  transform: scale(0.92) !important;
+}
+
+@keyframes speak-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 4px 10px rgba(244, 63, 94, 0.35); }
+  50% { transform: scale(1.08); box-shadow: 0 6px 16px rgba(244, 63, 94, 0.55); }
+}
+
+.kid-speak-btn.is-speaking {
+  border-color: #FDA4AF !important; /* rose-300 */
+  background: linear-gradient(135deg, #F43F5E 0%, #E11D48 100%) !important; /* rose-500 to rose-600 */
+  color: #FFFFFF !important;
+  animation: speak-pulse 1.4s ease-in-out infinite !important;
+}
+
+
