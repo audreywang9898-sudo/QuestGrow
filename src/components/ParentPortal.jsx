@@ -73,8 +73,7 @@ function ParentPortal({
     } else if (tourStep === 4) {
       setActiveTab('reports');
     } else if (tourStep === 5) {
-      setActiveTab('settings');
-      setSettingsSubTab('wishlist');
+      setActiveTab('wishlist');
     }
   }, [tourStep, showTour]);
 
@@ -94,7 +93,7 @@ function ParentPortal({
   const [importAssignedTo, setImportAssignedTo] = useState('all');
   const [reportsUserFilter, setReportsUserFilter] = useState('summary');
   const [manageTasksFilter, setManageTasksFilter] = useState('all');
-  const [settingsSubTab, setSettingsSubTab] = useState('wishlist'); // 'wishlist', 'parent', 'child'
+  const [settingsSubTab, setSettingsSubTab] = useState('parent'); // 'parent', 'child'
 
   // Multi-Child Form States
   const [showAddChildForm, setShowAddChildForm] = useState(false);
@@ -676,6 +675,15 @@ function ParentPortal({
           {t('tabGachaPool')}
         </button>
         <button
+          onClick={() => setActiveTab('wishlist')}
+          className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
+            activeTab === 'wishlist' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
+          } ${showTour && tourStep === 5 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse rounded' : ''}`}
+        >
+          <Trophy className="h-4 w-4 text-[#FF9F1C]" />
+          {t('tabWishlist')}
+        </button>
+        <button
           onClick={() => setActiveTab('reports')}
           className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
             activeTab === 'reports' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
@@ -688,7 +696,7 @@ function ParentPortal({
           onClick={() => setActiveTab('settings')}
           className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
             activeTab === 'settings' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
-          } ${showTour && tourStep === 5 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse rounded' : ''}`}
+          }`}
         >
           <Settings className="h-4 w-4 text-[#00E676]" />
           {t('tabSettings')}
@@ -1530,18 +1538,6 @@ function ParentPortal({
         <div className="flex border-b border-white/5 gap-2 pb-px overflow-x-auto">
           <button
             type="button"
-            onClick={() => setSettingsSubTab('wishlist')}
-            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap active:scale-95 duration-100 ${
-              settingsSubTab === 'wishlist' 
-                ? 'border-[#FF9F1C] text-[#FF9F1C] bg-[#FF9F1C]/10 shadow-md shadow-[#FF9F1C]/5' 
-                : 'border-transparent text-slate-400 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <Trophy className={`h-4 w-4 transition-colors ${settingsSubTab === 'wishlist' ? 'text-[#FF9F1C]' : 'text-slate-500'}`} />
-            {t('tabWishlist')}
-          </button>
-          <button
-            type="button"
             onClick={() => setSettingsSubTab('parent')}
             className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap active:scale-95 duration-100 ${
               settingsSubTab === 'parent' 
@@ -1568,7 +1564,7 @@ function ParentPortal({
       )}
 
       {/* --- Tab 5: Wishlist Config (New Standalone Tab) --- */}
-      {activeTab === 'settings' && settingsSubTab === 'wishlist' && (
+      {activeTab === 'wishlist' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-success">
           {/* Wishlist Config Form */}
           <div className="glass-panel p-6 space-y-4">

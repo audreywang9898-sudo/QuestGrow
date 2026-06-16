@@ -16,7 +16,7 @@ export const translations = {
     tabAudit: "審核工作台",
     tabWorkshop: "任務工坊",
     tabReports: "成長報表與日誌",
-    tabWishlist: "願望清單設定",
+    tabWishlist: "願望許願池",
     tabParent: "家長設定",
     tabChild: "兒童設定",
     tabGachaPool: "獎勵卡片池",
@@ -148,7 +148,7 @@ export const translations = {
     wishlistCanRedeem: "可兌換",
     wishlistProgress: "進度",
     familyWishlistTitle: "家庭願望清單",
-    noKidWishlistItems: "目前沒有設定任何家庭願望喔！請提示爸爸媽媽前往家長端的「系統設定 -> 願望清單設定」來新增願望。",
+    noKidWishlistItems: "目前沒有設定任何家庭願望喔！請提示爸爸媽媽前往家長端的「願望許願池」來新增願望。",
 
     // Parent Settings Tab
     parentManagementTitle: "家長角色管理",
@@ -376,7 +376,7 @@ export const translations = {
     parentTourStep3Desc: "您可以在此新增自訂任務，或是「快速匯入」系統預設的模板任務（包括最新推出的 10 大財商任務）。您可以自由設定難度、週期、指派對象，並提供德、智、體、群、美等全人屬性獎勵！",
     parentTourStep4Title: "📊 成長報表與 AI 教練 (Reports)",
     parentTourStep4Desc: "系統會以雷達圖呈現孩子的德智體群美發展。AI 家庭教練會根據本週的數據遙測日誌，分析孩子的成長亮點，並在每週日誌中給予您個性化的下週任務指派建議！",
-    parentTourStep5Title: "🎯 設定與願望清單 (Settings & Wishlist)",
+    parentTourStep5Title: "🎯 願望許願池 (Wishlist Pool)",
     parentTourStep5Desc: "在這裡可以新增家庭的共同大願望（如購買 Switch 遊戲或全家日本行）。當孩子完成任務累積足夠的家庭成長點數時，即可在這裡兌換，增進全家人的凝聚力！",
 
     // Kid Tour Steps
@@ -430,7 +430,7 @@ export const translations = {
     tabAudit: "Audit Center",
     tabWorkshop: "Quest Workshop",
     tabReports: "Reports & Logs",
-    tabWishlist: "Wishlist Settings",
+    tabWishlist: "Wishlist Pool",
     tabParent: "Parent Settings",
     tabChild: "Child Settings",
     tabGachaPool: "Reward Card Pool",
@@ -562,7 +562,7 @@ export const translations = {
     wishlistCanRedeem: "Ready",
     wishlistProgress: "Progress",
     familyWishlistTitle: "Family Wishlist",
-    noKidWishlistItems: "No family wishes have been set yet! Remind your parents to add wishes in 'System Settings -> Wishlist Settings' on the parent portal.",
+    noKidWishlistItems: "No family wishes have been set yet! Remind your parents to add wishes in the 'Wishlist Pool' on the parent portal.",
 
     // Parent Settings Tab
     parentManagementTitle: "Parent Profiles Management",
@@ -790,7 +790,7 @@ export const translations = {
     parentTourStep3Desc: "Create custom quests or 'Quick Import' pre-configured templates (including our new financial quotient quests). Customize difficulty, assignment, and award attributes like Wisdom, Responsibility, Courage, Empathy, or Creativity!",
     parentTourStep4Title: "📊 Reports & AI Coach",
     parentTourStep4Desc: "Track your child's developmental balance with a beautiful radar chart. Our AI Coach analyzes weekly interaction logs to highlight achievements and suggest specific areas to focus on next week!",
-    parentTourStep5Title: "🎯 Settings & Wishlist",
+    parentTourStep5Title: "🎯 Wishlist Pool",
     parentTourStep5Desc: "Configure ultimate family rewards (e.g., family trips, new games) that require Family Score points to unlock. Encourage cooperation as children complete quests to power up the family score!",
 
     // Kid Tour Steps
