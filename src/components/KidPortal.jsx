@@ -657,13 +657,44 @@ function KidPortal({
       !drawnTaskIds.includes(t.id)
     );
 
-    if (candidatePool.length === 0) return; // no candidates to swap with
+    if (candidatePool.length > 0) {
+      const shuffled = [...candidatePool].sort(() => Math.random() - 0.5);
+      const newTask = shuffled[0];
+      const newDrawnTaskIds = drawnTaskIds.map(id => id === taskIdToSwap ? newTask.id : id);
+      onUpdateDrawnTasks(newDrawnTaskIds);
+    } else {
+      // Fallback: draw a new random template from TASK_TEMPLATES matching the swapped task's type
+      const targetTask = tasks.find(t => t.id === taskIdToSwap);
+      const targetType = targetTask ? targetTask.type : '智';
+      
+      const catTemplates = TASK_TEMPLATES.filter(t => t.type === targetType && t.name !== (targetTask ? targetTask.name : ''));
+      const templatesToUse = catTemplates.length > 0 ? catTemplates : TASK_TEMPLATES;
+      const randomTpl = templatesToUse[Math.floor(Math.random() * templatesToUse.length)];
+      
+      const newId = `task-tpl-self-swap-${Date.now()}-${Math.random().toString(36).substr(2, 5)}-${stats.id}`;
+      const newTaskObj = {
+        id: newId,
+        name: randomTpl.name,
+        description: randomTpl.description,
+        type: randomTpl.type,
+        difficulty: randomTpl.difficulty,
+        expReward: randomTpl.expReward,
+        goldReward: randomTpl.goldReward,
+        ticketReward: randomTpl.ticketReward,
+        attributeReward: randomTpl.attributeReward,
+        period: randomTpl.period,
+        status: '進行中',
+        assignedTo: stats.id,
+        dateCreated: simulatedDate || new Date().toISOString().split('T')[0]
+      };
 
-    const shuffled = [...candidatePool].sort(() => Math.random() - 0.5);
-    const newTask = shuffled[0];
-
-    const newDrawnTaskIds = drawnTaskIds.map(id => id === taskIdToSwap ? newTask.id : id);
-    onUpdateDrawnTasks(newDrawnTaskIds);
+      if (onAddTask) {
+        onAddTask([newTaskObj]);
+      }
+      
+      const newDrawnTaskIds = drawnTaskIds.map(id => id === taskIdToSwap ? newId : id);
+      onUpdateDrawnTasks(newDrawnTaskIds);
+    }
   };
   
   // SVG Radar calculations
@@ -1349,22 +1380,15 @@ function KidPortal({
                           <span className={`text-xs font-bold border px-2 py-0.5 rounded-full whitespace-nowrap ${getTypeBadgeColor(task.type)}`}>
                             {translateType(task.type)} | {t('taskDifficultyLabel')} {translateDifficulty(task.difficulty)}
                           </span>
-                          {!isReadOnly && task.status === '進行中' && !task.rejectionReason && (() => {
-                            const candidatePool = tasks.filter(t =>
-                              (!t.assignedTo || t.assignedTo === stats.id) &&
-                              t.status === '進行中' &&
-                              !drawnTaskIds.includes(t.id)
-                            );
-                            return candidatePool.length > 0 ? (
-                              <button
-                                onClick={() => handleRerollTask(task.id)}
-                                title={language === 'zh' ? '換一個任務' : 'Swap this quest'}
-                                className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-slate-400 hover:text-violet-300 bg-white/5 hover:bg-violet-500/15 border border-white/10 hover:border-violet-500/30 rounded-lg transition-all shrink-0"
-                              >
-                                🔄 {language === 'zh' ? '換一個' : 'Swap'}
-                              </button>
-                            ) : null;
-                          })()}
+                          {!isReadOnly && task.status === '進行中' && !task.rejectionReason && (
+                            <button
+                              onClick={() => handleRerollTask(task.id)}
+                              title={language === 'zh' ? '換一個任務' : 'Swap this quest'}
+                              className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-slate-400 hover:text-violet-300 bg-white/5 hover:bg-violet-500/15 border border-white/10 hover:border-violet-500/30 rounded-lg transition-all shrink-0"
+                            >
+                              🔄 {language === 'zh' ? '換一個' : 'Swap'}
+                            </button>
+                          )}
                         </div>
 
                         {hasCorrection && (
@@ -1485,9 +1509,10 @@ function KidPortal({
                 </span>
                 {!isReadOnly && totalAvailableTasks > 0 && (
                   <button
+                    disabled={true}
                     onClick={handleDrawOrRefresh}
-                    className="flex items-center gap-1.5 px-3 py-1 bg-[#252529] border border-[#35363A] rounded-[4px] text-xs font-black text-slate-200 hover:text-white hover:bg-[#35363A] transition-all"
-                    title="重新抽取/刷新進行中的任務（鎖定待覆核及需修正任務）"
+                    className="flex items-center gap-1.5 px-3 py-1 bg-[#252529] border border-[#35363A] rounded-[4px] text-xs font-black text-slate-400 opacity-50 cursor-not-allowed transition-all"
+                    title="重新抽取/刷新進行中的任務（目前已停用）"
                   >
                     {t('refreshQuestsBtn')}
                   </button>
