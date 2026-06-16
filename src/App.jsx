@@ -108,6 +108,7 @@ function App() {
   const [eventLogs, setEventLogs] = useState([]);
   const [members, setMembers] = useState([]); // Replaces usersDB
   const [gachaPool, setGachaPool] = useState(GACHA_POOL);
+  const [familySettings, setFamilySettings] = useState({ zhuyinUnder8: true });
   
   // --- Toast State ---
   const [toasts, setToasts] = useState([]);
@@ -137,6 +138,11 @@ function App() {
           setGachaPool(familyData.gachaPool);
         } else {
           setGachaPool(GACHA_POOL);
+        }
+        if (familyData.settings) {
+          setFamilySettings(familyData.settings);
+        } else {
+          setFamilySettings({ zhuyinUnder8: true });
         }
       }
 
@@ -458,6 +464,17 @@ function App() {
       fetchAllData();
     } catch (error) {
       showToast(error.message || '更新轉蛋池失敗。', 'error');
+    }
+  };
+
+  const handleUpdateFamilySettings = async (newSettings) => {
+    try {
+      await api.updateFamilySettings(newSettings);
+      setFamilySettings(newSettings);
+      showToast('共同設定更新成功！', 'success');
+      fetchAllData();
+    } catch (error) {
+      showToast(error.message || '更新共同設定失敗。', 'error');
     }
   };
 
@@ -847,6 +864,7 @@ function App() {
             googleClientId={googleClientId}
             onToggleEquip={handleToggleEquip}
             gachaPool={gachaPool}
+            familySettings={familySettings}
           />
         ) : (
           <ParentPortal 
@@ -885,6 +903,8 @@ function App() {
             onUpdateParent={handleUpdateParent}
             gachaPool={gachaPool}
             onUpdateGachaPool={handleUpdateGachaPool}
+            familySettings={familySettings}
+            onUpdateFamilySettings={handleUpdateFamilySettings}
           />
         )}
       </main>

@@ -8,7 +8,7 @@ export const getFamilyData = async (req, res) => {
 
   try {
     const result = await pool.query(
-      'SELECT id, name, growth_score, gacha_pool FROM families WHERE id = $1',
+      'SELECT id, name, growth_score, gacha_pool, settings FROM families WHERE id = $1',
       [familyId]
     );
 
@@ -21,7 +21,8 @@ export const getFamilyData = async (req, res) => {
       id: row.id,
       name: row.name,
       growthScore: row.growth_score,
-      gachaPool: row.gacha_pool
+      gachaPool: row.gacha_pool,
+      settings: row.settings
     });
   } catch (error) {
     console.error('getFamilyData error:', error);
@@ -412,5 +413,26 @@ export const updateFamilyGachaPool = async (req, res) => {
   } catch (error) {
     console.error('updateFamilyGachaPool error:', error);
     res.status(500).json({ message: '更新轉蛋池失敗。' });
+  }
+};
+
+// 15. Update Family Settings (Parent only)
+export const updateFamilySettings = async (req, res) => {
+  const familyId = req.user.family_id;
+  const { settings } = req.body;
+
+  if (!settings) {
+    return res.status(400).json({ message: '設定內容不能為空。' });
+  }
+
+  try {
+    await pool.query(
+      'UPDATE families SET settings = $1 WHERE id = $2',
+      [JSON.stringify(settings), familyId]
+    );
+    res.json({ message: '共同設定更新成功！', settings });
+  } catch (error) {
+    console.error('updateFamilySettings error:', error);
+    res.status(500).json({ message: '更新共同設定失敗。' });
   }
 };

@@ -52,7 +52,9 @@ function ParentPortal({
   onDeleteParent,
   onUpdateParent,
   gachaPool,
-  onUpdateGachaPool
+  onUpdateGachaPool,
+  familySettings,
+  onUpdateFamilySettings
 }) {
   const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState('audit');
@@ -1560,6 +1562,18 @@ function ParentPortal({
             <Users className={`h-4 w-4 transition-colors ${settingsSubTab === 'child' ? 'text-[#00E676]' : 'text-slate-500'}`} />
             {t('tabChild')}
           </button>
+          <button
+            type="button"
+            onClick={() => setSettingsSubTab('common')}
+            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap active:scale-95 duration-100 ${
+              settingsSubTab === 'common' 
+                ? 'border-[#FF9F1C] text-[#FF9F1C] bg-[#FF9F1C]/10 shadow-md shadow-[#FF9F1C]/5' 
+                : 'border-transparent text-slate-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Settings className={`h-4 w-4 transition-colors ${settingsSubTab === 'common' ? 'text-[#FF9F1C]' : 'text-slate-500'}`} />
+            {t('tabCommon')}
+          </button>
         </div>
       )}
 
@@ -2249,6 +2263,46 @@ function ParentPortal({
                 </p>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* --- Tab 3.5.5: Common Settings panel --- */}
+      {activeTab === 'settings' && settingsSubTab === 'common' && (
+        <div className="max-w-2xl mx-auto glass-panel p-6 space-y-6 animate-success">
+          <div>
+            <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
+              <Settings className="h-5 w-5 text-[#FF9F1C]" />
+              {t('commonSettingsTitle')}
+            </h3>
+            <p className="text-xs text-slate-400 mt-1">{t('commonSettingsDesc')}</p>
+          </div>
+
+          <div className="bg-white/5 border border-white/5 p-6 rounded-2xl space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <h4 className="text-sm font-bold text-slate-200">{t('zhuyinToggleLabel')}</h4>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">{t('zhuyinToggleDesc')}</p>
+              </div>
+              <div className="flex items-center pt-1">
+                <label className="custom-toggle-label">
+                  <input
+                    type="checkbox"
+                    checked={familySettings && familySettings.zhuyinUnder8 !== false}
+                    onChange={(e) => {
+                      if (onUpdateFamilySettings) {
+                        onUpdateFamilySettings({
+                          ...familySettings,
+                          zhuyinUnder8: e.target.checked
+                        });
+                      }
+                    }}
+                    className="custom-toggle-input"
+                  />
+                  <div className="custom-toggle-slider"></div>
+                </label>
+              </div>
+            </div>
           </div>
         </div>
       )}

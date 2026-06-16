@@ -70,13 +70,15 @@ function KidPortal({
   isReadOnly = false,
   googleClientId,
   onToggleEquip,
-  gachaPool
+  gachaPool,
+  familySettings = { zhuyinUnder8: true }
 }) {
   const { t, language } = useLanguage();
 
   const renderTextWithZhuyin = (text) => {
     if (!text) return '';
-    if (language !== 'zh' || !stats.age || stats.age >= 8) {
+    const zhuyinEnabled = familySettings && familySettings.zhuyinUnder8 !== false;
+    if (language !== 'zh' || !stats.age || stats.age >= 8 || !zhuyinEnabled) {
       return text;
     }
 

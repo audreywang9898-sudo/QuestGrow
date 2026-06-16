@@ -19,6 +19,7 @@ export const translations = {
     tabWishlist: "願望許願池",
     tabParent: "家長設定",
     tabChild: "兒童設定",
+    tabCommon: "共同設定",
     tabGachaPool: "獎勵卡片池",
     tabSettings: "系統設定",
 
@@ -149,6 +150,12 @@ export const translations = {
     wishlistProgress: "進度",
     familyWishlistTitle: "家庭願望清單",
     noKidWishlistItems: "目前沒有設定任何家庭願望喔！請提示爸爸媽媽前往家長端的「願望許願池」來新增願望。",
+
+    // Common Settings
+    commonSettingsTitle: "家庭共同設定",
+    commonSettingsDesc: "管理家庭全域的系統偏好設定，適用於所有家庭成員與小隊員。",
+    zhuyinToggleLabel: "8歲以下開啟注音模式",
+    zhuyinToggleDesc: "啟用後，針對年齡小於 8 歲的小孩，其兒童版面上的任務、背包、願望等文字，均會自動生成注音符號 (Bopomofo) 標注，協助年幼孩子獨立閱讀與操作。",
 
     // Parent Settings Tab
     parentManagementTitle: "家長角色管理",
@@ -433,6 +440,7 @@ export const translations = {
     tabWishlist: "Wishlist Pool",
     tabParent: "Parent Settings",
     tabChild: "Child Settings",
+    tabCommon: "Common Settings",
     tabGachaPool: "Reward Card Pool",
     tabSettings: "System Settings",
 
@@ -563,6 +571,12 @@ export const translations = {
     wishlistProgress: "Progress",
     familyWishlistTitle: "Family Wishlist",
     noKidWishlistItems: "No family wishes have been set yet! Remind your parents to add wishes in the 'Wishlist Pool' on the parent portal.",
+
+    // Common Settings
+    commonSettingsTitle: "Common Family Settings",
+    commonSettingsDesc: "Manage global preferences applied to all family members and children.",
+    zhuyinToggleLabel: "Enable Bopomofo for Kids Under 8",
+    zhuyinToggleDesc: "When enabled, kids under 8 will see automatic Bopomofo (Zhuyin) annotations next to Mandarin text in their portal to help them read and interact independently.",
 
     // Parent Settings Tab
     parentManagementTitle: "Parent Profiles Management",

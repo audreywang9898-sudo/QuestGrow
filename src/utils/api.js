@@ -314,6 +314,15 @@ export const api = {
     return handleResponse(res);
   },
 
+  updateFamilySettings: async (settings) => {
+    const res = await fetch(`${API_URL}/family/settings`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify({ settings }),
+    });
+    return handleResponse(res);
+  },
+
   getWishlist: async () => {
     const res = await fetch(`${API_URL}/family/wishlist`, {
       method: 'GET',

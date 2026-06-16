@@ -746,4 +746,56 @@ th[class*="bg-white/5"] {
   animation: speak-pulse 1.4s ease-in-out infinite !important;
 }
 
+/* Premium Glassmorphic Switch Toggle */
+.custom-toggle-label {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.custom-toggle-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.custom-toggle-slider {
+  position: relative;
+  width: 3.5rem; /* 56px */
+  height: 1.75rem; /* 28px */
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.custom-toggle-slider::before {
+  content: "";
+  position: absolute;
+  height: 1.35rem; /* 21.6px */
+  width: 1.35rem;
+  left: 3px;
+  bottom: 2px;
+  background-color: #94A3B8; /* slate-400 */
+  border-radius: 50%;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.custom-toggle-input:checked + .custom-toggle-slider {
+  background-color: rgba(0, 230, 118, 0.15); /* #00E676 with opacity */
+  border-color: rgba(0, 230, 118, 0.3);
+}
+
+.custom-toggle-input:checked + .custom-toggle-slider::before {
+  transform: translateX(1.65rem); /* 26.4px */
+  background-color: #00E676; /* bright green */
+  box-shadow: 0 0 8px rgba(0, 230, 118, 0.6);
+}
+
+
 
