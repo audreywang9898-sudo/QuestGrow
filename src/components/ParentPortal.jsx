@@ -2328,16 +2328,25 @@ function ParentPortal({
                         <input 
                           type="number" 
                           required 
-                          min="1" 
-                          max="18" 
+                          min="3" 
+                          max="14" 
                           value={newChildAge} 
                           onChange={(e) => setNewChildAge(parseInt(e.target.value, 10))}
-                          className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#3661FF] focus:border-[#3661FF] transition-all"
+                          className={`w-full bg-slate-900 border rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 transition-all ${
+                            newChildAge < 3 || newChildAge > 14
+                              ? 'border-rose-500/60 focus:ring-rose-500 focus:border-rose-500'
+                              : 'border-white/10 focus:ring-[#3661FF] focus:border-[#3661FF]'
+                          }`}
                         />
+                        {(newChildAge < 3 || newChildAge > 14) && (
+                          <p className="mt-1 text-[10px] font-bold text-rose-400 flex items-center gap-1">
+                            ⚠️ {language === 'zh' ? '年齡需介於 3～14 歲之間' : 'Age must be between 3 and 14'}
+                          </p>
+                        )}
                       </div>
                       <div>
                         <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1.5">
-                          {language === 'zh' ? '生日' : 'Birthday'} <span className="text-rose-500">*</span>
+                          {language === 'zh' ? '生日 (MM/DD)' : 'Birthday (MM/DD)'} <span className="text-rose-500">*</span>
                         </label>
                         <input 
                           type="text" 
@@ -2345,8 +2354,42 @@ function ParentPortal({
                           value={newChildBirthday} 
                           onChange={(e) => setNewChildBirthday(e.target.value)}
                           placeholder="e.g. 10/24"
-                          className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#3661FF] focus:border-[#3661FF] transition-all"
+                          className={`w-full bg-slate-900 border rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 transition-all ${
+                            newChildBirthday.trim() && (() => {
+                              const parts = newChildBirthday.trim().split('/');
+                              if (parts.length !== 2) return true;
+                              const mm = parseInt(parts[0], 10);
+                              const dd = parseInt(parts[1], 10);
+                              if (isNaN(mm) || isNaN(dd) || mm < 1 || mm > 12) return true;
+                              const daysInMonth = [31,29,31,30,31,30,31,31,30,31,30,31];
+                              return dd < 1 || dd > daysInMonth[mm - 1];
+                            })()
+                              ? 'border-rose-500/60 focus:ring-rose-500 focus:border-rose-500'
+                              : 'border-white/10 focus:ring-[#3661FF] focus:border-[#3661FF]'
+                          }`}
                         />
+                        {newChildBirthday.trim() && (() => {
+                          const parts = newChildBirthday.trim().split('/');
+                          if (parts.length !== 2) return (
+                            <p className="mt-1 text-[10px] font-bold text-rose-400 flex items-center gap-1">
+                              ⚠️ {language === 'zh' ? '請依 MM/DD 格式輸入，例如 10/24' : 'Use MM/DD format, e.g. 10/24'}
+                            </p>
+                          );
+                          const mm = parseInt(parts[0], 10);
+                          const dd = parseInt(parts[1], 10);
+                          if (isNaN(mm) || isNaN(dd) || mm < 1 || mm > 12) return (
+                            <p className="mt-1 text-[10px] font-bold text-rose-400 flex items-center gap-1">
+                              ⚠️ {language === 'zh' ? '月份需為 01～12' : 'Month must be 01–12'}
+                            </p>
+                          );
+                          const daysInMonth = [31,29,31,30,31,30,31,31,30,31,30,31];
+                          if (dd < 1 || dd > daysInMonth[mm - 1]) return (
+                            <p className="mt-1 text-[10px] font-bold text-rose-400 flex items-center gap-1">
+                              ⚠️ {language === 'zh' ? `${mm} 月的日期需為 1～${daysInMonth[mm-1]}` : `Day for month ${mm} must be 1–${daysInMonth[mm-1]}`}
+                            </p>
+                          );
+                          return null;
+                        })()}
                       </div>
                     </div>
 
@@ -2579,8 +2622,33 @@ function ParentPortal({
                           }
                         }
                         if (wizardStep === 2) {
-                          if (!newChildBirthday.trim()) {
+                          // Age validation
+                          if (!newChildAge || isNaN(newChildAge) || newChildAge < 3 || newChildAge > 14) {
+                            alert(language === 'zh' ? '⚠️ 年齡需介於 3～14 歲之間！' : '⚠️ Age must be between 3 and 14!');
+                            return;
+                          }
+                          // Birthday format validation (MM/DD)
+                          const bdayTrim = newChildBirthday.trim();
+                          if (!bdayTrim) {
                             alert(language === 'zh' ? '請輸入誕生紀念日！' : 'Please enter birthday!');
+                            return;
+                          }
+                          const bdayParts = bdayTrim.split('/');
+                          if (bdayParts.length !== 2) {
+                            alert(language === 'zh' ? '⚠️ 生日格式錯誤！請依 MM/DD 格式輸入，例如 10/24。' : '⚠️ Invalid birthday format! Use MM/DD, e.g. 10/24.');
+                            return;
+                          }
+                          const bdayMM = parseInt(bdayParts[0], 10);
+                          const bdayDD = parseInt(bdayParts[1], 10);
+                          if (isNaN(bdayMM) || isNaN(bdayDD) || bdayMM < 1 || bdayMM > 12) {
+                            alert(language === 'zh' ? '⚠️ 月份需為 01～12！' : '⚠️ Month must be between 01 and 12!');
+                            return;
+                          }
+                          const daysInMonth = [31,29,31,30,31,30,31,31,30,31,30,31];
+                          if (bdayDD < 1 || bdayDD > daysInMonth[bdayMM - 1]) {
+                            alert(language === 'zh'
+                              ? `⚠️ ${bdayMM} 月的日期需為 1～${daysInMonth[bdayMM-1]}！`
+                              : `⚠️ Day for month ${bdayMM} must be between 1 and ${daysInMonth[bdayMM-1]}!`);
                             return;
                           }
                         }
