@@ -2257,23 +2257,40 @@ function ParentPortal({
                         <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1.5">
                           {language === 'zh' ? '冒險者暱稱' : 'Child Nickname'} <span className="text-rose-500">*</span>
                         </label>
-                        <input 
-                          type="text" 
-                          required 
-                          value={newChildName} 
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            setNewChildName(val);
-                            const clean = val.toLowerCase().replace(/[^a-z0-9]/g, '');
-                            if (clean) {
-                              setNewChildEmail(`${clean}@questgrow.com`);
-                            } else {
-                              setNewChildEmail('');
-                            }
-                          }}
-                          placeholder={language === 'zh' ? '例如：小明' : 'e.g. Leo'}
-                          className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#3661FF] focus:border-[#3661FF] transition-all"
-                        />
+                        <div className="relative">
+                          <input 
+                            type="text" 
+                            required 
+                            maxLength={12}
+                            value={newChildName} 
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setNewChildName(val);
+                              const clean = val.toLowerCase().replace(/[^a-z0-9]/g, '');
+                              if (clean) {
+                                setNewChildEmail(`${clean}@questgrow.com`);
+                              } else {
+                                setNewChildEmail('');
+                              }
+                            }}
+                            placeholder={language === 'zh' ? '例如：小明' : 'e.g. Leo'}
+                            className={`w-full bg-slate-900 border rounded-xl px-3 py-2 pr-14 text-xs text-slate-200 focus:outline-none focus:ring-1 transition-all ${
+                              newChildName.length > 12
+                                ? 'border-rose-500/60 focus:ring-rose-500 focus:border-rose-500'
+                                : 'border-white/10 focus:ring-[#3661FF] focus:border-[#3661FF]'
+                            }`}
+                          />
+                          <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold tabular-nums pointer-events-none ${
+                            newChildName.length >= 10 ? 'text-rose-400' : 'text-slate-500'
+                          }`}>
+                            {newChildName.length}/12
+                          </span>
+                        </div>
+                        {newChildName.length > 12 && (
+                          <p className="mt-1 text-[10px] font-bold text-rose-400">
+                            ⚠️ {language === 'zh' ? '暱稱最多 12 個字元' : 'Nickname must be 12 characters or fewer'}
+                          </p>
+                        )}
                       </div>
 
                       <div>
@@ -2630,6 +2647,12 @@ function ParentPortal({
                         if (wizardStep === 1) {
                           if (!newChildName.trim()) {
                             alert(language === 'zh' ? '請輸入冒險者暱稱！' : 'Please enter nickname!');
+                            return;
+                          }
+                          if (newChildName.trim().length > 12) {
+                            alert(language === 'zh'
+                              ? `暱稱最多 12 個字元，您目前已輸入 ${newChildName.trim().length} 個字元，請縮短暱稱後再繼續。`
+                              : `Nickname must be 12 characters or fewer. You entered ${newChildName.trim().length} characters.`);
                             return;
                           }
                         }
