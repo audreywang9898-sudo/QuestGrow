@@ -154,6 +154,7 @@ function ParentPortal({
   const [wizardStep, setWizardStep] = useState(1);
   const [selectedJobClass, setSelectedJobClass] = useState('Explorer');
   const [selectedStarterQuests, setSelectedStarterQuests] = useState([]);
+  const [wizardStep2Error, setWizardStep2Error] = useState('');
 
   const [editingChildId, setEditingChildId] = useState(null);
   const [editChildName, setEditChildName] = useState('');
@@ -2320,6 +2321,17 @@ function ParentPortal({
                     <h4 className="text-xs font-black text-violet-300 uppercase tracking-widest flex items-center gap-1.5">
                       🎂 {language === 'zh' ? '步驟 2：成長印記與個資授權' : 'Step 2: Demographics & Consent'}
                     </h4>
+
+                    {/* Inline error banner for step 2 */}
+                    {wizardStep2Error && (
+                      <div className="flex items-start gap-2.5 p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl animate-success">
+                        <span className="text-rose-400 text-base shrink-0">🚫</span>
+                        <div>
+                          <p className="text-[11px] font-black text-rose-400">{language === 'zh' ? '輸入有誤，無法進行下一步' : 'Input error — please fix before continuing'}</p>
+                          <p className="text-[11px] font-semibold text-rose-300 mt-0.5 leading-relaxed">{wizardStep2Error}</p>
+                        </div>
+                      </div>
+                    )}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1.5">
@@ -2331,7 +2343,7 @@ function ParentPortal({
                           min="3" 
                           max="14" 
                           value={newChildAge} 
-                          onChange={(e) => setNewChildAge(parseInt(e.target.value, 10))}
+                          onChange={(e) => { setNewChildAge(parseInt(e.target.value, 10)); setWizardStep2Error(''); }}
                           className={`w-full bg-slate-900 border rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 transition-all ${
                             newChildAge < 3 || newChildAge > 14
                               ? 'border-rose-500/60 focus:ring-rose-500 focus:border-rose-500'
@@ -2352,7 +2364,7 @@ function ParentPortal({
                           type="text" 
                           required 
                           value={newChildBirthday} 
-                          onChange={(e) => setNewChildBirthday(e.target.value)}
+                          onChange={(e) => { setNewChildBirthday(e.target.value); setWizardStep2Error(''); }}
                           placeholder="e.g. 10/24"
                           className={`w-full bg-slate-900 border rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 transition-all ${
                             newChildBirthday.trim() && (() => {
@@ -2624,33 +2636,52 @@ function ParentPortal({
                         if (wizardStep === 2) {
                           // Age validation
                           if (!newChildAge || isNaN(newChildAge) || newChildAge < 3 || newChildAge > 14) {
-                            alert(language === 'zh' ? '⚠️ 年齡需介於 3～14 歲之間！' : '⚠️ Age must be between 3 and 14!');
+                            setWizardStep2Error(
+                              language === 'zh'
+                                ? `「年齡」填寫錯誤：您輸入的年齡為 ${newChildAge} 歲，但 QuestGrow 適用範圍為 3～14 歲。請重新輸入正確年齡。`
+                                : `Age error: You entered ${newChildAge}, but QuestGrow supports ages 3–14. Please enter a valid age.`
+                            );
                             return;
                           }
                           // Birthday format validation (MM/DD)
                           const bdayTrim = newChildBirthday.trim();
                           if (!bdayTrim) {
-                            alert(language === 'zh' ? '請輸入誕生紀念日！' : 'Please enter birthday!');
+                            setWizardStep2Error(
+                              language === 'zh'
+                                ? '「生日」不可為空白，請依 MM/DD 格式填寫生日，例如 10/24。'
+                                : 'Birthday is required. Use MM/DD format, e.g. 10/24.'
+                            );
                             return;
                           }
                           const bdayParts = bdayTrim.split('/');
                           if (bdayParts.length !== 2) {
-                            alert(language === 'zh' ? '⚠️ 生日格式錯誤！請依 MM/DD 格式輸入，例如 10/24。' : '⚠️ Invalid birthday format! Use MM/DD, e.g. 10/24.');
+                            setWizardStep2Error(
+                              language === 'zh'
+                                ? `「生日」格式錯誤：您輸入的「${bdayTrim}」不符合 MM/DD 格式。正確格式為《月份/日期》，例如 10/24 代表 10 月 24 日。`
+                                : `Birthday format error: "${bdayTrim}" is not in MM/DD format. Example: 10/24 means October 24th.`
+                            );
                             return;
                           }
                           const bdayMM = parseInt(bdayParts[0], 10);
                           const bdayDD = parseInt(bdayParts[1], 10);
                           if (isNaN(bdayMM) || isNaN(bdayDD) || bdayMM < 1 || bdayMM > 12) {
-                            alert(language === 'zh' ? '⚠️ 月份需為 01～12！' : '⚠️ Month must be between 01 and 12!');
+                            setWizardStep2Error(
+                              language === 'zh'
+                                ? `「生日」月份錯誤：您輸入的月份為 ${bdayParts[0]}，但月份必須是 01～12 之間的數字。請重新輸入正確月份。`
+                                : `Birthday month error: "${bdayParts[0]}" is not a valid month. Month must be between 01 and 12.`
+                            );
                             return;
                           }
                           const daysInMonth = [31,29,31,30,31,30,31,31,30,31,30,31];
                           if (bdayDD < 1 || bdayDD > daysInMonth[bdayMM - 1]) {
-                            alert(language === 'zh'
-                              ? `⚠️ ${bdayMM} 月的日期需為 1～${daysInMonth[bdayMM-1]}！`
-                              : `⚠️ Day for month ${bdayMM} must be between 1 and ${daysInMonth[bdayMM-1]}!`);
+                            setWizardStep2Error(
+                              language === 'zh'
+                                ? `「生日」日期錯誤：${bdayMM} 月最多只有 ${daysInMonth[bdayMM-1]} 天，但您輸入了 ${bdayDD} 日。請檢查生日日期是否正確。`
+                                : `Birthday day error: ${bdayMM} only has ${daysInMonth[bdayMM-1]} days, but you entered day ${bdayDD}. Please check your birthday.`
+                            );
                             return;
                           }
+                          setWizardStep2Error('');
                         }
                         if (wizardStep === 4) {
                           if (!newChildEmail.trim() || !newChildPassword.trim()) {
