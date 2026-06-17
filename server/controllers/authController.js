@@ -227,7 +227,7 @@ export const googleLogin = async (req, res) => {
     if (targetRole === 'kid') {
       const newChild = await pool.query(
         `INSERT INTO children (user_id, name, age, birthday, avatar, level, exp, exp_needed, gold, tickets, job_class) 
-         VALUES ($1, $2, 10, '10/24', $3, 1, 0, 400, 100, 1, 'Explorer (探索者) ⚔️') RETURNING id`,
+         VALUES ($1, $2, 10, '10/24', $3, 1, 0, 400, 0, 0, 'Explorer (探索者) ⚔️') RETURNING id`,
         [userId, name, avatar || 'boy']
       );
       childId = newChild.rows[0].id;

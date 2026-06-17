@@ -2432,8 +2432,14 @@ function ParentPortal({
                                                  attr === 'Courage' ? (language === 'zh' ? '體' : 'COU') :
                                                  attr === 'Empathy' ? (language === 'zh' ? '群' : 'EMP') :
                                                  (language === 'zh' ? '美' : 'CRE');
+                                const badgeClass = 
+                                  attr === 'Wisdom' ? 'bg-sky-100 text-sky-700 border border-sky-300' :
+                                  attr === 'Responsibility' ? 'bg-emerald-100 text-emerald-700 border border-emerald-300' :
+                                  attr === 'Courage' ? 'bg-rose-100 text-rose-700 border border-rose-300' :
+                                  attr === 'Empathy' ? 'bg-pink-100 text-pink-700 border border-pink-300' :
+                                  'bg-violet-100 text-violet-700 border border-violet-300';
                                 return (
-                                  <span key={attr} className="text-[8px] px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-300 font-bold">
+                                  <span key={attr} className={`text-[8.5px] px-2 py-0.5 rounded-full font-bold transition-all ${badgeClass}`}>
                                     {attrName} +{val}
                                   </span>
                                 );

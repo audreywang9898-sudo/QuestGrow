@@ -47,8 +47,8 @@ CREATE TABLE children (
     level INT DEFAULT 1,
     exp INT DEFAULT 0,
     exp_needed INT DEFAULT 400,
-    gold INT DEFAULT 100,
-    tickets INT DEFAULT 1,
+    gold INT DEFAULT 0,
+    tickets INT DEFAULT 0,
     job_class VARCHAR(100) DEFAULT 'Explorer (探索者) ⚔️',
     attributes JSONB NOT NULL DEFAULT '{"Wisdom": 10, "Responsibility": 10, "Courage": 10, "Empathy": 10, "Creativity": 10}'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP

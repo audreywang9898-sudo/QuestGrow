@@ -1888,7 +1888,7 @@ function KidPortal({
                 <h3 className="text-sm font-extrabold text-slate-200 flex items-center gap-2 uppercase tracking-wider">
                   🎫 {language === 'zh' ? '已核銷與失效道具歷史' : 'Redeemed & Expired Items History'}
                   {historyInventory.length > 0 && (
-                    <span className="bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded text-[10px] font-black border border-white/5">
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-black border" style={{ backgroundColor: '#f1f5f9', color: '#475569', borderColor: '#e2e8f0' }}>
                       {historyInventory.length}
                     </span>
                   )}
