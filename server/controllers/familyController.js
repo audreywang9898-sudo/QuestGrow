@@ -2,13 +2,13 @@ import pool from '../config/db.js';
 import { getMessage } from '../utils/messageManager.js';
 import { validateTextField, safeErrorMessage } from '../utils/validation.js';
 
-// 1. Get Family Info (Name, Growth Score)
+// 1. Get Family Info (Name, Growth Score, Nickname)
 export const getFamilyData = async (req, res) => {
   const familyId = req.user.family_id;
 
   try {
     const result = await pool.query(
-      'SELECT id, name, growth_score, gacha_pool, settings FROM families WHERE id = $1',
+      'SELECT id, name, family_nickname, growth_score, gacha_pool, settings FROM families WHERE id = $1',
       [familyId]
     );
 
@@ -20,6 +20,7 @@ export const getFamilyData = async (req, res) => {
     res.json({
       id: row.id,
       name: row.name,
+      familyNickname: row.family_nickname,
       growthScore: row.growth_score,
       gachaPool: row.gacha_pool,
       settings: row.settings
@@ -434,5 +435,49 @@ export const updateFamilySettings = async (req, res) => {
   } catch (error) {
     console.error('updateFamilySettings error:', error);
     res.status(500).json({ message: '更新共同設定失敗。' });
+  }
+};
+
+// 16. Update Family Nickname (Parent only)
+export const updateFamilyNickname = async (req, res) => {
+  const familyId = req.user.family_id;
+  const { nickname } = req.body;
+
+  if (!nickname) {
+    return res.status(400).json({ message: '家庭暱稱不能為空。' });
+  }
+
+  if (nickname.length > 20) {
+    return res.status(400).json({ message: '家庭暱稱最多 20 個字元。' });
+  }
+
+  try {
+    await pool.query(
+      'UPDATE families SET family_nickname = $1 WHERE id = $2',
+      [nickname, familyId]
+    );
+    res.json({ message: '家庭暱稱更新成功！', familyNickname: nickname });
+  } catch (error) {
+    console.error('updateFamilyNickname error:', error);
+    res.status(500).json({ message: '更新家庭暱稱失敗。' });
+  }
+};
+
+// 17. Get Family Leaderboard
+export const getFamilyLeaderboard = async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT id, name, family_nickname, growth_score FROM families ORDER BY growth_score DESC LIMIT 10'
+    );
+    const mapped = result.rows.map(row => ({
+      id: row.id,
+      name: row.name,
+      familyNickname: row.family_nickname,
+      growthScore: row.growth_score
+    }));
+    res.json(mapped);
+  } catch (error) {
+    console.error('getFamilyLeaderboard error:', error);
+    res.status(500).json({ message: '獲取家庭排行榜失敗。' });
   }
 };

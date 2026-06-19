@@ -109,6 +109,8 @@ function App() {
   const [members, setMembers] = useState([]); // Replaces usersDB
   const [gachaPool, setGachaPool] = useState(GACHA_POOL);
   const [familySettings, setFamilySettings] = useState({ zhuyinUnder8: true });
+  const [familyNickname, setFamilyNickname] = useState('');
+  const [leaderboardData, setLeaderboardData] = useState([]);
   
   // --- Toast State ---
   const [toasts, setToasts] = useState([]);
@@ -134,6 +136,7 @@ function App() {
       const familyData = await api.getFamilyData();
       if (familyData) {
         setFamilyScore(familyData.growthScore);
+        setFamilyNickname(familyData.familyNickname || '');
         if (familyData.gachaPool) {
           setGachaPool(familyData.gachaPool);
         } else {
@@ -184,6 +187,13 @@ function App() {
 
       const membersData = await api.getMembers();
       setMembers(membersData);
+
+      try {
+        const leaderboard = await api.getFamilyLeaderboard();
+        setLeaderboardData(leaderboard);
+      } catch (e) {
+        console.error("Leaderboard fetch error:", e);
+      }
     } catch (error) {
       console.error('Fetch all data error:', error);
       showToast(error.message || '載入雲端資料失敗！', 'error');
@@ -419,6 +429,40 @@ function App() {
       return true;
     } catch (error) {
       showToast(error.message || '更新失敗。', 'error');
+      return false;
+    }
+  };
+
+  const handleUpdateFamilyNickname = async (nickname) => {
+    try {
+      await api.updateFamilyNickname(nickname);
+      setFamilyNickname(nickname);
+      showToast('家庭暱稱已更新！', 'success');
+      fetchAllData();
+      return true;
+    } catch (error) {
+      showToast(error.message || '更新家庭暱稱失敗。', 'error');
+      return false;
+    }
+  };
+
+  const handleCompleteOnboarding = async () => {
+    try {
+      await api.completeOnboarding();
+      // Update currentUser onboardingCompleted local state
+      if (currentUser) {
+        const updatedUser = {
+          ...currentUser,
+          onboardingCompleted: true
+        };
+        setCurrentUser(updatedUser);
+        localStorage.setItem('questgrow_current_user', JSON.stringify(updatedUser));
+      }
+      showToast('🎉 恭喜完成家長設定引導！', 'success');
+      fetchAllData();
+      return true;
+    } catch (error) {
+      showToast(error.message || '更新引導進度失敗。', 'error');
       return false;
     }
   };
@@ -912,6 +956,8 @@ function App() {
             inventory={inventory.filter(i => i.childId === activeChildId)} 
             wishlist={wishlist}
             familyScore={familyScore}
+            familyNickname={familyNickname}
+            leaderboardData={leaderboardData}
             onSubmitTask={handleSubmitTask}
             onDrawCard={handleAwardGachaCard}
             onRequestRedeem={handleRequestRedeem}
@@ -941,6 +987,10 @@ function App() {
             inventory={inventory}
             wishlist={wishlist}
             familyScore={familyScore}
+            familyNickname={familyNickname}
+            leaderboardData={leaderboardData}
+            onUpdateFamilyNickname={handleUpdateFamilyNickname}
+            onCompleteOnboarding={handleCompleteOnboarding}
             redeemLogs={redeemLogs}
             eventLogs={eventLogs}
             onAddTask={handleAddTask}

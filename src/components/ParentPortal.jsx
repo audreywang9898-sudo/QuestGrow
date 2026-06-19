@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TASK_TEMPLATES, GACHA_POOL } from '../utils/mockData';
 import Avatar from './Avatar';
 import { useLanguage } from './LanguageContext';
+import FamilyLeaderboardView from './FamilyLeaderboardView';
 import { 
   Plus, Check, X, ShieldAlert, Sparkles, BookOpen, 
   HelpCircle, Trash2, Award, ClipboardCheck, LayoutGrid, 
@@ -93,7 +94,11 @@ function ParentPortal({
   gachaPool,
   onUpdateGachaPool,
   familySettings,
-  onUpdateFamilySettings
+  onUpdateFamilySettings,
+  familyNickname,
+  leaderboardData,
+  onUpdateFamilyNickname,
+  onCompleteOnboarding
 }) {
   const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState('audit');
@@ -155,6 +160,30 @@ function ParentPortal({
   const [selectedJobClass, setSelectedJobClass] = useState('Explorer');
   const [selectedStarterQuests, setSelectedStarterQuests] = useState([]);
   const [wizardStep2Error, setWizardStep2Error] = useState('');
+
+  // New onboarding, nickname & leaderboard states
+  const [settingsNickname, setSettingsNickname] = useState(familyNickname || '');
+  const [nicknameWarning, setNicknameWarning] = useState('');
+  const [showChildWizardOnAudit, setShowChildWizardOnAudit] = useState(false);
+
+  React.useEffect(() => {
+    setSettingsNickname(familyNickname || '');
+  }, [familyNickname]);
+
+  const handleSaveSettingsNickname = async () => {
+    if (!settingsNickname.trim()) {
+      setNicknameWarning(language === 'zh' ? '家庭暱稱不能為空。' : 'Nickname cannot be empty.');
+      return;
+    }
+    if (settingsNickname.length > 20) {
+      setNicknameWarning(language === 'zh' ? '家庭暱稱最多 20 個字元。' : 'Family nickname cannot exceed 20 characters.');
+      return;
+    }
+    const success = await onUpdateFamilyNickname(settingsNickname);
+    if (success) {
+      setNicknameWarning('');
+    }
+  };
 
   const [editingChildId, setEditingChildId] = useState(null);
   const [editChildName, setEditChildName] = useState('');
@@ -448,6 +477,7 @@ function ParentPortal({
       setSelectedJobClass('Explorer');
       setSelectedStarterQuests([]);
       setShowAddChildForm(false);
+      setShowChildWizardOnAudit(false);
     }
   };
 
@@ -674,6 +704,23 @@ function ParentPortal({
   const pendingTasks = tasks.filter(t => t.status === '待覆核');
   const pendingRedemptions = inventory.filter(i => i.status === '待核銷');
 
+  if (currentUser && currentUser.role === 'parent' && !currentUser.onboardingCompleted) {
+    return (
+      <div className="min-h-[85vh] flex items-center justify-center py-10 w-full px-4 animate-success">
+        <ParentOnboardingWizard 
+          familyNickname={familyNickname}
+          onUpdateFamilyNickname={onUpdateFamilyNickname}
+          onAddChild={onAddChild}
+          onAddTask={onAddTask}
+          onCompleteOnboarding={onCompleteOnboarding}
+          children={children}
+          t={t}
+          language={language}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       
@@ -760,6 +807,15 @@ function ParentPortal({
         >
           <Settings className="h-4 w-4 text-[#00E676]" />
           {t('tabSettings')}
+        </button>
+        <button
+          onClick={() => setActiveTab('leaderboard')}
+          className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
+            activeTab === 'leaderboard' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
+          }`}
+        >
+          <Trophy className="h-4 w-4 text-violet-400" />
+          {t('tabLeaderboard')}
         </button>
       </div>
 
@@ -915,290 +971,814 @@ function ParentPortal({
       )}
 
       {activeTab === 'audit' && (
-        <div className="space-y-6 animate-success">
-          
-          <div className="space-y-4">
-            <div className="flex justify-between items-center flex-wrap gap-2">
-              <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
-                <ClipboardCheck className="h-5 w-5 text-violet-400" />
-                {t('auditTitleTasks')} ({pendingTasks.length})
-              </h3>
-              {pendingTasks.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setShowBulkTasksConfirm(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-xs font-black bg-[#00E676] text-[#111216] hover:bg-[#00c867] transition-all shadow-md transform hover:scale-105 active:scale-95"
-                >
-                  <Check className="h-3.5 w-3.5" />
-                  {t('bulkApproveTasksBtn')}
-                </button>
-              )}
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-success">
+          {/* Left Column: Children list & Setup Wizard toggle */}
+          <div className="lg:col-span-1 space-y-6">
+            {children.length === 0 || showChildWizardOnAudit ? (
+              <div className="glass-panel p-5 border border-violet-500/20 bg-slate-955/20 space-y-6 relative animate-success">
+                {children.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowChildWizardOnAudit(false)}
+                    className="absolute top-4 right-4 text-xs font-black text-slate-400 hover:text-white"
+                  >
+                    {t('close')}
+                  </button>
+                )}
+                <div>
+                  <h3 className="text-md font-black text-slate-200 flex items-center gap-2">
+                    <span className="text-xl">🧙‍♂️</span>
+                    {language === 'zh' ? '兒童角色設定嚮導' : 'Adventurer Setup Wizard'}
+                  </h3>
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    {language === 'zh' ? '跟著五步驟，輕鬆又任務化地為孩子建立專屬角色與起步任務！' : '5 steps to set up your child\'s RPG profile & starter quests!'}
+                  </p>
+                </div>
 
-            {pendingTasks.length === 0 ? (
-              <div className="glass-panel p-8 text-center text-slate-500 text-sm">
-                {t('noPendingTasks')}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {pendingTasks.map((task) => (
-                  <div key={task.id} className="glass-panel p-5 border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="space-y-2 flex-1">
-                      <div className="flex items-center gap-3">
-                        <span className="text-md font-bold text-slate-200">{task.name}</span>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getAttributeColor(task.type)}`}>
-                          {translateType(task.type)} | {language === 'zh' ? '難度' : 'Difficulty'} {translateDifficulty(task.difficulty)}
-                        </span>
-                      </div>
-                      
-                      <p className="text-xs text-slate-400">{task.description}</p>
-                      
-                      {task.submission && (
-                        <div className="p-3 bg-white/5 border border-white/5 rounded-xl space-y-2">
-                          <div className="text-[11px] text-slate-400 flex items-center gap-1">
-                            <MessageSquare className="h-3 w-3" />
-                            {t('childNotesLabel')}
+                {children.length < 8 ? (
+                  <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
+                    {/* Stepper progress indicator */}
+                    <div className="flex items-center justify-between mb-4">
+                      {[1, 2, 3, 4, 5].map((step) => (
+                        <React.Fragment key={step}>
+                          <div className="flex flex-col items-center relative">
+                            <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] transition-all duration-300 ${
+                              wizardStep === step 
+                                ? 'bg-[#3661FF] text-white ring-2 ring-[#3661FF]/20 shadow-[0_0_8px_rgba(54,97,255,0.4)]' 
+                                : wizardStep > step 
+                                  ? 'bg-emerald-500 text-white' 
+                                  : 'bg-slate-800 text-slate-450 border border-white/10'
+                            }`}>
+                              {wizardStep > step ? <Check className="h-3 w-3" /> : step}
+                            </div>
+                            <span className="text-[8px] font-bold text-slate-450 mt-1 whitespace-nowrap">
+                              {step === 1 ? (language === 'zh' ? '暱稱' : 'Profile') :
+                               step === 2 ? (language === 'zh' ? '個資' : 'Consent') :
+                               step === 3 ? (language === 'zh' ? '職業' : 'Job') :
+                               step === 4 ? (language === 'zh' ? '登入' : 'Login') :
+                               (language === 'zh' ? '任務' : 'Quests')}
+                            </span>
                           </div>
-                          <p className="text-xs text-slate-200 font-semibold">{task.submission.notes}</p>
-                          {task.submission.photo && (
-                            <button 
-                              onClick={() => setPreviewPhotoUrl(task.submission.photo)}
-                              className="flex items-center gap-1 text-[11px] text-cyan-400 hover:text-cyan-300 font-bold"
-                            >
-                              <Eye className="h-3.5 w-3.5" />
-                              {t('viewProofPhoto')}
-                            </button>
+                          {step < 5 && (
+                            <div className="flex-1 h-0.5 mx-0.5 bg-slate-855 relative">
+                              <div 
+                                className="absolute top-0 left-0 h-full bg-[#3661FF] transition-all duration-300" 
+                                style={{ width: wizardStep > step ? '100%' : '0%' }} 
+                              />
+                            </div>
                           )}
+                        </React.Fragment>
+                      ))}
+                    </div>
+
+                    {/* Step 1: Profile & Avatar */}
+                    {wizardStep === 1 && (
+                      <div className="space-y-4 animate-success">
+                        <h4 className="text-[11px] font-black text-violet-300 uppercase tracking-wider flex items-center gap-1.5">
+                          🎭 {language === 'zh' ? '步驟 1：暱稱與外觀角色' : 'Step 1: Profile Name & Avatar'}
+                        </h4>
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1">
+                              {language === 'zh' ? '冒險者暱稱' : 'Child Nickname'} <span className="text-rose-500">*</span>
+                            </label>
+                            <div className="relative">
+                              <input 
+                                type="text" 
+                                required 
+                                maxLength={12}
+                                value={newChildName} 
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setNewChildName(val);
+                                  const clean = val.toLowerCase().replace(/[^a-z0-9]/g, '');
+                                  if (clean) {
+                                    setNewChildEmail(`${clean}@questgrow.com`);
+                                  } else {
+                                    setNewChildEmail('');
+                                  }
+                                }}
+                                placeholder={language === 'zh' ? '例如：小明' : 'e.g. Leo'}
+                                className={`w-full bg-slate-900 border rounded-lg px-2.5 py-1.5 pr-14 text-xs text-slate-200 focus:outline-none focus:ring-1 transition-all ${
+                                  newChildName.length > 12
+                                    ? 'border-rose-500/60 focus:ring-rose-500'
+                                    : 'border-white/10 focus:ring-[#3661FF]'
+                                }`}
+                              />
+                              <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-bold tabular-nums pointer-events-none ${
+                                newChildName.length >= 10 ? 'text-rose-455' : 'text-slate-505'
+                              }`}>
+                                {newChildName.length}/12
+                              </span>
+                            </div>
+                            {newChildName.length > 12 && (
+                              <p className="mt-1 text-[9px] font-bold text-rose-400">
+                                ⚠️ {language === 'zh' ? '暱稱最多 12 個字元' : 'Nickname must be 12 characters or fewer'}
+                              </p>
+                            )}
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] text-slate-455 font-bold uppercase mb-2">
+                              {language === 'zh' ? '選擇外觀頭像' : 'Select Avatar'}
+                            </label>
+                            <div className="grid grid-cols-2 gap-3">
+                              <button
+                                type="button"
+                                onClick={() => setNewChildAvatar('boy')}
+                                className={`p-2.5 rounded-xl flex flex-col items-center justify-center border transition-all hover:scale-105 active:scale-95 ${
+                                  newChildAvatar === 'boy' 
+                                    ? 'border-cyan-500 bg-cyan-600/10 shadow-[0_0_12px_rgba(6,182,212,0.15)]' 
+                                    : 'border-white/5 bg-white/5 hover:border-white/20'
+                                }`}
+                              >
+                                <span className="text-2xl mb-1">👦</span>
+                                <span className="text-[9px] font-bold text-slate-300">
+                                  {language === 'zh' ? '小男孩 (Boy)' : 'Boy'}
+                                </span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setNewChildAvatar('girl')}
+                                className={`p-2.5 rounded-xl flex flex-col items-center justify-center border transition-all hover:scale-105 active:scale-95 ${
+                                  newChildAvatar === 'girl' 
+                                    ? 'border-pink-500 bg-pink-600/10 shadow-[0_0_12px_rgba(236,72,153,0.15)]' 
+                                    : 'border-white/5 bg-white/5 hover:border-white/20'
+                                }`}
+                              >
+                                <span className="text-2xl mb-1">👧</span>
+                                <span className="text-[9px] font-bold text-slate-300">
+                                  {language === 'zh' ? '小女孩 (Girl)' : 'Girl'}
+                                </span>
+                              </button>
+                            </div>
+                          </div>
                         </div>
+                      </div>
+                    )}
+
+                    {/* Step 2: Demographics & Consent */}
+                    {wizardStep === 2 && (
+                      <div className="space-y-4 animate-success">
+                        <h4 className="text-[11px] font-black text-violet-300 uppercase tracking-wider flex items-center gap-1.5">
+                          🎂 {language === 'zh' ? '步驟 2：成長印記與個資授權' : 'Step 2: Demographics & Consent'}
+                        </h4>
+
+                        {wizardStep2Error && (
+                          <div className="flex items-start gap-2 p-2 bg-rose-500/10 border border-rose-500/30 rounded-xl animate-success">
+                            <span className="text-rose-400 text-sm shrink-0">🚫</span>
+                            <div>
+                              <p className="text-[10px] font-black text-rose-455">{language === 'zh' ? '輸入有誤，無法進行下一步' : 'Input error — please fix before continuing'}</p>
+                              <p className="text-[9px] font-semibold text-rose-300 mt-0.5 leading-relaxed">{wizardStep2Error}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-2.5">
+                          <div>
+                            <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1">
+                              {language === 'zh' ? '年齡' : 'Age'} <span className="text-rose-500">*</span>
+                            </label>
+                            <input 
+                              type="number" 
+                              required 
+                              min="3" 
+                              max="14" 
+                              value={newChildAge} 
+                              onChange={(e) => { setNewChildAge(parseInt(e.target.value, 10)); setWizardStep2Error(''); }}
+                              className={`w-full bg-slate-900 border rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-1 transition-all ${
+                                newChildAge < 3 || newChildAge > 14
+                                  ? 'border-rose-500/60 focus:ring-rose-500'
+                                  : 'border-white/10 focus:ring-[#3661FF]'
+                              }`}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1">
+                              {language === 'zh' ? '生日 (MM/DD)' : 'Birthday (MM/DD)'} <span className="text-rose-500">*</span>
+                            </label>
+                            <input 
+                              type="text" 
+                              required 
+                              value={newChildBirthday} 
+                              onChange={(e) => { setNewChildBirthday(e.target.value); setWizardStep2Error(''); }}
+                              placeholder="e.g. 10/24"
+                              className={`w-full bg-slate-900 border rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-1 transition-all ${
+                                newChildBirthday.trim() && (() => {
+                                  const parts = newChildBirthday.trim().split('/');
+                                  if (parts.length !== 2) return true;
+                                  const mm = parseInt(parts[0], 10);
+                                  const dd = parseInt(parts[1], 10);
+                                  if (isNaN(mm) || isNaN(dd) || mm < 1 || mm > 12) return true;
+                                  const daysInMonth = [31,29,31,30,31,30,31,31,30,31,30,31];
+                                  return dd < 1 || dd > daysInMonth[mm - 1];
+                                })()
+                                  ? 'border-rose-500/60 focus:ring-rose-500'
+                                  : 'border-white/10 focus:ring-[#3661FF]'
+                              }`}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Taiwan PDPA/Consent Warning box */}
+                        <div className={`p-3 rounded-xl border text-[10px] leading-relaxed transition-all duration-300 ${
+                          newChildAge < 8 
+                            ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' 
+                            : 'bg-[#3661FF]/10 border-[#3661FF]/20 text-[#4e75ff]'
+                        }`}>
+                          <div className="flex gap-2 items-start">
+                            <ShieldAlert className="h-4.5 w-4.5 shrink-0 mt-0.5" />
+                            <div>
+                              <h5 className="font-bold mb-0.5">
+                                {language === 'zh' ? '🛡️ 個資與隱私保護說明' : '🛡️ Child Data Protection & Privacy Consent'}
+                              </h5>
+                              <p className="text-[9px] text-slate-355">
+                                {language === 'zh' 
+                                  ? `QuestGrow 依據年齡適配冒險任務。符合台灣個資法第8條規範：` 
+                                  : `QuestGrow adapts adventure tasks based on age. In compliance with Taiwan PDPA:`}
+                              </p>
+                              <ul className="list-disc list-inside mt-0.5 space-y-0.5 text-[8.5px] text-slate-400">
+                                <li>
+                                  {language === 'zh'
+                                    ? '僅收集暱稱、生日、年齡以計算全人成長指數。'
+                                    : 'Only nickname, birthday, age are collected.'}
+                                </li>
+                                {newChildAge < 8 && (
+                                  <li className="text-amber-400 font-bold">
+                                    {language === 'zh'
+                                      ? '⚠️ 偵測到小孩小於 8 歲：系統將在孩子登入時自動啟用【注音輔助模式】，協助孩子順暢識字成長！'
+                                      : '⚠️ Under 8 detected: System will automatically enable [Zhuyin Assistive Mode] to help them read!'}
+                                  </li>
+                                )}
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Step 3: Starting Job Class */}
+                    {wizardStep === 3 && (
+                      <div className="space-y-4 animate-success">
+                        <h4 className="text-[11px] font-black text-violet-300 uppercase tracking-wider flex items-center gap-1.5">
+                          ⚔️ {language === 'zh' ? '步驟 3：初始職業與屬性傾向' : 'Step 3: Starting Job Class'}
+                        </h4>
+                        <div className="grid grid-cols-1 gap-2 max-h-[220px] overflow-y-auto pr-1">
+                          {Object.entries(JOB_CLASSES).map(([key, config]) => {
+                            const isSelected = selectedJobClass === key;
+                            return (
+                              <button
+                                key={key}
+                                type="button"
+                                onClick={() => setSelectedJobClass(key)}
+                                className={`p-2.5 rounded-lg border text-left transition-all hover:scale-[1.01] active:scale-95 ${
+                                  isSelected 
+                                    ? 'border-violet-500 bg-violet-600/10 shadow-[0_0_8px_rgba(124,58,237,0.15)]' 
+                                    : 'border-white/5 bg-white/5 hover:border-white/10'
+                                }`}
+                              >
+                                <div className="flex justify-between items-center mb-0.5">
+                                  <span className="text-[11px] font-black text-slate-200">
+                                    {language === 'zh' ? config.nameZh : config.nameEn}
+                                  </span>
+                                  {isSelected && (
+                                    <span className="bg-violet-500 text-white rounded-full p-0.5">
+                                      <Check className="h-2.5 w-2.5" />
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-[9px] text-slate-400 mb-1 leading-relaxed">
+                                  {language === 'zh' ? config.descZh : config.descEn}
+                                </p>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Step 4: Login Account Setup */}
+                    {wizardStep === 4 && (
+                      <div className="space-y-4 animate-success">
+                        <h4 className="text-[11px] font-black text-violet-300 uppercase tracking-wider flex items-center gap-1.5">
+                          🔑 {language === 'zh' ? '步驟 4：傳送門鑰匙 (帳號密碼)' : 'Step 4: Login Account Key'}
+                        </h4>
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1">
+                              {language === 'zh' ? '登入信箱 (Email)' : 'Login Email'} <span className="text-rose-500">*</span>
+                            </label>
+                            <input 
+                              type="email" 
+                              required 
+                              value={newChildEmail} 
+                              onChange={(e) => setNewChildEmail(e.target.value)}
+                              placeholder="e.g. michelle@questgrow.com"
+                              className="w-full bg-slate-900 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#3661FF] transition-all"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1">
+                              {language === 'zh' ? '密碼' : 'Password'} <span className="text-rose-500">*</span>
+                            </label>
+                            <input 
+                              type="text" 
+                              required 
+                              value={newChildPassword} 
+                              onChange={(e) => setNewChildPassword(e.target.value)}
+                              placeholder="密碼"
+                              className="w-full bg-slate-900 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#3661FF] transition-all"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Step 5: Starter Quests assignment */}
+                    {wizardStep === 5 && (
+                      <div className="space-y-4 animate-success">
+                        <h4 className="text-[11px] font-black text-violet-300 uppercase tracking-wider flex items-center gap-1.5">
+                          🚀 {language === 'zh' ? '步驟 5：第一份冒險合約' : 'Step 5: Starter Quests'}
+                        </h4>
+                        <p className="text-[9px] text-slate-400">
+                          {language === 'zh' ? '可直接勾選下方任務，建立成功時會立即指派給孩子！' : 'Select starting quests to assign immediately.'}
+                        </p>
+                        <div className="space-y-1.5 max-h-[180px] overflow-y-auto pr-1">
+                          {STARTER_QUESTS_TEMPLATES.map((quest, index) => {
+                            const isChecked = selectedStarterQuests.includes(index);
+                            return (
+                              <button
+                                key={index}
+                                type="button"
+                                onClick={() => {
+                                  if (isChecked) {
+                                    setSelectedStarterQuests(prev => prev.filter(i => i !== index));
+                                  } else {
+                                    setSelectedStarterQuests(prev => [...prev, index]);
+                                  }
+                                }}
+                                className={`w-full p-2 rounded-lg border text-left transition-all flex items-start gap-2 ${
+                                  isChecked ? 'border-emerald-500 bg-emerald-600/10' : 'border-white/5 bg-white/5 hover:border-white/10'
+                                }`}
+                              >
+                                <div className="pt-0.5">
+                                  <div className={`w-3 h-3 rounded border flex items-center justify-center transition-all ${
+                                    isChecked ? 'bg-emerald-500 border-emerald-500 text-white animate-scale-up' : 'border-white/20'
+                                  }`}>
+                                    {isChecked && <Check className="h-2 w-2" />}
+                                  </div>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex justify-between items-center gap-1 mb-0.5">
+                                    <span className="text-[10px] font-black text-slate-200 truncate">
+                                      {quest.name}
+                                    </span>
+                                  </div>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Back / Next buttons */}
+                    <div className="flex gap-2 justify-between border-t border-white/5 pt-3">
+                      {wizardStep > 1 ? (
+                        <button
+                          type="button"
+                          onClick={() => setWizardStep(prev => prev - 1)}
+                          className="px-2.5 py-1.5 rounded bg-[#252529] border border-[#35363A] text-[#b5b7bc] text-[10px] font-bold hover:text-white transition-all active:scale-95"
+                        >
+                          {language === 'zh' ? '上一步' : 'Back'}
+                        </button>
+                      ) : (
+                        <div />
+                      )}
+
+                      {wizardStep < 5 ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            // Validation
+                            if (wizardStep === 1) {
+                              if (!newChildName.trim()) {
+                                alert(language === 'zh' ? '請輸入冒險者暱稱！' : 'Please enter nickname!');
+                                return;
+                              }
+                              if (newChildName.trim().length > 12) {
+                                alert(language === 'zh' ? '暱稱最多 12 個字元！' : 'Nickname must be 12 characters or fewer!');
+                                return;
+                              }
+                            }
+                            if (wizardStep === 2) {
+                              if (!newChildAge || isNaN(newChildAge) || newChildAge < 3 || newChildAge > 14) {
+                                setWizardStep2Error(language === 'zh' ? '年齡需介於 3～14 歲之間' : 'Age must be between 3 and 14');
+                                return;
+                              }
+                              const bdayTrim = newChildBirthday.trim();
+                              if (!bdayTrim) {
+                                setWizardStep2Error(language === 'zh' ? '請輸入生日 (MM/DD)' : 'Please enter birthday (MM/DD)');
+                                return;
+                              }
+                              const parts = bdayTrim.split('/');
+                              if (parts.length !== 2) {
+                                setWizardStep2Error(language === 'zh' ? '請依 MM/DD 格式輸入，例如 10/24' : 'Use MM/DD format, e.g. 10/24');
+                                return;
+                              }
+                              const mm = parseInt(parts[0], 10);
+                              const dd = parseInt(parts[1], 10);
+                              if (isNaN(mm) || isNaN(dd) || mm < 1 || mm > 12) {
+                                setWizardStep2Error(language === 'zh' ? '月份需為 01～12' : 'Month must be 01–12');
+                                return;
+                              }
+                              const daysInMonth = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+                              if (dd < 1 || dd > daysInMonth[mm - 1]) {
+                                setWizardStep2Error(language === 'zh' ? `${mm} 月的日期需為 1～${daysInMonth[mm-1]}` : `Day for month ${mm} must be 1–${daysInMonth[mm-1]}`);
+                                return;
+                              }
+                              setWizardStep2Error('');
+                            }
+                            if (wizardStep === 4) {
+                              if (!newChildEmail.trim() || !newChildPassword.trim()) {
+                                alert(language === 'zh' ? '請輸入登入帳號及密碼！' : 'Please enter login credentials!');
+                                return;
+                              }
+                            }
+                            setWizardStep(prev => prev + 1);
+                          }}
+                          className="px-3 py-1.5 rounded bg-[#3661FF] text-white text-[10px] font-black hover:bg-[#4e75ff] transition-all active:scale-95"
+                        >
+                          {language === 'zh' ? '下一步' : 'Next'}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={submitAddChild}
+                          className="px-4 py-1.5 rounded bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-955 text-[10px] font-black hover:from-emerald-400 hover:to-cyan-400 transition-all active:scale-95"
+                        >
+                          {language === 'zh' ? '完成建立 🚀' : 'Complete 🚀'}
+                        </button>
                       )}
                     </div>
-
-                    <div className="flex items-center gap-2 whitespace-nowrap">
-                      <button
-                        onClick={() => onApproveTask(task.id)}
-                        className="flex items-center gap-1.5 px-4 py-2 rounded-[4px] text-xs font-black bg-[#00E676] text-[#111216] hover:bg-[#00c867] transition-colors"
-                      >
-                        <Check className="h-4 w-4" />
-                        {t('approve')}
-                      </button>
-                      <button
-                        onClick={() => setRejectingTaskId(task.id)}
-                        className="flex items-center gap-1.5 px-4 py-2 rounded-[4px] text-xs font-black bg-[#FF4747] text-white hover:bg-[#ff3030] transition-colors"
-                      >
-                        <X className="h-4 w-4" />
-                        {t('reject')}
-                      </button>
-                    </div>
+                  </form>
+                ) : (
+                  <div className="p-4 bg-rose-500/5 border border-rose-500/10 rounded-xl text-center space-y-1">
+                    <ShieldAlert className="h-6 w-6 text-rose-400 mx-auto animate-pulse" />
+                    <h4 className="text-[10px] font-black text-rose-350">{t('maxChildLimit')}</h4>
                   </div>
-                ))}
+                )}
               </div>
-            )}
-          </div>
-
-          {rejectingTaskId && (
-            <div className="glass-panel p-5 border border-rose-500/30 bg-rose-950/20 space-y-4 max-w-md animate-success">
-              <h4 className="text-sm font-extrabold text-rose-300 flex items-center gap-1.5 uppercase tracking-wider">
-                <AlertCircle className="h-5 w-5" />
-                {t('rejectionReasonTitle')}
-              </h4>
-              
-              <div className="space-y-2">
-                <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                  {t('cannedReasonTitle')}
-                </label>
-                <div className="grid grid-cols-1 gap-1">
-                  {cannedReasons.map((reason, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        setSelectedCannedReason(reason);
-                        setRejectReason('');
-                      }}
-                      className={`text-left px-3 py-1.5 text-xs rounded-lg border transition-all ${
-                        selectedCannedReason === reason 
-                          ? 'bg-rose-500/20 border-rose-500/50 text-rose-200' 
-                          : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-200'
-                      }`}
-                    >
-                      {reason}
-                    </button>
+            ) : (
+              <div className="glass-panel p-5 border border-white/5 bg-slate-950/20 space-y-4">
+                <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                  <h3 className="text-xs font-black text-slate-200 flex items-center gap-1.5">
+                    <Users className="h-4 w-4 text-violet-400" />
+                    {language === 'zh' ? '家庭冒險小隊' : 'Family Adventurers'} ({children.length})
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setWizardStep(1);
+                      setNewChildName('');
+                      setNewChildAge(10);
+                      setNewChildBirthday('');
+                      setNewChildAvatar('boy');
+                      setNewChildEmail('');
+                      setNewChildPassword('password123');
+                      setSelectedJobClass('Explorer');
+                      setSelectedStarterQuests([]);
+                      setWizardStep2Error('');
+                      setShowChildWizardOnAudit(true);
+                    }}
+                    className="px-2.5 py-1 bg-violet-600/20 hover:bg-violet-605/35 border border-violet-500/30 text-violet-400 hover:text-violet-350 text-[9px] font-black rounded-lg transition-all active:scale-95"
+                  >
+                    ➕ {language === 'zh' ? '新增兒童角色' : 'Add Child'}
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto pr-1">
+                  {children.map(child => (
+                    <div key={child.id} className="p-2.5 bg-white/5 border border-white/5 rounded-xl flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full overflow-hidden shrink-0">
+                        <Avatar 
+                          avatar={child.avatar} 
+                          role="kid" 
+                          badge={inventory.find(i => i.childId === child.id && i.type === '收藏卡' && i.status === '已使用')?.id}
+                          className="w-full h-full"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-xs font-extrabold text-slate-200 truncate">{child.name}</h4>
+                        <p className="text-[9px] text-slate-500 font-semibold mt-0.5">
+                          Lv. {child.level} • {child.age} Y/O
+                        </p>
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
+            )}
+          </div>
 
-              <div className="space-y-2">
-                <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                  {t('customReasonTitle')}
-                </label>
-                <textarea
-                  value={rejectReason}
-                  onChange={(e) => {
-                    setRejectReason(e.target.value);
-                    setSelectedCannedReason('');
-                  }}
-                  placeholder={t('customReasonPlaceholder')}
-                  className="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none"
-                  rows="3"
-                />
+          {/* Right Column: Pending Audits & History Logs */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="space-y-4">
+              <div className="flex justify-between items-center flex-wrap gap-2">
+                <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
+                  <ClipboardCheck className="h-5 w-5 text-violet-400" />
+                  {t('auditTitleTasks')} ({pendingTasks.length})
+                </h3>
+                {pendingTasks.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowBulkTasksConfirm(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-xs font-black bg-[#00E676] text-[#111216] hover:bg-[#00c867] transition-all shadow-md transform hover:scale-105 active:scale-95"
+                  >
+                    <Check className="h-3.5 w-3.5" />
+                    {t('bulkApproveTasksBtn')}
+                  </button>
+                )}
               </div>
 
-              <div className="flex gap-2 justify-end">
-                <button onClick={submitRejection} className="px-4 py-2 rounded-[4px] text-xs font-black bg-[#FF4747] text-white hover:bg-[#ff3030]">{t('confirmReject')}</button>
-                <button onClick={() => { setRejectingTaskId(null); setRejectReason(''); setSelectedCannedReason(''); }} className="px-4 py-2 rounded-[4px] text-xs font-bold bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white">{t('cancel')}</button>
-              </div>
-            </div>
-          )}
-
-          {/* Pending Redemptions with V2 Expired warning and block protection */}
-          <div className="space-y-4">
-            <div className="flex justify-between items-center flex-wrap gap-2">
-              <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
-                <ClipboardCheck className="h-5 w-5 text-indigo-400" />
-                {t('auditTitleRedeems')} ({pendingRedemptions.length})
-              </h3>
-              {pendingRedemptions.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setShowBulkRedeemsConfirm(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-xs font-black bg-[#00E676] text-[#111216] hover:bg-[#00c867] transition-all shadow-md transform hover:scale-105 active:scale-95"
-                >
-                  <Check className="h-3.5 w-3.5" />
-                  {t('bulkApproveRedeemsBtn')}
-                </button>
-              )}
-            </div>
-
-            {pendingRedemptions.length === 0 ? (
-              <div className="glass-panel p-8 text-center text-slate-500 text-sm">
-                {t('noPendingRedeems')}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {pendingRedemptions.map((item) => {
-                  const isExpired = item.expireAt && item.expireAt < simulatedDate;
-                  return (
-                    <div 
-                      key={item.inventoryId} 
-                      className={`glass-panel p-5 border flex flex-col justify-between gap-4 ${
-                        isExpired ? 'border-rose-500/30 bg-rose-950/10' : 'border-amber-500/20 bg-amber-500/5'
-                      }`}
-                    >
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className={`px-2 py-0.5 text-[9px] font-black rounded-md uppercase tracking-wider ${getRarityBadge(item.rarity)}`}>
-                            {item.rarity} | {item.type}
+              {pendingTasks.length === 0 ? (
+                <div className="glass-panel p-8 text-center text-slate-500 text-sm">
+                  {t('noPendingTasks')}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {pendingTasks.map((task) => (
+                    <div key={task.id} className="glass-panel p-5 border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="space-y-2 flex-1">
+                        <div className="flex items-center gap-3">
+                          <span className="text-md font-bold text-slate-200">{task.name}</span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getAttributeColor(task.type)}`}>
+                            {translateType(task.type)} | {language === 'zh' ? '難度' : 'Difficulty'} {translateDifficulty(task.difficulty)}
                           </span>
-                          <span className="text-[10px] text-slate-400 font-bold">{t('applicantLabel', { name: children.find(c => c.id === item.ownerId)?.name || stats.name })}</span>
                         </div>
-                        <h4 className="text-md font-bold text-slate-100">{item.name}</h4>
-                        <p className="text-xs text-slate-400">{item.desc}</p>
-                        {item.expireAt && (
-                          <p className={`text-[10px] font-extrabold ${isExpired ? 'text-rose-400' : 'text-slate-400'}`}>
-                            {t('expiredLabel')} {item.expireAt} {isExpired && t('expiredAlert')}
-                          </p>
+                        
+                        <p className="text-xs text-slate-400">{task.description}</p>
+                        
+                        {task.submission && (
+                          <div className="p-3 bg-white/5 border border-white/5 rounded-xl space-y-2">
+                            <div className="text-[11px] text-slate-400 flex items-center gap-1">
+                              <MessageSquare className="h-3 w-3" />
+                              {t('childNotesLabel')}
+                            </div>
+                            <p className="text-xs text-slate-200 font-semibold">{task.submission.notes}</p>
+                            {task.submission.photo && (
+                              <button 
+                                onClick={() => setPreviewPhotoUrl(task.submission.photo)}
+                                className="flex items-center gap-1 text-[11px] text-cyan-400 hover:text-cyan-300 font-bold"
+                              >
+                                <Eye className="h-3.5 w-3.5" />
+                                {t('viewProofPhoto')}
+                              </button>
+                            )}
+                          </div>
                         )}
                       </div>
 
-                      <div className="flex gap-2 border-t border-white/5 pt-3 mt-1">
+                      <div className="flex items-center gap-2 whitespace-nowrap">
                         <button
-                          disabled={isExpired}
-                          onClick={() => onApproveRedeem(item.inventoryId)}
-                          className={`flex-1 py-2 rounded-[4px] text-xs font-black transition-all ${
-                            isExpired 
-                              ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-750' 
-                              : 'bg-[#00E676] text-[#111216] hover:bg-[#00c867]'
-                          }`}
+                          onClick={() => onApproveTask(task.id)}
+                          className="flex items-center gap-1.5 px-4 py-2 rounded-[4px] text-xs font-black bg-[#00E676] text-[#111216] hover:bg-[#00c867] transition-colors"
                         >
-                          {isExpired ? t('cardExpiredBlock') : t('confirmApprove')}
+                          <Check className="h-4 w-4" />
+                          {t('approve')}
                         </button>
                         <button
-                          onClick={() => onRejectRedeem(item.inventoryId)}
-                          className="px-3 py-2 rounded-[4px] text-xs font-bold bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white transition-colors"
+                          onClick={() => setRejectingTaskId(task.id)}
+                          className="flex items-center gap-1.5 px-4 py-2 rounded-[4px] text-xs font-black bg-[#FF4747] text-white hover:bg-[#ff3030] transition-colors"
                         >
-                          {isExpired ? t('reclaimCard') : t('rejectRedeem')}
+                          <X className="h-4 w-4" />
+                          {t('reject')}
                         </button>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Collapsible History Section */}
-          <div className="border-t border-white/10 pt-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
-                <Database className="h-5 w-5 text-cyan-400" />
-                {language === 'zh' ? '歷史審核與核銷紀錄' : 'History Logs'}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setShowHistoryLogs(prev => !prev)}
-                className="flex items-center gap-1.5 px-4 py-1.5 bg-white/5 hover:bg-white/10 active:bg-white/15 border border-white/15 hover:border-white/20 text-slate-200 text-xs font-bold rounded-full shadow-sm transition-all duration-200 active:scale-95"
-              >
-                <span>{showHistoryLogs ? (language === 'zh' ? '收起記錄' : 'Hide History') : (language === 'zh' ? '展開記錄' : 'Show History')}</span>
-                <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-300 ${showHistoryLogs ? 'rotate-180' : ''}`} />
-              </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {showHistoryLogs && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-success">
-                {/* Completed Tasks History */}
-                <div className="glass-panel p-5 space-y-4 bg-slate-950/20">
-                  <h4 className="text-sm font-extrabold text-slate-350 flex items-center gap-2 border-b border-white/5 pb-2">
-                    ✅ {language === 'zh' ? '已完成任務歷史' : 'Completed Quests'}
-                  </h4>
-                  {tasks.filter(t => t.status === '已完成').length === 0 ? (
-                    <p className="text-xs text-slate-500 text-center py-6">{language === 'zh' ? '無已完成的任務紀錄。' : 'No completed quest records.'}</p>
-                  ) : (
-                    <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
-                      {tasks.filter(t => t.status === '已完成').map(task => (
-                        <div key={task.id} className="p-3 bg-white/5 border border-white/5 rounded-xl space-y-1">
-                          <div className="flex justify-between items-center text-xs">
-                            <span className="font-bold text-slate-200">{task.name}</span>
-                            <span className="text-[10px] text-slate-500">{task.dateCreated}</span>
-                          </div>
-                          <p className="text-[11px] text-slate-400 leading-normal">{task.description}</p>
-                          <div className="flex items-center justify-between text-[9px] text-emerald-450 font-bold mt-1">
-                            <span>{language === 'zh' ? '指派給：' : 'Assigned to: '}{children.find(c => c.id === task.assignedTo)?.name || '通用'}</span>
-                            <span>+{task.expReward} EXP | 🪙 {task.goldReward}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+            {rejectingTaskId && (
+              <div className="glass-panel p-5 border border-rose-500/30 bg-rose-955/20 space-y-4 max-w-md animate-success">
+                <h4 className="text-sm font-extrabold text-rose-300 flex items-center gap-1.5 uppercase tracking-wider">
+                  <AlertCircle className="h-5 w-5" />
+                  {t('rejectionReasonTitle')}
+                </h4>
+                
+                <div className="space-y-2">
+                  <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                    {t('cannedReasonTitle')}
+                  </label>
+                  <div className="grid grid-cols-1 gap-1">
+                    {cannedReasons.map((reason, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          setSelectedCannedReason(reason);
+                          setRejectReason('');
+                        }}
+                        className={`text-left px-3 py-1.5 text-xs rounded-lg border transition-all ${
+                          selectedCannedReason === reason 
+                            ? 'bg-rose-500/20 border-rose-500/50 text-rose-200' 
+                            : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-200'
+                        }`}
+                      >
+                        {reason}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                {/* Redeemed Cards History */}
-                <div className="glass-panel p-5 space-y-4 bg-slate-950/20">
-                  <h4 className="text-sm font-extrabold text-slate-350 flex items-center gap-2 border-b border-white/5 pb-2">
-                    🎫 {language === 'zh' ? '已核銷獎勵歷史' : 'Redeemed Cards'}
-                  </h4>
-                  {redeemLogs.length === 0 ? (
-                    <p className="text-xs text-slate-500 text-center py-6">{language === 'zh' ? '無已核銷的獎勵紀錄。' : 'No redeemed card records.'}</p>
-                  ) : (
-                    <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
-                      {redeemLogs.map(log => (
-                        <div key={log.id} className="p-3 bg-white/5 border border-white/5 rounded-xl space-y-1">
-                          <div className="flex justify-between items-center text-xs">
-                            <span className="font-bold text-slate-200">{log.cardName}</span>
-                            <span className="text-[10px] text-slate-500">{log.dateRedeemed}</span>
-                          </div>
-                          <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium pt-1">
-                            <span>{language === 'zh' ? '使用者：' : 'User: '}<strong className="text-cyan-400">{log.kidName}</strong></span>
-                            <span>{language === 'zh' ? '審核者：' : 'Reviewer: '}<strong className="text-slate-350">{log.reviewer || '系統'}</strong></span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                <div className="space-y-2">
+                  <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                    {t('customReasonTitle')}
+                  </label>
+                  <textarea
+                    value={rejectReason}
+                    onChange={(e) => {
+                      setRejectReason(e.target.value);
+                      setSelectedCannedReason('');
+                    }}
+                    placeholder={t('customReasonPlaceholder')}
+                    className="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none"
+                    rows="3"
+                  />
+                </div>
+
+                <div className="flex gap-2 justify-end">
+                  <button onClick={submitRejection} className="px-4 py-2 rounded-[4px] text-xs font-black bg-[#FF4747] text-white hover:bg-[#ff3030]">{t('confirmReject')}</button>
+                  <button onClick={() => { setRejectingTaskId(null); setRejectReason(''); setSelectedCannedReason(''); }} className="px-4 py-2 rounded-[4px] text-xs font-bold bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white">{t('cancel')}</button>
                 </div>
               </div>
             )}
+
+            {/* Pending Redemptions with V2 Expired warning and block protection */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center flex-wrap gap-2">
+                <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
+                  <ClipboardCheck className="h-5 w-5 text-indigo-400" />
+                  {t('auditTitleRedeems')} ({pendingRedemptions.length})
+                </h3>
+                {pendingRedemptions.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowBulkRedeemsConfirm(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-xs font-black bg-[#00E676] text-[#111216] hover:bg-[#00c867] transition-all shadow-md transform hover:scale-105 active:scale-95"
+                  >
+                    <Check className="h-3.5 w-3.5" />
+                    {t('bulkApproveRedeemsBtn')}
+                  </button>
+                )}
+              </div>
+
+              {pendingRedemptions.length === 0 ? (
+                <div className="glass-panel p-8 text-center text-slate-500 text-sm">
+                  {t('noPendingRedeems')}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {pendingRedemptions.map((item) => {
+                    const isExpired = item.expireAt && item.expireAt < simulatedDate;
+                    return (
+                      <div 
+                        key={item.inventoryId} 
+                        className={`glass-panel p-5 border flex flex-col justify-between gap-4 ${
+                          isExpired ? 'border-rose-500/30 bg-rose-950/10' : 'border-amber-500/20 bg-amber-500/5'
+                        }`}
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className={`px-2 py-0.5 text-[9px] font-black rounded-md uppercase tracking-wider ${getRarityBadge(item.rarity)}`}>
+                              {item.rarity} | {item.type}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-bold">{t('applicantLabel', { name: children.find(c => c.id === item.ownerId)?.name || stats.name })}</span>
+                          </div>
+                          <h4 className="text-md font-bold text-slate-100">{item.name}</h4>
+                          <p className="text-xs text-slate-400">{item.desc}</p>
+                          {item.expireAt && (
+                            <p className={`text-[10px] font-extrabold ${isExpired ? 'text-rose-400' : 'text-slate-400'}`}>
+                              {t('expiredLabel')} {item.expireAt} {isExpired && t('expiredAlert')}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="flex gap-2 border-t border-white/5 pt-3 mt-1">
+                          <button
+                            disabled={isExpired}
+                            onClick={() => onApproveRedeem(item.inventoryId)}
+                            className={`flex-1 py-2 rounded-[4px] text-xs font-black transition-all ${
+                              isExpired 
+                                ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-750' 
+                                : 'bg-[#00E676] text-[#111216] hover:bg-[#00c867]'
+                            }`}
+                          >
+                            {isExpired ? t('cardExpiredBlock') : t('confirmApprove')}
+                          </button>
+                          <button
+                            onClick={() => onRejectRedeem(item.inventoryId)}
+                            className="px-3 py-2 rounded-[4px] text-xs font-bold bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white transition-colors"
+                          >
+                            {isExpired ? t('reclaimCard') : t('rejectRedeem')}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Collapsible History Section */}
+            <div className="border-t border-white/10 pt-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
+                  <Database className="h-5 w-5 text-cyan-400" />
+                  {language === 'zh' ? '歷史審核與核銷紀錄' : 'History Logs'}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowHistoryLogs(prev => !prev)}
+                  className="flex items-center gap-1.5 px-4 py-1.5 bg-white/5 hover:bg-white/10 active:bg-white/15 border border-white/15 hover:border-white/20 text-slate-200 text-xs font-bold rounded-full shadow-sm transition-all duration-200 active:scale-95"
+                >
+                  <span>{showHistoryLogs ? (language === 'zh' ? '收起記錄' : 'Hide History') : (language === 'zh' ? '展開記錄' : 'Show History')}</span>
+                  <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-300 ${showHistoryLogs ? 'rotate-180' : ''}`} />
+                </button>
+              </div>
+
+              {showHistoryLogs && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-success">
+                  {/* Completed Tasks History */}
+                  <div className="glass-panel p-5 space-y-4 bg-slate-950/20">
+                    <h4 className="text-sm font-extrabold text-slate-350 flex items-center gap-2 border-b border-white/5 pb-2">
+                      ✅ {language === 'zh' ? '已完成任務歷史' : 'Completed Quests'}
+                    </h4>
+                    {tasks.filter(t => t.status === '已完成').length === 0 ? (
+                      <p className="text-xs text-slate-500 text-center py-6">{language === 'zh' ? '無已完成的任務紀錄。' : 'No completed quest records.'}</p>
+                    ) : (
+                      <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
+                        {tasks.filter(t => t.status === '已完成').map(task => (
+                          <div key={task.id} className="p-3 bg-white/5 border border-white/5 rounded-xl space-y-1">
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="font-bold text-slate-200">{task.name}</span>
+                              <span className="text-[10px] text-slate-500">{task.dateCreated}</span>
+                            </div>
+                            <p className="text-[11px] text-slate-400 leading-normal">{task.description}</p>
+                            <div className="flex items-center justify-between text-[9px] text-emerald-450 font-bold mt-1">
+                              <span>{language === 'zh' ? '指派給：' : 'Assigned to: '}{children.find(c => c.id === task.assignedTo)?.name || '通用'}</span>
+                              <span>+{task.expReward} EXP | 🪙 {task.goldReward}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Redeemed Cards History */}
+                  <div className="glass-panel p-5 space-y-4 bg-slate-955/20">
+                    <h4 className="text-sm font-extrabold text-slate-350 flex items-center gap-2 border-b border-white/5 pb-2">
+                      🎫 {language === 'zh' ? '已核銷獎勵歷史' : 'Redeemed Cards'}
+                    </h4>
+                    {redeemLogs.length === 0 ? (
+                      <p className="text-xs text-slate-500 text-center py-6">{language === 'zh' ? '無已核銷的獎勵紀錄。' : 'No redeemed card records.'}</p>
+                    ) : (
+                      <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
+                        {redeemLogs.map(log => (
+                          <div key={log.id} className="p-3 bg-white/5 border border-white/5 rounded-xl space-y-1">
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="font-bold text-slate-200">{log.cardName}</span>
+                              <span className="text-[10px] text-slate-500">{log.dateRedeemed}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium pt-1">
+                              <span>{language === 'zh' ? '使用者：' : 'User: '}<strong className="text-cyan-400">{log.kidName}</strong></span>
+                              <span>{language === 'zh' ? '審核者：' : 'Reviewer: '}<strong className="text-slate-350">{log.reviewer || '系統'}</strong></span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
+
+      {/* --- Tab 1.5: Family Leaderboard --- */}
+      {activeTab === 'leaderboard' && (
+        <div className="animate-success">
+          <FamilyLeaderboardView 
+            leaderboardData={leaderboardData}
+            familyNickname={familyNickname}
+            t={t}
+            language={language}
+          />
+        </div>
+      )}
+
+
 
       {/* --- Tab 2: Quest Workshop --- */}
       {activeTab === 'workshop' && (
@@ -2046,9 +2626,9 @@ function ParentPortal({
 
       {/* --- Tab 3.5: Child Role Settings panel --- */}
       {activeTab === 'settings' && settingsSubTab === 'child' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-success">
-          {/* Left Column: Children list */}
-          <div className="lg:col-span-2 glass-panel p-6 space-y-6">
+        <div className="max-w-4xl mx-auto animate-success">
+          {/* Children list */}
+          <div className="glass-panel p-6 space-y-6">
             <div>
               <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
                 <Users className="h-5 w-5 text-violet-400" />
@@ -2197,548 +2777,6 @@ function ParentPortal({
             </div>
           </div>
 
-          {/* Right Column: Add Child form (Wizard stepper) */}
-          <div className="glass-panel p-6 space-y-6">
-            <div>
-              <h3 className="text-lg font-black text-slate-200 flex items-center gap-2">
-                <span className="text-2xl">🧙‍♂️</span>
-                {language === 'zh' ? '兒童角色設定嚮導' : 'Adventurer Setup Wizard'}
-              </h3>
-              <p className="text-xs text-slate-400 mt-1">
-                {language === 'zh' ? '跟著五步驟，輕鬆又趣味地為孩子建立專屬角色與起步任務！' : '5 steps to set up your child\'s RPG profile & starter quests!'}
-              </p>
-            </div>
-
-            {children.length < 8 ? (
-              <form onSubmit={(e) => e.preventDefault()} className="bg-white/5 border border-white/5 p-5 rounded-2xl space-y-6 animate-success">
-                
-                {/* Stepper progress indicator */}
-                <div className="flex items-center justify-between mb-6">
-                  {[1, 2, 3, 4, 5].map((step) => (
-                    <React.Fragment key={step}>
-                      <div className="flex flex-col items-center relative">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 ${
-                          wizardStep === step 
-                            ? 'bg-[#3661FF] text-white ring-4 ring-[#3661FF]/20 shadow-[0_0_10px_rgba(54,97,255,0.4)]' 
-                            : wizardStep > step 
-                              ? 'bg-emerald-500 text-white' 
-                              : 'bg-slate-800 text-slate-400 border border-white/10'
-                        }`}>
-                          {wizardStep > step ? <Check className="h-4 w-4" /> : step}
-                        </div>
-                        <span className="text-[9px] font-bold text-slate-400 mt-1 whitespace-nowrap">
-                          {step === 1 ? (language === 'zh' ? '暱稱頭像' : 'Profile') :
-                           step === 2 ? (language === 'zh' ? '成長個資' : 'Consent') :
-                           step === 3 ? (language === 'zh' ? '初始職業' : 'Job Class') :
-                           step === 4 ? (language === 'zh' ? '登入設定' : 'Login Key') :
-                           (language === 'zh' ? '起步任務' : 'Quests')}
-                        </span>
-                      </div>
-                      {step < 5 && (
-                        <div className="flex-1 h-0.5 mx-1.5 bg-slate-850 relative">
-                          <div 
-                            className="absolute top-0 left-0 h-full bg-[#3661FF] transition-all duration-300" 
-                            style={{ width: wizardStep > step ? '100%' : '0%' }} 
-                          />
-                        </div>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </div>
-
-                {/* Step 1: Profile & Avatar */}
-                {wizardStep === 1 && (
-                  <div className="space-y-4 animate-success">
-                    <h4 className="text-xs font-black text-violet-300 uppercase tracking-widest flex items-center gap-1.5">
-                      🎭 {language === 'zh' ? '步驟 1：暱稱與外觀角色' : 'Step 1: Profile Name & Avatar'}
-                    </h4>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1.5">
-                          {language === 'zh' ? '冒險者暱稱' : 'Child Nickname'} <span className="text-rose-500">*</span>
-                        </label>
-                        <div className="relative">
-                          <input 
-                            type="text" 
-                            required 
-                            maxLength={12}
-                            value={newChildName} 
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setNewChildName(val);
-                              const clean = val.toLowerCase().replace(/[^a-z0-9]/g, '');
-                              if (clean) {
-                                setNewChildEmail(`${clean}@questgrow.com`);
-                              } else {
-                                setNewChildEmail('');
-                              }
-                            }}
-                            placeholder={language === 'zh' ? '例如：小明' : 'e.g. Leo'}
-                            className={`w-full bg-slate-900 border rounded-xl px-3 py-2 pr-14 text-xs text-slate-200 focus:outline-none focus:ring-1 transition-all ${
-                              newChildName.length > 12
-                                ? 'border-rose-500/60 focus:ring-rose-500 focus:border-rose-500'
-                                : 'border-white/10 focus:ring-[#3661FF] focus:border-[#3661FF]'
-                            }`}
-                          />
-                          <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold tabular-nums pointer-events-none ${
-                            newChildName.length >= 10 ? 'text-rose-400' : 'text-slate-500'
-                          }`}>
-                            {newChildName.length}/12
-                          </span>
-                        </div>
-                        {newChildName.length > 12 && (
-                          <p className="mt-1 text-[10px] font-bold text-rose-400">
-                            ⚠️ {language === 'zh' ? '暱稱最多 12 個字元' : 'Nickname must be 12 characters or fewer'}
-                          </p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="block text-[10px] text-slate-455 font-bold uppercase mb-2">
-                          {language === 'zh' ? '選擇外觀頭像' : 'Select Avatar'}
-                        </label>
-                        <div className="grid grid-cols-2 gap-4">
-                          <button
-                            type="button"
-                            onClick={() => setNewChildAvatar('boy')}
-                            className={`p-3 rounded-xl flex flex-col items-center justify-center border transition-all hover:scale-105 active:scale-95 ${
-                              newChildAvatar === 'boy' 
-                                ? 'border-cyan-500 bg-cyan-600/10 shadow-[0_0_12px_rgba(6,182,212,0.15)]' 
-                                : 'border-white/5 bg-white/5 hover:border-white/20'
-                            }`}
-                          >
-                            <span className="text-3xl mb-1.5">👦</span>
-                            <span className="text-[10px] font-bold text-slate-300">
-                              {language === 'zh' ? '小男孩 (Boy)' : 'Boy'}
-                            </span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setNewChildAvatar('girl')}
-                            className={`p-3 rounded-xl flex flex-col items-center justify-center border transition-all hover:scale-105 active:scale-95 ${
-                              newChildAvatar === 'girl' 
-                                ? 'border-pink-500 bg-pink-600/10 shadow-[0_0_12px_rgba(236,72,153,0.15)]' 
-                                : 'border-white/5 bg-white/5 hover:border-white/20'
-                            }`}
-                          >
-                            <span className="text-3xl mb-1.5">👧</span>
-                            <span className="text-[10px] font-bold text-slate-300">
-                              {language === 'zh' ? '小女孩 (Girl)' : 'Girl'}
-                            </span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Step 2: Demographics & Consent */}
-                {wizardStep === 2 && (
-                  <div className="space-y-4 animate-success">
-                    <h4 className="text-xs font-black text-violet-300 uppercase tracking-widest flex items-center gap-1.5">
-                      🎂 {language === 'zh' ? '步驟 2：成長印記與個資授權' : 'Step 2: Demographics & Consent'}
-                    </h4>
-
-                    {/* Inline error banner for step 2 */}
-                    {wizardStep2Error && (
-                      <div className="flex items-start gap-2.5 p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl animate-success">
-                        <span className="text-rose-400 text-base shrink-0">🚫</span>
-                        <div>
-                          <p className="text-[11px] font-black text-rose-400">{language === 'zh' ? '輸入有誤，無法進行下一步' : 'Input error — please fix before continuing'}</p>
-                          <p className="text-[11px] font-semibold text-rose-300 mt-0.5 leading-relaxed">{wizardStep2Error}</p>
-                        </div>
-                      </div>
-                    )}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1.5">
-                          {language === 'zh' ? '年齡' : 'Age'} <span className="text-rose-500">*</span>
-                        </label>
-                        <input 
-                          type="number" 
-                          required 
-                          min="3" 
-                          max="14" 
-                          value={newChildAge} 
-                          onChange={(e) => { setNewChildAge(parseInt(e.target.value, 10)); setWizardStep2Error(''); }}
-                          className={`w-full bg-slate-900 border rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 transition-all ${
-                            newChildAge < 3 || newChildAge > 14
-                              ? 'border-rose-500/60 focus:ring-rose-500 focus:border-rose-500'
-                              : 'border-white/10 focus:ring-[#3661FF] focus:border-[#3661FF]'
-                          }`}
-                        />
-                        {(newChildAge < 3 || newChildAge > 14) && (
-                          <p className="mt-1 text-[10px] font-bold text-rose-400 flex items-center gap-1">
-                            ⚠️ {language === 'zh' ? '年齡需介於 3～14 歲之間' : 'Age must be between 3 and 14'}
-                          </p>
-                        )}
-                      </div>
-                      <div>
-                        <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1.5">
-                          {language === 'zh' ? '生日 (MM/DD)' : 'Birthday (MM/DD)'} <span className="text-rose-500">*</span>
-                        </label>
-                        <input 
-                          type="text" 
-                          required 
-                          value={newChildBirthday} 
-                          onChange={(e) => { setNewChildBirthday(e.target.value); setWizardStep2Error(''); }}
-                          placeholder="e.g. 10/24"
-                          className={`w-full bg-slate-900 border rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 transition-all ${
-                            newChildBirthday.trim() && (() => {
-                              const parts = newChildBirthday.trim().split('/');
-                              if (parts.length !== 2) return true;
-                              const mm = parseInt(parts[0], 10);
-                              const dd = parseInt(parts[1], 10);
-                              if (isNaN(mm) || isNaN(dd) || mm < 1 || mm > 12) return true;
-                              const daysInMonth = [31,29,31,30,31,30,31,31,30,31,30,31];
-                              return dd < 1 || dd > daysInMonth[mm - 1];
-                            })()
-                              ? 'border-rose-500/60 focus:ring-rose-500 focus:border-rose-500'
-                              : 'border-white/10 focus:ring-[#3661FF] focus:border-[#3661FF]'
-                          }`}
-                        />
-                        {newChildBirthday.trim() && (() => {
-                          const parts = newChildBirthday.trim().split('/');
-                          if (parts.length !== 2) return (
-                            <p className="mt-1 text-[10px] font-bold text-rose-400 flex items-center gap-1">
-                              ⚠️ {language === 'zh' ? '請依 MM/DD 格式輸入，例如 10/24' : 'Use MM/DD format, e.g. 10/24'}
-                            </p>
-                          );
-                          const mm = parseInt(parts[0], 10);
-                          const dd = parseInt(parts[1], 10);
-                          if (isNaN(mm) || isNaN(dd) || mm < 1 || mm > 12) return (
-                            <p className="mt-1 text-[10px] font-bold text-rose-400 flex items-center gap-1">
-                              ⚠️ {language === 'zh' ? '月份需為 01～12' : 'Month must be 01–12'}
-                            </p>
-                          );
-                          const daysInMonth = [31,29,31,30,31,30,31,31,30,31,30,31];
-                          if (dd < 1 || dd > daysInMonth[mm - 1]) return (
-                            <p className="mt-1 text-[10px] font-bold text-rose-400 flex items-center gap-1">
-                              ⚠️ {language === 'zh' ? `${mm} 月的日期需為 1～${daysInMonth[mm-1]}` : `Day for month ${mm} must be 1–${daysInMonth[mm-1]}`}
-                            </p>
-                          );
-                          return null;
-                        })()}
-                      </div>
-                    </div>
-
-                    {/* Taiwan PDPA/Consent Warning box */}
-                    <div className={`p-4 rounded-xl border text-[11px] leading-relaxed transition-all duration-300 ${
-                      newChildAge < 8 
-                        ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' 
-                        : 'bg-[#3661FF]/10 border-[#3661FF]/20 text-[#4e75ff]'
-                    }`}>
-                      <div className="flex gap-2 items-start">
-                        <ShieldAlert className="h-5 w-5 shrink-0 mt-0.5" />
-                        <div>
-                          <h5 className="font-bold mb-1">
-                            {language === 'zh' ? '🛡️ 個資與隱私保護說明' : '🛡️ Child Data Protection & Privacy Consent'}
-                          </h5>
-                          <p className="text-[10px] text-slate-355">
-                            {language === 'zh' 
-                              ? `QuestGrow 依據年齡適配冒險任務。符合台灣個資法第8條規範：` 
-                              : `QuestGrow adapts adventure tasks based on age. In compliance with Taiwan PDPA:`}
-                          </p>
-                          <ul className="list-disc list-inside mt-1 space-y-1 text-[9px] text-slate-400">
-                            <li>
-                              {language === 'zh'
-                                ? '僅收集暱稱、生日、年齡以計算全人均衡指數，且數據經加密與雜湊保護。'
-                                : 'Only nickname, birthday, age are collected. All data is encrypted.'}
-                            </li>
-                            {newChildAge < 8 && (
-                              <li className="text-amber-400 font-bold">
-                                {language === 'zh'
-                                  ? '⚠️ 偵測到小孩小於 8 歲：系統將在孩子登入時自動啟用【注音輔助模式】，協助孩子順暢識字成長！'
-                                  : '⚠️ Under 8 detected: System will automatically enable [Zhuyin Assistive Mode] to help them read!'}
-                              </li>
-                            )}
-                          </ul>
-                          <p className="mt-2 text-[9px] text-slate-500 border-t border-white/5 pt-1.5">
-                            {language === 'zh'
-                              ? '點擊下一步代表您（法定代理人）已閱讀並授權同意上述個資聲明與使用範圍。'
-                              : 'By proceeding, you (the legal guardian) authorized the above consent & data scope.'}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Step 3: Starting Job Class */}
-                {wizardStep === 3 && (
-                  <div className="space-y-4 animate-success">
-                    <h4 className="text-xs font-black text-violet-300 uppercase tracking-widest flex items-center gap-1.5">
-                      ⚔️ {language === 'zh' ? '步驟 3：初始職業與屬性傾向' : 'Step 3: Starting Job Class'}
-                    </h4>
-                    <div className="grid grid-cols-1 gap-2.5 max-h-[300px] overflow-y-auto pr-1">
-                      {Object.entries(JOB_CLASSES).map(([key, config]) => {
-                        const isSelected = selectedJobClass === key;
-                        return (
-                          <button
-                            key={key}
-                            type="button"
-                            onClick={() => setSelectedJobClass(key)}
-                            className={`p-3 rounded-xl border text-left transition-all hover:scale-[1.01] active:scale-95 ${
-                              isSelected 
-                                ? 'border-violet-500 bg-violet-600/10 shadow-[0_0_12px_rgba(124,58,237,0.15)]' 
-                                : 'border-white/5 bg-white/5 hover:border-white/10'
-                            }`}
-                          >
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="text-xs font-black text-slate-200">
-                                {language === 'zh' ? config.nameZh : config.nameEn}
-                              </span>
-                              {isSelected && (
-                                <span className="bg-violet-500 text-white rounded-full p-0.5">
-                                  <Check className="h-3 w-3" />
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-[10px] text-slate-400 mb-2 leading-relaxed">
-                              {language === 'zh' ? config.descZh : config.descEn}
-                            </p>
-                            <div className="flex flex-wrap gap-1">
-                              {Object.entries(config.attributes).map(([attr, val]) => {
-                                const attrName = attr === 'Wisdom' ? (language === 'zh' ? '智' : 'WIS') :
-                                                 attr === 'Responsibility' ? (language === 'zh' ? '德' : 'RES') :
-                                                 attr === 'Courage' ? (language === 'zh' ? '體' : 'COU') :
-                                                 attr === 'Empathy' ? (language === 'zh' ? '群' : 'EMP') :
-                                                 (language === 'zh' ? '美' : 'CRE');
-                                const badgeClass = 
-                                  attr === 'Wisdom' ? 'bg-sky-100 text-sky-700 border border-sky-300' :
-                                  attr === 'Responsibility' ? 'bg-emerald-100 text-emerald-700 border border-emerald-300' :
-                                  attr === 'Courage' ? 'bg-rose-100 text-rose-700 border border-rose-300' :
-                                  attr === 'Empathy' ? 'bg-pink-100 text-pink-700 border border-pink-300' :
-                                  'bg-violet-100 text-violet-700 border border-violet-300';
-                                return (
-                                  <span key={attr} className={`text-[8.5px] px-2 py-0.5 rounded-full font-bold transition-all ${badgeClass}`}>
-                                    {attrName} +{val}
-                                  </span>
-                                );
-                              })}
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Step 4: Login Account Setup */}
-                {wizardStep === 4 && (
-                  <div className="space-y-4 animate-success">
-                    <h4 className="text-xs font-black text-violet-300 uppercase tracking-widest flex items-center gap-1.5">
-                      🔑 {language === 'zh' ? '步驟 4：傳送門鑰匙 (帳號密碼)' : 'Step 4: Login Account Key'}
-                    </h4>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1.5">
-                          {language === 'zh' ? '登入信箱 (Email)' : 'Login Email'} <span className="text-rose-500">*</span>
-                        </label>
-                        <input 
-                          type="email" 
-                          required 
-                          value={newChildEmail} 
-                          onChange={(e) => setNewChildEmail(e.target.value)}
-                          placeholder="e.g. michelle@questgrow.com"
-                          className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#3661FF] focus:border-[#3661FF] transition-all"
-                        />
-                        <p className="text-[9px] text-slate-500 mt-1">
-                          {language === 'zh' ? '💡 小孩登入兒童模式所用的帳號，依暱稱自動產生，亦可自由修改。' : '💡 Child\'s login account, auto-generated and editable.'}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1.5">
-                          {language === 'zh' ? '密碼' : 'Password'} <span className="text-rose-500">*</span>
-                        </label>
-                        <input 
-                          type="text" 
-                          required 
-                          value={newChildPassword} 
-                          onChange={(e) => setNewChildPassword(e.target.value)}
-                          placeholder="密碼"
-                          className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#3661FF] focus:border-[#3661FF] transition-all"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Step 5: Starter Quests assignment */}
-                {wizardStep === 5 && (
-                  <div className="space-y-4 animate-success">
-                    <h4 className="text-xs font-black text-violet-300 uppercase tracking-widest flex items-center gap-1.5">
-                      🚀 {language === 'zh' ? '步驟 5：第一份冒險合約 (起步任務)' : 'Step 5: Starter Quests Contract'}
-                    </h4>
-                    <p className="text-[10px] text-slate-400">
-                      {language === 'zh' ? '可直接勾選下方任務，建立成功時會立即指派給孩子，讓孩子第 1 天就有目標挑戰！' : 'Select starting quests to assign immediately on creation.'}
-                    </p>
-                    <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
-                      {STARTER_QUESTS_TEMPLATES.map((quest, index) => {
-                        const isChecked = selectedStarterQuests.includes(index);
-                        return (
-                          <button
-                            key={index}
-                            type="button"
-                            onClick={() => {
-                              if (isChecked) {
-                                setSelectedStarterQuests(prev => prev.filter(i => i !== index));
-                              } else {
-                                setSelectedStarterQuests(prev => [...prev, index]);
-                              }
-                            }}
-                            className={`w-full p-2.5 rounded-xl border text-left transition-all flex items-start gap-2.5 hover:scale-[1.01] active:scale-95 ${
-                              isChecked 
-                                ? 'border-emerald-500 bg-emerald-600/10' 
-                                : 'border-white/5 bg-white/5 hover:border-white/10'
-                            }`}
-                          >
-                            <div className="pt-0.5">
-                              <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-all ${
-                                isChecked ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-white/20'
-                              }`}>
-                                {isChecked && <Check className="h-2.5 w-2.5" />}
-                              </div>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex justify-between items-center gap-2 mb-0.5">
-                                <span className="text-[11px] font-black text-slate-200 truncate">
-                                  {quest.name}
-                                </span>
-                                <span className={`text-[8px] px-1.5 py-0.5 rounded-full border shrink-0 ${getAttributeColor(quest.type)}`}>
-                                  {translateType(quest.type)} • {translateDifficulty(quest.difficulty)}
-                                </span>
-                              </div>
-                              <p className="text-[9px] text-slate-400 leading-normal truncate">
-                                {quest.description}
-                              </p>
-                              <div className="flex items-center gap-2 mt-1 text-[8px] font-bold text-amber-400">
-                                <span>🪙 +{quest.goldReward}</span>
-                                <span className="text-violet-400">🔮 +{quest.expReward} XP</span>
-                                <span className="text-cyan-400">🎫 +{quest.ticketReward}</span>
-                              </div>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Back / Next buttons */}
-                <div className="flex gap-2 justify-between border-t border-white/5 pt-4">
-                  {wizardStep > 1 ? (
-                    <button
-                      type="button"
-                      onClick={() => setWizardStep(prev => prev - 1)}
-                      className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white transition-all active:scale-95"
-                    >
-                      {language === 'zh' ? '上一步' : 'Back'}
-                    </button>
-                  ) : (
-                    <div />
-                  )}
-
-                  {wizardStep < 5 ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        // Validation
-                        if (wizardStep === 1) {
-                          if (!newChildName.trim()) {
-                            alert(language === 'zh' ? '請輸入冒險者暱稱！' : 'Please enter nickname!');
-                            return;
-                          }
-                          if (newChildName.trim().length > 12) {
-                            alert(language === 'zh'
-                              ? `暱稱最多 12 個字元，您目前已輸入 ${newChildName.trim().length} 個字元，請縮短暱稱後再繼續。`
-                              : `Nickname must be 12 characters or fewer. You entered ${newChildName.trim().length} characters.`);
-                            return;
-                          }
-                        }
-                        if (wizardStep === 2) {
-                          // Age validation
-                          if (!newChildAge || isNaN(newChildAge) || newChildAge < 3 || newChildAge > 14) {
-                            setWizardStep2Error(
-                              language === 'zh'
-                                ? `「年齡」填寫錯誤：您輸入的年齡為 ${newChildAge} 歲，但 QuestGrow 適用範圍為 3～14 歲。請重新輸入正確年齡。`
-                                : `Age error: You entered ${newChildAge}, but QuestGrow supports ages 3–14. Please enter a valid age.`
-                            );
-                            return;
-                          }
-                          // Birthday format validation (MM/DD)
-                          const bdayTrim = newChildBirthday.trim();
-                          if (!bdayTrim) {
-                            setWizardStep2Error(
-                              language === 'zh'
-                                ? '「生日」不可為空白，請依 MM/DD 格式填寫生日，例如 10/24。'
-                                : 'Birthday is required. Use MM/DD format, e.g. 10/24.'
-                            );
-                            return;
-                          }
-                          const bdayParts = bdayTrim.split('/');
-                          if (bdayParts.length !== 2) {
-                            setWizardStep2Error(
-                              language === 'zh'
-                                ? `「生日」格式錯誤：您輸入的「${bdayTrim}」不符合 MM/DD 格式。正確格式為《月份/日期》，例如 10/24 代表 10 月 24 日。`
-                                : `Birthday format error: "${bdayTrim}" is not in MM/DD format. Example: 10/24 means October 24th.`
-                            );
-                            return;
-                          }
-                          const bdayMM = parseInt(bdayParts[0], 10);
-                          const bdayDD = parseInt(bdayParts[1], 10);
-                          if (isNaN(bdayMM) || isNaN(bdayDD) || bdayMM < 1 || bdayMM > 12) {
-                            setWizardStep2Error(
-                              language === 'zh'
-                                ? `「生日」月份錯誤：您輸入的月份為 ${bdayParts[0]}，但月份必須是 01～12 之間的數字。請重新輸入正確月份。`
-                                : `Birthday month error: "${bdayParts[0]}" is not a valid month. Month must be between 01 and 12.`
-                            );
-                            return;
-                          }
-                          const daysInMonth = [31,29,31,30,31,30,31,31,30,31,30,31];
-                          if (bdayDD < 1 || bdayDD > daysInMonth[bdayMM - 1]) {
-                            setWizardStep2Error(
-                              language === 'zh'
-                                ? `「生日」日期錯誤：${bdayMM} 月最多只有 ${daysInMonth[bdayMM-1]} 天，但您輸入了 ${bdayDD} 日。請檢查生日日期是否正確。`
-                                : `Birthday day error: ${bdayMM} only has ${daysInMonth[bdayMM-1]} days, but you entered day ${bdayDD}. Please check your birthday.`
-                            );
-                            return;
-                          }
-                          setWizardStep2Error('');
-                        }
-                        if (wizardStep === 4) {
-                          if (!newChildEmail.trim() || !newChildPassword.trim()) {
-                            alert(language === 'zh' ? '請輸入登入帳號及密碼！' : 'Please enter login credentials!');
-                            return;
-                          }
-                        }
-                        setWizardStep(prev => prev + 1);
-                      }}
-                      className="px-3.5 py-1.5 rounded-lg text-xs font-black bg-[#3661FF] text-white hover:bg-[#4e75ff] transition-all active:scale-95"
-                    >
-                      {language === 'zh' ? '下一步' : 'Next'}
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={submitAddChild}
-                      className="px-5 py-1.5 rounded-lg text-xs font-black bg-gradient-to-r from-emerald-500 to-cyan-500 text-[#111216] hover:from-emerald-400 hover:to-cyan-400 shadow-[0_0_12px_rgba(16,185,129,0.2)] transition-all active:scale-95"
-                    >
-                      {language === 'zh' ? '完成建立並出發 🚀' : 'Complete & Launch 🚀'}
-                    </button>
-                  )}
-                </div>
-              </form>
-            ) : (
-              <div className="p-6 bg-rose-500/5 border border-rose-500/10 rounded-xl text-center space-y-2">
-                <ShieldAlert className="h-8 w-8 text-rose-400 mx-auto animate-pulse" />
-                <h4 className="text-xs font-black text-rose-350">{t('maxChildLimit')}</h4>
-                <p className="text-[10px] text-slate-500">
-                  {t('maxChildLimitDesc')}
-                </p>
-              </div>
-            )}
-          </div>
         </div>
       )}
 
@@ -2778,6 +2816,45 @@ function ParentPortal({
                 </label>
               </div>
             </div>
+          </div>
+
+          <div className="bg-white/5 border border-white/5 p-6 rounded-2xl space-y-4 animate-success">
+            <h4 className="text-sm font-bold text-slate-200">{t('familyNicknameLabel') || "家庭暱稱"}</h4>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              {language === 'zh' ? '設定您的家庭在排行榜中顯示的專屬暱稱（最多 20 字）。' : 'Set your family nickname to be displayed on the leaderboard (max 20 characters).'}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+              <div className="relative flex-1 w-full">
+                <input
+                  type="text"
+                  maxLength={20}
+                  value={settingsNickname}
+                  onChange={(e) => {
+                    setSettingsNickname(e.target.value);
+                    if (e.target.value.length <= 20) {
+                      setNicknameWarning('');
+                    }
+                  }}
+                  placeholder={t('familyNicknamePlaceholder') || "例如：格林冒險隊"}
+                  className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 pr-12 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#FF9F1C] transition-all"
+                />
+                <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold tabular-nums pointer-events-none ${
+                  settingsNickname.length >= 18 ? 'text-rose-500' : 'text-slate-500'
+                }`}>
+                  {settingsNickname.length}/20
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleSaveSettingsNickname}
+                className="px-4 py-2 bg-[#FF9F1C] hover:bg-[#ff8f00] text-slate-950 font-black text-xs rounded-lg transition-colors shadow-md shrink-0 w-full sm:w-auto font-bold"
+              >
+                {t('saveChanges')}
+              </button>
+            </div>
+            {nicknameWarning && (
+              <p className="text-xs font-bold text-rose-500">{nicknameWarning}</p>
+            )}
           </div>
 
           {/* V2 COPPA & GDPR-K Compliance Settings */}
@@ -3610,5 +3687,614 @@ function ParentPortal({
     </div>
   );
 }
+
+
+export function ParentOnboardingWizard({
+  familyNickname,
+  onUpdateFamilyNickname,
+  onAddChild,
+  onAddTask,
+  onCompleteOnboarding,
+  children = [],
+  t,
+  language
+}) {
+  const [step, setStep] = useState(1);
+
+  // Step 2 State (Family Nickname)
+  const [nickname, setNickname] = useState(familyNickname || '');
+  const [nicknameWarning, setNicknameWarning] = useState('');
+
+  // Step 3 State (Add Child Form)
+  const [childName, setChildName] = useState('');
+  const [childAge, setChildAge] = useState(10);
+  const [childBirthday, setChildBirthday] = useState('');
+  const [childAvatar, setChildAvatar] = useState('boy');
+  const [childEmail, setChildEmail] = useState('');
+  const [childPassword, setChildPassword] = useState('password123');
+  const [selectedJob, setSelectedJob] = useState('Explorer');
+  const [childStep2Error, setChildStep2Error] = useState('');
+  const [childSuccessMsg, setChildSuccessMsg] = useState('');
+
+  // Step 4 State (Starter Quests Checkboxes)
+  const [selectedQuests, setSelectedQuests] = useState([0, 1, 2, 3, 4]); // all checked by default
+
+  const handleNextStep2 = async () => {
+    if (!nickname.trim()) {
+      setNicknameWarning(language === 'zh' ? '家庭暱稱不能為空。' : 'Family nickname cannot be empty.');
+      return;
+    }
+    if (nickname.length > 20) {
+      setNicknameWarning(language === 'zh' ? '家庭暱稱最多 20 個字元。' : 'Family nickname cannot exceed 20 characters.');
+      return;
+    }
+    const success = await onUpdateFamilyNickname(nickname);
+    if (success) {
+      setNicknameWarning('');
+      setStep(3);
+    }
+  };
+
+  const handleAddChildProfile = async (e) => {
+    e.preventDefault();
+    if (!childName.trim()) {
+      alert(language === 'zh' ? '請輸入冒險者暱稱！' : 'Please enter child nickname!');
+      return;
+    }
+    if (childName.length > 12) {
+      alert(language === 'zh' ? '暱稱最多 12 個字元！' : 'Nickname must be 12 characters or fewer!');
+      return;
+    }
+
+    // Age validation
+    if (!childAge || isNaN(childAge) || childAge < 3 || childAge > 14) {
+      setChildStep2Error(language === 'zh' ? '年齡需介於 3～14 歲之間。' : 'Age must be between 3 and 14.');
+      return;
+    }
+
+    // Birthday MM/DD validation
+    const bdayTrim = childBirthday.trim();
+    if (!bdayTrim) {
+      setChildStep2Error(language === 'zh' ? '請輸入生日 (MM/DD)' : 'Please enter birthday (MM/DD)');
+      return;
+    }
+    const bdayParts = bdayTrim.split('/');
+    if (bdayParts.length !== 2) {
+      setChildStep2Error(language === 'zh' ? '請依 MM/DD 格式輸入生日。' : 'Use MM/DD format, e.g. 10/24.');
+      return;
+    }
+    const bdayMM = parseInt(bdayParts[0], 10);
+    const bdayDD = parseInt(bdayParts[1], 10);
+    if (isNaN(bdayMM) || isNaN(bdayDD) || bdayMM < 1 || bdayMM > 12) {
+      setChildStep2Error(language === 'zh' ? '月份需為 01～12 之間的數字。' : 'Month must be 01-12.');
+      return;
+    }
+    const daysInMonth = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    if (bdayDD < 1 || bdayDD > daysInMonth[bdayMM - 1]) {
+      setChildStep2Error(language === 'zh' ? '輸入的日期有誤，請確認月份天數。' : 'Day is invalid for selected month.');
+      return;
+    }
+
+    if (!childEmail.trim() || !childPassword.trim()) {
+      alert(language === 'zh' ? '請輸入登入帳號及密碼！' : 'Please enter login credentials!');
+      return;
+    }
+
+    setChildStep2Error('');
+
+    const initialAttributes = JOB_CLASSES[selectedJob].attributes;
+
+    const childData = {
+      name: childName.trim(),
+      age: childAge,
+      birthday: bdayTrim,
+      avatar: childAvatar,
+      email: childEmail.trim(),
+      password: childPassword,
+      jobClass: selectedJob,
+      attributes: initialAttributes
+    };
+
+    const success = await onAddChild(childData);
+    if (success) {
+      setChildSuccessMsg(language === 'zh' ? `🎉 成功建立冒險者「${childName}」！` : `Successfully created adventurer '${childName}'!`);
+      setChildName('');
+      setChildAge(10);
+      setChildBirthday('');
+      setChildAvatar('boy');
+      setChildEmail('');
+      setChildPassword('password123');
+      setSelectedJob('Explorer');
+      setTimeout(() => setChildSuccessMsg(''), 4000);
+    }
+  };
+
+  const handleFinishOnboarding = async () => {
+    if (selectedQuests.length > 0 && children.length > 0) {
+      for (const child of children) {
+        for (const idx of selectedQuests) {
+          const questTemplate = STARTER_QUESTS_TEMPLATES[idx];
+          await onAddTask({
+            name: questTemplate.name,
+            description: questTemplate.description,
+            type: questTemplate.type,
+            difficulty: questTemplate.difficulty,
+            expReward: questTemplate.expReward,
+            goldReward: questTemplate.goldReward,
+            ticketReward: questTemplate.ticketReward,
+            attributeReward: questTemplate.attributeReward,
+            period: questTemplate.period === '每日' ? '每日' : '每週',
+            assignedTo: child.id
+          });
+        }
+      }
+    }
+    await onCompleteOnboarding();
+  };
+
+  const getQuestColor = (type) => {
+    switch (type) {
+      case '智': return 'bg-sky-100/10 text-sky-400 border-sky-400/20';
+      case '德': return 'bg-emerald-100/10 text-emerald-400 border-emerald-400/20';
+      case '體': return 'bg-rose-100/10 text-rose-400 border-rose-400/20';
+      case '群': return 'bg-pink-100/10 text-pink-400 border-pink-400/20';
+      case '美': return 'bg-violet-100/10 text-violet-400 border-violet-400/20';
+      default: return 'bg-slate-800/10 text-slate-400 border-white/10';
+    }
+  };
+
+  return (
+    <div className="w-full max-w-xl glass-panel p-8 border border-white/10 space-y-6 relative overflow-hidden bg-gradient-to-b from-slate-900 to-indigo-950/40">
+      <div className="absolute top-[-100px] right-[-100px] w-[300px] h-[300px] bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div className="flex items-center justify-between mb-2 border-b border-white/5 pb-4">
+        {[1, 2, 3, 4].map((s) => (
+          <React.Fragment key={s}>
+            <div className="flex items-center gap-2">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 ${
+                step === s 
+                  ? 'bg-[#3661FF] text-white ring-4 ring-[#3661FF]/20 shadow-[0_0_10px_rgba(54,97,255,0.4)] font-black' 
+                  : step > s 
+                    ? 'bg-emerald-500 text-white' 
+                    : 'bg-slate-800 text-slate-450 border border-white/10'
+              }`}>
+                {step > s ? <Check className="h-4 w-4" /> : s}
+              </div>
+              <span className={`text-[10px] font-black tracking-wider hidden sm:inline ${
+                step === s ? 'text-slate-200' : 'text-slate-500'
+              }`}>
+                {s === 1 ? (language === 'zh' ? '歡迎' : 'Welcome') :
+                 s === 2 ? (language === 'zh' ? '家庭暱稱' : 'Family Nickname') :
+                 s === 3 ? (language === 'zh' ? '兒童角色' : 'Child Setup') :
+                 (language === 'zh' ? '起步任務' : 'Starter Quests')}
+              </span>
+            </div>
+            {s < 4 && (
+              <div className="flex-1 h-[2px] min-w-[20px] bg-slate-800 relative">
+                <div 
+                  className="absolute top-0 left-0 h-full bg-[#3661FF] transition-all duration-300" 
+                  style={{ width: step > s ? '100%' : '0%' }} 
+                />
+              </div>
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+
+      {step === 1 && (
+        <div className="space-y-6 animate-success">
+          <div className="text-center space-y-2">
+            <span className="text-5xl block select-none animate-bounce-gentle">👋</span>
+            <h2 className="text-xl font-black text-slate-100">{t('parentWizardStep1Title')}</h2>
+            <p className="text-xs text-slate-400 leading-relaxed max-w-sm mx-auto">
+              {t('parentWizardStep1Desc')}
+            </p>
+          </div>
+          <div className="bg-indigo-500/10 border border-indigo-500/20 p-4 rounded-2xl text-left space-y-2">
+            <h4 className="text-xs font-black text-indigo-400 flex items-center gap-1.5 uppercase tracking-wider">
+              ✨ Quick Overview
+            </h4>
+            <ul className="list-disc list-inside space-y-1.5 text-[11px] text-slate-300">
+              <li>{language === 'zh' ? '給您的家庭設定暱稱，並與其他家庭友好競賽排行榜' : 'Give your family a nickname and compete on the leaderboards'}</li>
+              <li>{language === 'zh' ? '為孩子建立專屬角色與職業（智者、探索者、守護者等）' : 'Set up adventurer roles & starting jobs for your children'}</li>
+              <li>{language === 'zh' ? '指派基礎的德智體群美任務，開始賺取經驗值與金幣' : 'Assign five-attribute starter tasks to jumpstart their progress'}</li>
+            </ul>
+          </div>
+          <button
+            onClick={() => setStep(2)}
+            className="w-full py-3 bg-[#3661FF] hover:bg-[#254edb] active:scale-95 text-white font-black text-xs rounded-xl transition-all shadow-lg shadow-indigo-950/40"
+          >
+            {language === 'zh' ? '開始引導 🧙‍♂️' : 'Start Guide 🧙‍♂️'}
+          </button>
+        </div>
+      )}
+
+      {step === 2 && (
+        <div className="space-y-6 animate-success">
+          <div className="space-y-1">
+            <h3 className="text-md font-black text-slate-205 flex items-center gap-2">
+              <span className="text-xl">🏰</span>
+              {t('parentWizardStep2Title')}
+            </h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              {t('parentWizardStep2Desc')}
+            </p>
+          </div>
+
+          <div className="space-y-3 bg-white/5 border border-white/5 p-5 rounded-2xl text-left">
+            <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1.5">
+              {t('familyNicknameLabel')} <span className="text-rose-500">*</span>
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                maxLength={20}
+                value={nickname}
+                onChange={(e) => {
+                  setNickname(e.target.value);
+                  if (e.target.value.length <= 20) {
+                    setNicknameWarning('');
+                  }
+                }}
+                placeholder={t('familyNicknamePlaceholder')}
+                className="w-full bg-slate-900 border border-white/10 rounded-xl px-3.5 py-2.5 pr-14 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#3661FF] focus:border-[#3661FF] transition-all"
+              />
+              <span className={`absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold tabular-nums pointer-events-none ${
+                nickname.length >= 18 ? 'text-rose-455' : 'text-slate-505'
+              }`}>
+                {nickname.length}/20
+              </span>
+            </div>
+            {nicknameWarning && (
+              <p className="text-[10px] font-bold text-rose-400 flex items-center gap-1">
+                ⚠️ {nicknameWarning}
+              </p>
+            )}
+            <p className="text-[9px] text-slate-500">
+              {language === 'zh' ? '例如：「格林冒險小隊」、「馬斯克太空探索隊」。' : 'Example: "Green Adventurers", "Musk Space Team".'}
+            </p>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => setStep(1)}
+              className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white transition-all active:scale-95"
+            >
+              {language === 'zh' ? '上一步' : 'Back'}
+            </button>
+            <button
+              onClick={handleNextStep2}
+              className="flex-1 py-2.5 rounded-xl text-xs font-black bg-[#3661FF] text-white hover:bg-[#254edb] transition-all active:scale-95 shadow-md shadow-indigo-950/20"
+            >
+              {language === 'zh' ? '下一步' : 'Next'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === 3 && (
+        <div className="space-y-6 animate-success">
+          <div className="space-y-1">
+            <h3 className="text-md font-black text-slate-205 flex items-center gap-2">
+              <span className="text-xl">👶</span>
+              {t('parentWizardStep3Title')}
+            </h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              {t('parentWizardStep3Desc')}
+            </p>
+          </div>
+
+          {childSuccessMsg && (
+            <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs text-emerald-400 font-bold animate-success flex items-center gap-2">
+              <span>🎉</span>
+              <span>{childSuccessMsg}</span>
+            </div>
+          )}
+
+          {childStep2Error && (
+            <div className="flex items-start gap-2.5 p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl animate-success">
+              <span className="text-rose-400 text-sm shrink-0">🚫</span>
+              <p className="text-[10px] font-semibold text-rose-300 leading-relaxed">{childStep2Error}</p>
+            </div>
+          )}
+
+          <form onSubmit={handleAddChildProfile} className="bg-white/5 border border-white/5 p-5 rounded-2xl space-y-4 text-left">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1.5">
+                  {t('childNameLabel')} <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    required
+                    maxLength={12}
+                    value={childName}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setChildName(val);
+                      const clean = val.toLowerCase().replace(/[^a-z0-9]/g, '');
+                      if (clean) {
+                        setChildEmail(`${clean}@questgrow.com`);
+                      } else {
+                        setChildEmail('');
+                      }
+                    }}
+                    placeholder={t('childNamePlaceholder')}
+                    className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 pr-12 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#3661FF] focus:border-[#3661FF] transition-all"
+                  />
+                  <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-bold tabular-nums ${
+                    childName.length >= 10 ? 'text-rose-400' : 'text-slate-505'
+                  }`}>
+                    {childName.length}/12
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1.5">
+                  {t('childBirthdayLabel')} <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={childBirthday}
+                  onChange={(e) => setChildBirthday(e.target.value)}
+                  placeholder="e.g. 10/24"
+                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#3661FF] focus:border-[#3661FF] transition-all"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1.5">
+                  {t('childAgeLabel')} <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  required
+                  min="3"
+                  max="14"
+                  value={childAge}
+                  onChange={(e) => setChildAge(parseInt(e.target.value, 10))}
+                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#3661FF] focus:border-[#3661FF] transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1.5">
+                  {t('avatarSelectLabel')}
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setChildAvatar('boy')}
+                    className={`py-1.5 rounded-lg border text-center transition-all flex items-center justify-center gap-1 ${
+                      childAvatar === 'boy' ? 'border-cyan-500 bg-cyan-600/10' : 'border-white/5 bg-white/5'
+                    }`}
+                  >
+                    <span className="text-sm">👦</span>
+                    <span className="text-[9px] font-bold text-slate-300">Boy</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setChildAvatar('girl')}
+                    className={`py-1.5 rounded-lg border text-center transition-all flex items-center justify-center gap-1 ${
+                      childAvatar === 'girl' ? 'border-pink-500 bg-pink-600/10' : 'border-white/5 bg-white/5'
+                    }`}
+                  >
+                    <span className="text-sm">👧</span>
+                    <span className="text-[9px] font-bold text-slate-300">Girl</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {childAge < 8 && (
+              <div className="p-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-[10px] leading-relaxed animate-success">
+                <strong>⚠️ {language === 'zh' ? '已自動啟用注音輔助模式' : 'Bopomofo Assistive Mode Enabled'}</strong>
+                <p className="text-[9px] text-slate-400 mt-0.5">
+                  {language === 'zh' ? '針對年齡小於 8 歲的小孩，系統會在登入時自動以注音標注所有中文文字，協助獨立識字閱讀。' : 'Since child is under 8, standard Bopomofo annotations will render on their UI.'}
+                </p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-white/5 pt-3 mt-1">
+              <div>
+                <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1.5">
+                  {t('emailLabelChild')} <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={childEmail}
+                  onChange={(e) => setChildEmail(e.target.value)}
+                  placeholder="e.g. leo@questgrow.com"
+                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#3661FF] focus:border-[#3661FF]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1.5">
+                  {t('passwordLabelChild')} <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={childPassword}
+                  onChange={(e) => setChildPassword(e.target.value)}
+                  placeholder="Password"
+                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#3661FF] focus:border-[#3661FF]"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1.5">
+                {language === 'zh' ? '選擇初始職業角色' : 'Starting Job Class'}
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {['Explorer', 'Sage', 'Guardian', 'Creator'].map(job => (
+                  <button
+                    key={job}
+                    type="button"
+                    onClick={() => setSelectedJob(job)}
+                    className={`p-2 rounded-lg border text-left transition-all ${
+                      selectedJob === job ? 'border-violet-500 bg-violet-600/10' : 'border-white/5 bg-white/5 hover:border-white/10'
+                    }`}
+                  >
+                    <div className="text-[10px] font-black text-slate-205 mb-0.5">
+                      {language === 'zh' ? JOB_CLASSES[job].nameZh : JOB_CLASSES[job].nameEn}
+                    </div>
+                    <p className="text-[8px] text-slate-505 leading-tight">
+                      {language === 'zh' ? JOB_CLASSES[job].descZh.split('。')[0] : JOB_CLASSES[job].descEn.split('.')[0]}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black text-xs rounded-xl transition-all shadow-md active:scale-95"
+            >
+              ➕ {language === 'zh' ? '確認新增冒險者角色' : 'Confirm Add Adventurer'}
+            </button>
+          </form>
+
+          {children.length > 0 && (
+            <div className="space-y-2 text-left">
+              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                {language === 'zh' ? '目前已建立的冒險者：' : 'Adventurers Created:'}
+              </h4>
+              <div className="grid grid-cols-2 gap-2">
+                {children.map(c => (
+                  <div key={c.id} className="p-2 bg-white/5 border border-white/5 rounded-xl flex items-center gap-2">
+                    <span className="text-xl">{c.avatar === 'boy' ? '👦' : '👧'}</span>
+                    <div className="min-w-0">
+                      <span className="text-xs font-black text-slate-200 block truncate">{c.name}</span>
+                      <span className="text-[8.5px] text-slate-500 font-bold block">Lv.{c.level} • {c.age} Y/O</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setStep(2)}
+              className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white transition-all active:scale-95"
+            >
+              {language === 'zh' ? '上一步' : 'Back'}
+            </button>
+            <button
+              type="button"
+              disabled={children.length === 0}
+              onClick={() => setStep(4)}
+              className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all active:scale-95 shadow-md ${
+                children.length === 0
+                  ? 'bg-slate-800 text-slate-655 cursor-not-allowed border border-white/5'
+                  : 'bg-[#3661FF] text-white hover:bg-[#254edb] shadow-indigo-950/20'
+              }`}
+            >
+              {language === 'zh' ? '下一步' : 'Next'}
+            </button>
+          </div>
+          {children.length === 0 && (
+            <p className="text-[9px] text-slate-550 font-bold text-center">
+              * {language === 'zh' ? '請至少建立一位孩子角色以繼續引導。' : 'Please create at least one child profile to continue.'}
+            </p>
+          )}
+        </div>
+      )}
+
+      {step === 4 && (
+        <div className="space-y-6 animate-success">
+          <div className="space-y-1">
+            <h3 className="text-md font-black text-slate-205 flex items-center gap-2">
+              <span className="text-xl">📜</span>
+              {t('parentWizardStep4Title')}
+            </h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              {t('parentWizardStep4Desc')}
+            </p>
+          </div>
+
+          <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 text-left">
+            {STARTER_QUESTS_TEMPLATES.map((quest, index) => {
+              const isChecked = selectedQuests.includes(index);
+              return (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => {
+                    if (isChecked) {
+                      setSelectedQuests(prev => prev.filter(i => i !== index));
+                    } else {
+                      setSelectedQuests(prev => [...prev, index]);
+                    }
+                  }}
+                  className={`w-full p-3 rounded-xl border text-left transition-all flex items-start gap-3 hover:scale-[1.01] active:scale-95 ${
+                    isChecked 
+                      ? 'border-emerald-500 bg-emerald-600/10' 
+                      : 'border-white/5 bg-white/5 hover:border-white/10'
+                  }`}
+                >
+                  <div className="pt-0.5">
+                    <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${
+                      isChecked ? 'bg-emerald-500 border-emerald-500 text-white shadow-[0_0_8px_rgba(16,185,129,0.2)]' : 'border-white/20'
+                    }`}>
+                      {isChecked && <Check className="h-3 w-3" />}
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-center gap-2 mb-0.5">
+                      <span className="text-[11px] font-black text-slate-202 truncate">
+                        {quest.name}
+                      </span>
+                      <span className={`text-[8.5px] px-1.5 py-0.5 rounded-full border shrink-0 font-bold ${getQuestColor(quest.type)}`}>
+                        {quest.type}
+                      </span>
+                    </div>
+                    <p className="text-[9px] text-slate-400 leading-normal">
+                      {quest.description}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={handleFinishOnboarding}
+              className="w-full py-3 rounded-xl text-xs font-black bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-955 hover:from-emerald-400 hover:to-cyan-400 transition-all active:scale-95 shadow-lg shadow-emerald-950/20"
+            >
+              {t('parentWizardFinishBtn')}
+            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setStep(3)}
+                className="flex-1 py-2 rounded-xl text-xs font-bold bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white transition-all active:scale-95"
+              >
+                {language === 'zh' ? '上一步' : 'Back'}
+              </button>
+              <button
+                onClick={onCompleteOnboarding}
+                className="flex-1 py-2 rounded-xl text-xs font-bold bg-white/5 border border-white/10 text-[#b5b7bc] hover:text-white transition-all active:scale-95"
+              >
+                {t('parentWizardSkipBtn')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 export default ParentPortal;

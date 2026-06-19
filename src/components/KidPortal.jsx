@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { GACHA_POOL, TASK_TEMPLATES } from '../utils/mockData';
 import { useLanguage } from './LanguageContext';
 import Avatar from './Avatar';
+import FamilyLeaderboardView from './FamilyLeaderboardView';
 import { pinyin } from 'pinyin-pro';
 import { pinyinToZhuyin } from 'pinyin-zhuyin';
 import { 
@@ -54,6 +55,8 @@ function KidPortal({
   inventory, 
   wishlist, 
   familyScore,
+  familyNickname,
+  leaderboardData,
   onSubmitTask, 
   onDrawCard, 
   onRequestRedeem, 
@@ -1083,6 +1086,15 @@ function KidPortal({
           <Trophy className="h-4 w-4 text-[#FF9F1C]" />
           {t('tabKidWishlist')}
         </button>
+        <button
+          onClick={() => setActiveSubTab('leaderboard')}
+          className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
+            activeSubTab === 'leaderboard' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
+          }`}
+        >
+          <Trophy className="h-4 w-4 text-violet-400" />
+          {t('tabLeaderboard')}
+        </button>
       </div>
 
       {/* --- Tab 1: Character Sheet --- */}
@@ -2057,6 +2069,16 @@ function KidPortal({
             </>
           )}
         </div>
+      )}
+
+      {/* --- Tab 6: Leaderboard --- */}
+      {activeSubTab === 'leaderboard' && (
+        <FamilyLeaderboardView 
+          leaderboardData={leaderboardData}
+          familyNickname={familyNickname}
+          t={t}
+          language={language}
+        />
       )}
 
       {/* Avatar Selector Modal */}

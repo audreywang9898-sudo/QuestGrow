@@ -2,7 +2,7 @@ import express from 'express';
 import { 
   getFamilyData, getWishlist, addWishlistItem, editWishlistItem, deleteWishlistItem, redeemWishlist,
   getParentGoals, addParentGoal, updateGoalProgress, deleteParentGoal, getWeeklyComp, getEventLogs, addEventLog,
-  updateFamilyGachaPool, updateFamilySettings
+  updateFamilyGachaPool, updateFamilySettings, updateFamilyNickname, getFamilyLeaderboard
 } from '../controllers/familyController.js';
 import { authenticateToken, requireRole } from '../middleware/authMiddleware.js';
 
@@ -11,6 +11,8 @@ const router = express.Router();
 router.get('/', authenticateToken, getFamilyData);
 router.put('/gacha-pool', authenticateToken, requireRole('parent'), updateFamilyGachaPool);
 router.put('/settings', authenticateToken, requireRole('parent'), updateFamilySettings);
+router.put('/nickname', authenticateToken, requireRole('parent'), updateFamilyNickname);
+router.get('/leaderboard', authenticateToken, getFamilyLeaderboard);
 
 // Wishlist
 router.get('/wishlist', authenticateToken, getWishlist);

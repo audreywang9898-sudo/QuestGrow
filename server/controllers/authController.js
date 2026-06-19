@@ -65,7 +65,7 @@ export const registerParent = async (req, res) => {
     // Create the Parent User
     const newUser = await pool.query(
       `INSERT INTO users (family_id, email, password_hash, name, role, avatar) 
-       VALUES ($1, $2, $3, $4, 'parent', $5) RETURNING id, email, name, role, avatar, family_id, child_id`,
+       VALUES ($1, $2, $3, $4, 'parent', $5) RETURNING id, email, name, role, avatar, family_id, child_id, onboarding_completed`,
       [familyId, dbEmail, passwordHash, name, avatar || 'girl']
     );
 
@@ -73,6 +73,7 @@ export const registerParent = async (req, res) => {
 
     const user = newUser.rows[0];
     user.childId = user.child_id;
+    user.onboardingCompleted = user.onboarding_completed;
     const token = generateToken(user);
 
     res.status(201).json({
@@ -98,7 +99,7 @@ export const login = async (req, res) => {
   try {
     const dbEmail = email.toLowerCase();
     const result = await pool.query(
-      `SELECT u.id, u.family_id, u.email, u.password_hash, u.name, u.role, u.avatar, u.child_id
+      `SELECT u.id, u.family_id, u.email, u.password_hash, u.name, u.role, u.avatar, u.child_id, u.onboarding_completed
        FROM users u
        WHERE u.email = $1`,
       [dbEmail]
@@ -117,6 +118,7 @@ export const login = async (req, res) => {
     // Exclude password_hash from response
     delete user.password_hash;
     user.childId = user.child_id;
+    user.onboardingCompleted = user.onboarding_completed;
     const token = generateToken(user);
 
     res.json({
@@ -172,7 +174,7 @@ export const googleLogin = async (req, res) => {
     const dbEmail = email.toLowerCase();
     // 1. Search by Google ID or email
     const findUser = await pool.query(
-      'SELECT id, family_id, email, name, role, avatar, google_id, child_id FROM users WHERE google_id = $1 OR email = $2',
+      'SELECT id, family_id, email, name, role, avatar, google_id, child_id, onboarding_completed FROM users WHERE google_id = $1 OR email = $2',
       [googleId, dbEmail]
     );
 
@@ -182,13 +184,14 @@ export const googleLogin = async (req, res) => {
       // If email matched but google_id wasn't linked, link it now
       if (!user.google_id) {
         const updateResult = await pool.query(
-          'UPDATE users SET google_id = $1 WHERE id = $2 RETURNING id, family_id, email, name, role, avatar, child_id',
+          'UPDATE users SET google_id = $1 WHERE id = $2 RETURNING id, family_id, email, name, role, avatar, child_id, onboarding_completed',
           [googleId, user.id]
         );
         user = updateResult.rows[0];
       }
 
       user.childId = user.child_id;
+      user.onboardingCompleted = user.onboarding_completed;
       const token = generateToken(user);
       return res.json({
         message: getMessage('GOOGLE_LOGIN_SUCCESS'),
@@ -218,7 +221,7 @@ export const googleLogin = async (req, res) => {
     // Create Google User
     const newUser = await pool.query(
       `INSERT INTO users (family_id, email, password_hash, name, role, avatar, google_id) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, family_id, email, name, role, avatar, child_id`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, family_id, email, name, role, avatar, child_id, onboarding_completed`,
       [familyId, dbEmail, passwordHash, name, targetRole, avatar, googleId]
     );
     const userId = newUser.rows[0].id;
@@ -239,7 +242,8 @@ export const googleLogin = async (req, res) => {
     const user = {
       ...newUser.rows[0],
       child_id: childId,
-      childId: childId
+      childId: childId,
+      onboardingCompleted: newUser.rows[0].onboarding_completed
     };
     const token = generateToken(user);
 
@@ -317,7 +321,7 @@ export const getAuthConfig = async (req, res) => {
 export const getMe = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT id, family_id, email, name, role, avatar, child_id, google_id
+      `SELECT id, family_id, email, name, role, avatar, child_id, google_id, onboarding_completed
        FROM users
        WHERE id = $1`,
       [req.user.id]
@@ -329,6 +333,7 @@ export const getMe = async (req, res) => {
 
     const user = result.rows[0];
     user.childId = user.child_id;
+    user.onboardingCompleted = user.onboarding_completed;
 
     // Generate a fresh token with the current database information
     const token = generateToken(user);
@@ -340,5 +345,20 @@ export const getMe = async (req, res) => {
   } catch (error) {
     console.error('Get me error:', error);
     res.status(500).json({ message: '獲取使用者資訊失敗。' });
+  }
+};
+
+// 7. Complete Onboarding (Parent only)
+export const completeOnboarding = async (req, res) => {
+  const userId = req.user.id;
+  try {
+    await pool.query(
+      'UPDATE users SET onboarding_completed = true WHERE id = $1',
+      [userId]
+    );
+    res.json({ message: '家長引導設定已完成！' });
+  } catch (error) {
+    console.error('completeOnboarding error:', error);
+    res.status(500).json({ message: '完成引導設定失敗。' });
   }
 };

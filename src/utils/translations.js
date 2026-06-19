@@ -429,7 +429,29 @@ export const translations = {
     cardValidityLabel: "使用有效期限",
     cardStyleLabel: "展示特效/樣式",
     deleteCardBtn: "刪除卡片",
-    addCardBtn: "新增卡片至此分組"
+    addCardBtn: "新增卡片至此分組",
+    // Onboarding & Leaderboard
+    tabLeaderboard: "家庭排行榜",
+    leaderboardTitle: "🏆 跨家庭分數排行榜",
+    leaderboardDesc: "與其他冒險家庭進行友好競爭，比比看誰是本週最強的成長小隊！",
+    leaderboardRank: "排名",
+    leaderboardFamily: "家庭",
+    leaderboardScore: "成長積分",
+    leaderboardNoData: "目前沒有其他家庭的排行數據。",
+    familyNicknameLabel: "家庭暱稱",
+    familyNicknamePlaceholder: "例如：格林冒險隊、王家探險小隊",
+    parentWizardTitle: "🧙‍♂️ 新家長冒險指南",
+    parentWizardStep1Title: "👋 歡迎來到 QuestGrow！",
+    parentWizardStep1Desc: "QuestGrow 是一款把「全人成長」與「家庭理財」變成 RPG 冒險遊戲的系統。在這裡，孩子可以藉由完成您的任務來獲得金幣、經驗與冒險獎勵！",
+    parentWizardStep2Title: "🏰 第一步：設定您的專屬家庭暱稱",
+    parentWizardStep2Desc: "請給您的家庭起一個有歸屬感的團隊名稱（例如：王家冒險隊）。這將顯示在未來的家庭排行榜中！",
+    parentWizardStep3Title: "👶 第二步：建立您的第一個小孩角色",
+    parentWizardStep3Desc: "為您的第一個孩子建立專屬的 RPG 冒險角色。系統將為其自動生成一個登入帳密。",
+    parentWizardStep4Title: "📜 第三步：匯入五育基礎起步任務",
+    parentWizardStep4Desc: "一鍵匯入系統為孩子精心挑選的 5 個基礎起步任務（涵蓋德、智、體、群、美），讓孩子登入後可以直接開始冒險！",
+    parentWizardFinishBtn: "完成設定，開啟冒險！",
+    parentWizardSkipBtn: "之後再說，先進入工作台",
+    parentWizardWelcomeBack: "歡迎回來，繼續完成您的家長引導設定！"
   },
   en: {
     // Header
@@ -859,6 +881,28 @@ export const translations = {
     cardValidityLabel: "Expiration / Validity",
     cardStyleLabel: "Display Style / Effects",
     deleteCardBtn: "Delete Card",
-    addCardBtn: "Add Card to Group"
+    addCardBtn: "Add Card to Group",
+    // Onboarding & Leaderboard
+    tabLeaderboard: "Leaderboard",
+    leaderboardTitle: "🏆 Family Leaderboard",
+    leaderboardDesc: "Compete with other adventurous families to see who has the strongest growth team!",
+    leaderboardRank: "Rank",
+    leaderboardFamily: "Family",
+    leaderboardScore: "Growth Score",
+    leaderboardNoData: "No leaderboard data available.",
+    familyNicknameLabel: "Family Nickname",
+    familyNicknamePlaceholder: "e.g., Green Adventurers",
+    parentWizardTitle: "🧙‍♂️ New Parent Onboarding Guide",
+    parentWizardStep1Title: "👋 Welcome to QuestGrow!",
+    parentWizardStep1Desc: "QuestGrow is a family growth system that turns character building and financial literacy into an RPG adventure. Children complete quests assigned by you to earn gold, EXP, and rewards!",
+    parentWizardStep2Title: "🏰 Step 1: Set Family Nickname",
+    parentWizardStep2Desc: "Give your family an adventurous team name (e.g. Green Adventurers). This will be displayed in the family leaderboard!",
+    parentWizardStep3Title: "👶 Step 2: Create First Child Profile",
+    parentWizardStep3Desc: "Create the first RPG character profile for your child. The system will auto-generate login credentials.",
+    parentWizardStep4Title: "📜 Step 3: Import Starter Quests",
+    parentWizardStep4Desc: "One-click to import 5 default starter quests (Responsibility, Wisdom, Courage, Empathy, Creativity) so your child can start playing immediately!",
+    parentWizardFinishBtn: "Finish Setup, Start Adventure!",
+    parentWizardSkipBtn: "Do it later, enter desk",
+    parentWizardWelcomeBack: "Welcome back, continue your parent onboarding setup!"
   }
 };

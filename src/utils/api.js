@@ -439,4 +439,29 @@ export const api = {
     });
     return handleResponse(res);
   },
+
+  completeOnboarding: async () => {
+    const res = await fetch(`${API_URL}/auth/complete-onboarding`, {
+      method: 'POST',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  updateFamilyNickname: async (nickname) => {
+    const res = await fetch(`${API_URL}/family/nickname`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify({ nickname }),
+    });
+    return handleResponse(res);
+  },
+
+  getFamilyLeaderboard: async () => {
+    const res = await fetch(`${API_URL}/family/leaderboard`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
 };
