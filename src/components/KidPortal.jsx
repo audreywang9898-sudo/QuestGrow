@@ -459,61 +459,64 @@ function KidPortal({
     window.speechSynthesis.cancel();
     setSpeakingTaskId(null);
     setTourSpeaking(false);
-
-    const prefixZh = language === 'zh' ? '每日鼓勵：' : 'Daily Encouragement: ';
-    const utterZh = new SpeechSynthesisUtterance(prefixZh + dailyProverb.contentZh);
-    utterZh.lang = 'zh-TW';
-    utterZh.rate = 0.9;
-    utterZh.pitch = 1.1;
-
-    const voices = window.speechSynthesis.getVoices();
-    const preferredZhNames = ['hanhan', 'yating', 'ting-ting', 'tingting', 'google 國語', 'google 臺灣', 'xiaoxiao', 'hsiaoyu', 'yaoyao', 'mei-jia', 'sin-ji'];
-    let selectedZhVoice = null;
-    for (const name of preferredZhNames) {
-      const found = voices.find(v => v.name.toLowerCase().includes(name) && (v.lang.includes('zh') || v.lang.includes('zho')));
-      if (found) {
-        selectedZhVoice = found;
-        break;
-      }
-    }
-    if (!selectedZhVoice) {
-      selectedZhVoice = voices.find(v => v.lang.toLowerCase().includes('zh'));
-    }
-    if (selectedZhVoice) {
-      utterZh.voice = selectedZhVoice;
-    }
-
-    const utterEn = new SpeechSynthesisUtterance(dailyProverb.contentEn);
-    utterEn.lang = 'en-US';
-    utterEn.rate = 0.9;
-    utterEn.pitch = 1.1;
-
-    const preferredEnNames = ['zira', 'samantha', 'aria', 'jenny', 'google us english'];
-    let selectedEnVoice = null;
-    for (const name of preferredEnNames) {
-      const found = voices.find(v => v.name.toLowerCase().includes(name) && v.lang.includes('en'));
-      if (found) {
-        selectedEnVoice = found;
-        break;
-      }
-    }
-    if (!selectedEnVoice) {
-      selectedEnVoice = voices.find(v => v.lang.toLowerCase().includes('en'));
-    }
-    if (selectedEnVoice) {
-      utterEn.voice = selectedEnVoice;
-    }
-
-    utterEn.onend = () => {
-      setProverbSpeaking(false);
-    };
-
-    utterZh.onerror = () => setProverbSpeaking(false);
-    utterEn.onerror = () => setProverbSpeaking(false);
-
     setProverbSpeaking(true);
-    window.speechSynthesis.speak(utterZh);
-    window.speechSynthesis.speak(utterEn);
+
+    // 80ms delay to clear call stack and allow speechSynthesis.cancel() to finalize on older engines
+    setTimeout(() => {
+      const prefixZh = language === 'zh' ? '每日鼓勵：' : 'Daily Encouragement: ';
+      const utterZh = new SpeechSynthesisUtterance(prefixZh + dailyProverb.contentZh);
+      utterZh.lang = 'zh-TW';
+      utterZh.rate = 0.9;
+      utterZh.pitch = 1.1;
+
+      const voices = window.speechSynthesis.getVoices();
+      const preferredZhNames = ['hanhan', 'yating', 'ting-ting', 'tingting', 'google 國語', 'google 臺灣', 'xiaoxiao', 'hsiaoyu', 'yaoyao', 'mei-jia', 'sin-ji'];
+      let selectedZhVoice = null;
+      for (const name of preferredZhNames) {
+        const found = voices.find(v => v.name.toLowerCase().includes(name) && (v.lang.includes('zh') || v.lang.includes('zho')));
+        if (found) {
+          selectedZhVoice = found;
+          break;
+        }
+      }
+      if (!selectedZhVoice) {
+        selectedZhVoice = voices.find(v => v.lang.toLowerCase().includes('zh'));
+      }
+      if (selectedZhVoice) {
+        utterZh.voice = selectedZhVoice;
+      }
+
+      const utterEn = new SpeechSynthesisUtterance(dailyProverb.contentEn);
+      utterEn.lang = 'en-US';
+      utterEn.rate = 0.9;
+      utterEn.pitch = 1.1;
+
+      const preferredEnNames = ['zira', 'samantha', 'aria', 'jenny', 'google us english'];
+      let selectedEnVoice = null;
+      for (const name of preferredEnNames) {
+        const found = voices.find(v => v.name.toLowerCase().includes(name) && v.lang.includes('en'));
+        if (found) {
+          selectedEnVoice = found;
+          break;
+        }
+      }
+      if (!selectedEnVoice) {
+        selectedEnVoice = voices.find(v => v.lang.toLowerCase().includes('en'));
+      }
+      if (selectedEnVoice) {
+        utterEn.voice = selectedEnVoice;
+      }
+
+      utterEn.onend = () => {
+        setProverbSpeaking(false);
+      };
+
+      utterZh.onerror = () => setProverbSpeaking(false);
+      utterEn.onerror = () => setProverbSpeaking(false);
+
+      window.speechSynthesis.speak(utterZh);
+      window.speechSynthesis.speak(utterEn);
+    }, 80);
   };
 
   // Stop synthesis when component unmounts
