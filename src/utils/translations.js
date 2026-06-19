@@ -451,8 +451,9 @@ export const translations = {
     parentWizardStep4Desc: "一鍵匯入系統為孩子精心挑選的 5 個基礎起步任務（涵蓋德、智、體、群、美），讓孩子登入後可以直接開始冒險！",
     parentWizardFinishBtn: "完成設定，開啟冒險！",
     parentWizardSkipBtn: "之後再說，先進入工作台",
-    parentWizardWelcomeBack: "歡迎回來，繼續完成您的家長引導設定！",
-    dailyProverbLabel: "💡 每日鼓勵 | Daily Encouragement"
+    dailyProverbLabel: "💡 每日鼓勵 | Daily Encouragement",
+    startSpeaking: "語音朗讀",
+    stopSpeaking: "停止朗讀"
   },
   en: {
     // Header
@@ -904,7 +905,8 @@ export const translations = {
     parentWizardStep4Desc: "One-click to import 5 default starter quests (Responsibility, Wisdom, Courage, Empathy, Creativity) so your child can start playing immediately!",
     parentWizardFinishBtn: "Finish Setup, Start Adventure!",
     parentWizardSkipBtn: "Do it later, enter desk",
-    parentWizardWelcomeBack: "Welcome back, continue your parent onboarding setup!",
-    dailyProverbLabel: "💡 Daily Encouragement"
+    dailyProverbLabel: "💡 Daily Encouragement",
+    startSpeaking: "Read Aloud",
+    stopSpeaking: "Stop Reading"
   }
 };

@@ -312,6 +312,7 @@ function KidPortal({
   // TTS Voice Synthesis States and Functions
   const [speakingTaskId, setSpeakingTaskId] = useState(null);
   const [tourSpeaking, setTourSpeaking] = useState(false);
+  const [proverbSpeaking, setProverbSpeaking] = useState(false);
   const [showCompletedHistory, setShowCompletedHistory] = useState(false);
   const [showBackpackHistory, setShowBackpackHistory] = useState(false);
   const [swappingTaskId, setSwappingTaskId] = useState(null);
@@ -330,6 +331,7 @@ function KidPortal({
 
     window.speechSynthesis.cancel();
     setSpeakingTaskId(null); // Clear task speech status if any
+    setProverbSpeaking(false);
 
     const title = t(`kidTourStep${stepNum}Title`);
     const desc = t(`kidTourStep${stepNum}Desc`);
@@ -407,6 +409,8 @@ function KidPortal({
     }
 
     window.speechSynthesis.cancel();
+    setProverbSpeaking(false);
+    setTourSpeaking(false);
 
     let textToSpeak = '';
     if (type === 'task') {
@@ -438,6 +442,85 @@ function KidPortal({
 
     setSpeakingTaskId(itemId);
     window.speechSynthesis.speak(utterance);
+  };
+
+  const speakProverb = () => {
+    if (!('speechSynthesis' in window)) {
+      alert(language === 'zh' ? '您的瀏覽器不支援語音播放功能。' : 'Your browser does not support voice playback.');
+      return;
+    }
+
+    if (proverbSpeaking) {
+      window.speechSynthesis.cancel();
+      setProverbSpeaking(false);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    setSpeakingTaskId(null);
+    setTourSpeaking(false);
+
+    const prefixZh = language === 'zh' ? '每日鼓勵：' : 'Daily Encouragement: ';
+    const utterZh = new SpeechSynthesisUtterance(prefixZh + dailyProverb.contentZh);
+    utterZh.lang = 'zh-TW';
+    utterZh.rate = 0.9;
+    utterZh.pitch = 1.1;
+
+    const voices = window.speechSynthesis.getVoices();
+    const preferredZhNames = ['hanhan', 'yating', 'ting-ting', 'tingting', 'google 國語', 'google 臺灣', 'xiaoxiao', 'hsiaoyu', 'yaoyao', 'mei-jia', 'sin-ji'];
+    let selectedZhVoice = null;
+    for (const name of preferredZhNames) {
+      const found = voices.find(v => v.name.toLowerCase().includes(name) && (v.lang.includes('zh') || v.lang.includes('zho')));
+      if (found) {
+        selectedZhVoice = found;
+        break;
+      }
+    }
+    if (!selectedZhVoice) {
+      selectedZhVoice = voices.find(v => v.lang.toLowerCase().includes('zh'));
+    }
+    if (selectedZhVoice) {
+      utterZh.voice = selectedZhVoice;
+    }
+
+    const utterEn = new SpeechSynthesisUtterance(dailyProverb.contentEn);
+    utterEn.lang = 'en-US';
+    utterEn.rate = 0.9;
+    utterEn.pitch = 1.1;
+
+    const preferredEnNames = ['zira', 'samantha', 'aria', 'jenny', 'google us english'];
+    let selectedEnVoice = null;
+    for (const name of preferredEnNames) {
+      const found = voices.find(v => v.name.toLowerCase().includes(name) && v.lang.includes('en'));
+      if (found) {
+        selectedEnVoice = found;
+        break;
+      }
+    }
+    if (!selectedEnVoice) {
+      selectedEnVoice = voices.find(v => v.lang.toLowerCase().includes('en'));
+    }
+    if (selectedEnVoice) {
+      utterEn.voice = selectedEnVoice;
+    }
+
+    utterZh.onend = () => {
+      setTimeout(() => {
+        if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+          window.speechSynthesis.speak(utterEn);
+        }
+      }, 500);
+    };
+
+    utterEn.onend = () => {
+      setProverbSpeaking(false);
+    };
+
+    utterZh.onerror = () => setProverbSpeaking(false);
+    utterEn.onerror = () => setProverbSpeaking(false);
+
+    setProverbSpeaking(true);
+    window.speechSynthesis.speak(utterZh);
   };
 
   // Stop synthesis when component unmounts
@@ -1000,6 +1083,17 @@ function KidPortal({
               {dailyProverb.contentEn}
             </div>
           </div>
+          <button
+            onClick={speakProverb}
+            className={`p-3 rounded-xl border transition-all duration-200 flex items-center justify-center active:scale-95 ${
+              proverbSpeaking
+                ? 'bg-rose-500/20 border-rose-500/40 text-rose-400 shadow-[0_0_10px_rgba(244,63,94,0.15)] animate-pulse'
+                : 'bg-violet-600/10 border-violet-500/20 text-violet-400 hover:bg-violet-600/20 hover:border-violet-500/40 shadow-[0_0_10px_rgba(139,92,246,0.05)]'
+            }`}
+            title={proverbSpeaking ? t('stopSpeaking') : t('startSpeaking')}
+          >
+            {proverbSpeaking ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+          </button>
         </div>
       )}
 
