@@ -464,4 +464,13 @@ export const api = {
     });
     return handleResponse(res);
   },
+
+  getDailyProverb: async (dateStr) => {
+    const queryParam = dateStr ? `?date=${dateStr}` : '';
+    const res = await fetch(`${API_URL}/proverbs/daily${queryParam}`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
 };

@@ -75,7 +75,11 @@ function KidPortal({
   onToggleEquip,
   gachaPool,
   familySettings = { zhuyinUnder8: true },
-  onBuyTicketWithGold
+  onBuyTicketWithGold,
+  dailyProverb = {
+    contentZh: "千里之行，始於足下。",
+    contentEn: "A journey of a thousand miles begins with a single step."
+  }
 }) {
   const { t, language } = useLanguage();
 
@@ -978,6 +982,27 @@ function KidPortal({
 
         <span className="text-xs text-slate-500 font-medium">{t('simulatedDateLabel')} {simulatedDate}</span>
       </div>
+
+      {/* Daily Proverb Card */}
+      {dailyProverb && (
+        <div className="glass-panel p-5 bg-gradient-to-r from-[#1b1c2b] via-[#21173a]/80 to-[#1b1c2b] border border-violet-500/20 shadow-[0_0_15px_rgba(139,92,246,0.15)] rounded-2xl flex flex-col sm:flex-row items-center gap-4 hover:border-violet-500/35 hover:shadow-[0_0_20px_rgba(139,92,246,0.25)] transition-all duration-300">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-violet-600/20 border border-violet-500/30 text-violet-400 shadow-[0_0_10px_rgba(139,92,246,0.1)]">
+            <Sparkles className="h-6 w-6 animate-pulse" />
+          </div>
+          <div className="space-y-1 text-center sm:text-left flex-1">
+            <div className="text-[10px] text-violet-400 font-black uppercase tracking-widest">
+              {t('dailyProverbLabel')}
+            </div>
+            <div className="text-sm font-extrabold text-slate-200 leading-relaxed">
+              {renderTextWithZhuyin(dailyProverb.contentZh)}
+            </div>
+            <div className="text-xs font-semibold text-slate-400 italic font-mono">
+              {dailyProverb.contentEn}
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {/* Restart Tour button */}
       {!isReadOnly && (

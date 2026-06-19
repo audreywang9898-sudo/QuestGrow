@@ -111,6 +111,10 @@ function App() {
   const [familySettings, setFamilySettings] = useState({ zhuyinUnder8: true });
   const [familyNickname, setFamilyNickname] = useState('');
   const [leaderboardData, setLeaderboardData] = useState([]);
+  const [dailyProverb, setDailyProverb] = useState({
+    contentZh: "千里之行，始於足下。",
+    contentEn: "A journey of a thousand miles begins with a single step."
+  });
   
   // --- Toast State ---
   const [toasts, setToasts] = useState([]);
@@ -193,6 +197,15 @@ function App() {
         setLeaderboardData(leaderboard);
       } catch (e) {
         console.error("Leaderboard fetch error:", e);
+      }
+
+      try {
+        const proverbData = await api.getDailyProverb(getSimulatedDateString());
+        if (proverbData) {
+          setDailyProverb(proverbData);
+        }
+      } catch (e) {
+        console.error("Proverb fetch error:", e);
       }
     } catch (error) {
       console.error('Fetch all data error:', error);
@@ -979,6 +992,7 @@ function App() {
             gachaPool={gachaPool}
             familySettings={familySettings}
             onBuyTicketWithGold={handleBuyTicketWithGold}
+            dailyProverb={dailyProverb}
           />
         ) : (
           <ParentPortal 

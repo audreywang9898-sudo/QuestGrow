@@ -11,7 +11,9 @@ import taskRoutes from './routes/taskRoutes.js';
 import itemRoutes from './routes/itemRoutes.js';
 import familyRoutes from './routes/familyRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import proverbRoutes from './routes/proverbRoutes.js';
 import { getMessage, languageMiddleware } from './utils/messageManager.js';
+
 
 dotenv.config();
 
@@ -101,6 +103,8 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/family', familyRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/proverbs', proverbRoutes);
+
 
 // ── 8. SPA Fallback ───────────────────────────────────────────────────
 app.get('*', (req, res) => {

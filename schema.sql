@@ -14,6 +14,8 @@ DROP TABLE IF EXISTS tasks CASCADE;
 DROP TABLE IF EXISTS children CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS families CASCADE;
+DROP TABLE IF EXISTS daily_proverbs CASCADE;
+
 
 -- 1. Families Table
 CREATE TABLE families (
@@ -223,3 +225,11 @@ VALUES
 INSERT INTO weekly_competition (id, family_id, week_range, champions, mvp_task, devil_task, family_title)
 VALUES
 ('00003333-3333-3333-3333-333333333333', 'f1111111-1111-1111-1111-111111111111', '05/25 ~ 05/31', '{"taskCount": "小格林 (Leo) [14 個任務]", "growthRate": "小格林 (Leo) [+150% EXP]", "courage": "小格林 (Leo) [超慢跑挑戰成功]", "creativity": "小格林 (Leo) [樂高飛船創作]"}', '自主整理房間與書桌 (完成度 92%)', '戶外超慢跑 1.5 公里 (完成度 40%)', '「超級探險小隊」✨');
+
+-- 10. Daily Proverbs Table
+CREATE TABLE daily_proverbs (
+    id SERIAL PRIMARY KEY,
+    content_zh VARCHAR(500) NOT NULL,
+    content_en VARCHAR(500) NOT NULL
+);
+
