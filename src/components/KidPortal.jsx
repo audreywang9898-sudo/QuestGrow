@@ -504,14 +504,6 @@ function KidPortal({
       utterEn.voice = selectedEnVoice;
     }
 
-    utterZh.onend = () => {
-      setTimeout(() => {
-        if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
-          window.speechSynthesis.speak(utterEn);
-        }
-      }, 500);
-    };
-
     utterEn.onend = () => {
       setProverbSpeaking(false);
     };
@@ -521,6 +513,7 @@ function KidPortal({
 
     setProverbSpeaking(true);
     window.speechSynthesis.speak(utterZh);
+    window.speechSynthesis.speak(utterEn);
   };
 
   // Stop synthesis when component unmounts
