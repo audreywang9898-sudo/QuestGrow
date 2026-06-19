@@ -82,6 +82,23 @@ function KidPortal({
   }
 }) {
   const { t, language } = useLanguage();
+  const activeUtterancesRef = React.useRef([]);
+
+  const keepUtteranceAlive = (utterance) => {
+    if (!activeUtterancesRef.current) activeUtterancesRef.current = [];
+    activeUtterancesRef.current.push(utterance);
+    if (typeof window !== 'undefined') {
+      window._activeUtterances = window._activeUtterances || [];
+      window._activeUtterances.push(utterance);
+    }
+  };
+
+  const clearAliveUtterances = () => {
+    activeUtterancesRef.current = [];
+    if (typeof window !== 'undefined') {
+      window._activeUtterances = [];
+    }
+  };
 
   const renderTextWithZhuyin = (text) => {
     if (!text) return '';
@@ -268,6 +285,7 @@ function KidPortal({
   React.useEffect(() => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
+      clearAliveUtterances();
     }
     setTourSpeaking(false);
 
@@ -325,11 +343,13 @@ function KidPortal({
 
     if (tourSpeaking) {
       window.speechSynthesis.cancel();
+      clearAliveUtterances();
       setTourSpeaking(false);
       return;
     }
 
     window.speechSynthesis.cancel();
+    clearAliveUtterances();
     setSpeakingTaskId(null); // Clear task speech status if any
     setProverbSpeaking(false);
     setTourSpeaking(true);
@@ -386,14 +406,27 @@ function KidPortal({
 
       utterance.onend = () => {
         setTourSpeaking(false);
+        if (activeUtterancesRef.current) {
+          activeUtterancesRef.current = activeUtterancesRef.current.filter(u => u !== utterance);
+        }
+        if (typeof window !== 'undefined' && window._activeUtterances) {
+          window._activeUtterances = window._activeUtterances.filter(u => u !== utterance);
+        }
       };
 
       utterance.onerror = () => {
         setTourSpeaking(false);
+        if (activeUtterancesRef.current) {
+          activeUtterancesRef.current = activeUtterancesRef.current.filter(u => u !== utterance);
+        }
+        if (typeof window !== 'undefined' && window._activeUtterances) {
+          window._activeUtterances = window._activeUtterances.filter(u => u !== utterance);
+        }
       };
 
+      keepUtteranceAlive(utterance);
       window.speechSynthesis.speak(utterance);
-    }, 80);
+    }, 100);
   };
 
   const handleSpeak = (item, type = 'task') => {
@@ -406,16 +439,18 @@ function KidPortal({
 
     if (speakingTaskId === itemId) {
       window.speechSynthesis.cancel();
+      clearAliveUtterances();
       setSpeakingTaskId(null);
       return;
     }
 
     window.speechSynthesis.cancel();
+    clearAliveUtterances();
     setProverbSpeaking(false);
     setTourSpeaking(false);
     setSpeakingTaskId(itemId);
 
-    // 80ms delay to clear call stack and allow speechSynthesis.cancel() to finalize
+    // 100ms delay to clear call stack and allow speechSynthesis.cancel() to finalize
     setTimeout(() => {
       let textToSpeak = '';
       if (type === 'task') {
@@ -439,14 +474,27 @@ function KidPortal({
 
       utterance.onend = () => {
         setSpeakingTaskId(null);
+        if (activeUtterancesRef.current) {
+          activeUtterancesRef.current = activeUtterancesRef.current.filter(u => u !== utterance);
+        }
+        if (typeof window !== 'undefined' && window._activeUtterances) {
+          window._activeUtterances = window._activeUtterances.filter(u => u !== utterance);
+        }
       };
 
       utterance.onerror = () => {
         setSpeakingTaskId(null);
+        if (activeUtterancesRef.current) {
+          activeUtterancesRef.current = activeUtterancesRef.current.filter(u => u !== utterance);
+        }
+        if (typeof window !== 'undefined' && window._activeUtterances) {
+          window._activeUtterances = window._activeUtterances.filter(u => u !== utterance);
+        }
       };
 
+      keepUtteranceAlive(utterance);
       window.speechSynthesis.speak(utterance);
-    }, 80);
+    }, 100);
   };
 
   const speakProverb = () => {
@@ -457,16 +505,18 @@ function KidPortal({
 
     if (proverbSpeaking) {
       window.speechSynthesis.cancel();
+      clearAliveUtterances();
       setProverbSpeaking(false);
       return;
     }
 
     window.speechSynthesis.cancel();
+    clearAliveUtterances();
     setSpeakingTaskId(null);
     setTourSpeaking(false);
     setProverbSpeaking(true);
 
-    // 80ms delay to clear call stack and allow speechSynthesis.cancel() to finalize on older engines
+    // 100ms delay to clear call stack and allow speechSynthesis.cancel() to finalize
     setTimeout(() => {
       const prefixZh = language === 'zh' ? '每日鼓勵：' : 'Daily Encouragement: ';
       const utterZh = new SpeechSynthesisUtterance(prefixZh + dailyProverb.contentZh);
@@ -512,23 +562,55 @@ function KidPortal({
         utterEn.voice = selectedEnVoice;
       }
 
-      utterEn.onend = () => {
-        setProverbSpeaking(false);
+      utterZh.onend = () => {
+        if (activeUtterancesRef.current) {
+          activeUtterancesRef.current = activeUtterancesRef.current.filter(u => u !== utterZh);
+        }
+        if (typeof window !== 'undefined' && window._activeUtterances) {
+          window._activeUtterances = window._activeUtterances.filter(u => u !== utterZh);
+        }
       };
 
-      utterZh.onerror = () => setProverbSpeaking(false);
-      utterEn.onerror = () => setProverbSpeaking(false);
+      utterEn.onend = () => {
+        setProverbSpeaking(false);
+        if (activeUtterancesRef.current) {
+          activeUtterancesRef.current = activeUtterancesRef.current.filter(u => u !== utterEn);
+        }
+        if (typeof window !== 'undefined' && window._activeUtterances) {
+          window._activeUtterances = window._activeUtterances.filter(u => u !== utterEn);
+        }
+      };
+
+      const handleErr = (u) => {
+        setProverbSpeaking(false);
+        if (activeUtterancesRef.current) {
+          activeUtterancesRef.current = activeUtterancesRef.current.filter(item => item !== u);
+        }
+        if (typeof window !== 'undefined' && window._activeUtterances) {
+          window._activeUtterances = window._activeUtterances.filter(item => item !== u);
+        }
+      };
+
+      utterZh.onerror = () => handleErr(utterZh);
+      utterEn.onerror = () => handleErr(utterEn);
+
+      keepUtteranceAlive(utterZh);
+      keepUtteranceAlive(utterEn);
 
       window.speechSynthesis.speak(utterZh);
       window.speechSynthesis.speak(utterEn);
-    }, 80);
+    }, 100);
   };
 
-  // Stop synthesis when component unmounts
+  // Initialize voices and stop synthesis when component unmounts
   React.useEffect(() => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.getVoices();
+    }
     return () => {
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
+        clearAliveUtterances();
       }
     };
   }, []);
