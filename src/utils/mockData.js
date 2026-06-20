@@ -21,6 +21,27 @@ export const INITIAL_CHILD_STATS = {
   }
 };
 
+export const EMPTY_CHILD_STATS = {
+  id: "",
+  name: "",
+  age: 0,
+  birthday: "",
+  avatar: "boy",
+  level: 1,
+  exp: 0,
+  expNeeded: 100,
+  gold: 0,
+  tickets: 0,
+  jobClass: "",
+  attributes: {
+    Wisdom: 0,
+    Responsibility: 0,
+    Courage: 0,
+    Empathy: 0,
+    Creativity: 0
+  }
+};
+
 export const TASK_TEMPLATES = [
   {
     id: "t1",
@@ -1701,17 +1722,17 @@ export const INITIAL_WISHLIST = [
 ];
 
 export const INITIAL_REDEEM_LOGS = [
-  { id: "rl-1", cardName: "額外遊戲時間 30 分鐘", kidName: "小格林 (Leo)", dateRedeemed: "2026-05-29", status: "已核銷", reviewer: "Audrey (媽媽)" },
-  { id: "rl-2", cardName: "晚餐選擇權", kidName: "小格林 (Leo)", dateRedeemed: "2026-05-27", status: "已核銷", reviewer: "Richard (爸爸)" }
+  { id: "rl-1", cardName: "額外遊戲時間 30 分鐘", kidName: "Michelle", dateRedeemed: "2026-05-29", status: "已核銷", reviewer: "Audrey (媽媽)" },
+  { id: "rl-2", cardName: "晚餐選擇權", kidName: "Michelle", dateRedeemed: "2026-05-27", status: "已核銷", reviewer: "Richard (爸爸)" }
 ];
 
 export const INITIAL_WEEKLY_COMPETITION = {
   weekRange: "05/25 ~ 05/31",
   champions: {
-    taskCount: "小格林 (Leo) [14 個任務]",
-    growthRate: "小格林 (Leo) [+150% EXP]",
-    courage: "小格林 (Leo) [超慢跑挑戰成功]",
-    creativity: "小格林 (Leo) [樂高飛船創作]"
+    taskCount: "Michelle [14 個任務]",
+    growthRate: "Michelle [+150% EXP]",
+    courage: "Michelle [超慢跑挑戰成功]",
+    creativity: "Michelle [樂高飛船創作]"
   },
   mvpTask: "自主整理房間與書桌 (完成度 92%)",
   devilTask: "戶外超慢跑 1.5 公里 (完成度 40%)",

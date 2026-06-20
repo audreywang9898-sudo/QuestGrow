@@ -16,9 +16,9 @@ function LoginPortal({ onLogin, googleClientId }) {
 
   // Google Sandbox Simulator States
   const [showGoogleSandbox, setShowGoogleSandbox] = useState(false);
-  const [sandboxEmail, setSandboxEmail] = useState('leo.explorer@gmail.com');
-  const [sandboxName, setSandboxName] = useState('小格林 (Leo)');
-  const [sandboxPicture, setSandboxPicture] = useState('boy');
+  const [sandboxEmail, setSandboxEmail] = useState('michelle.explorer@gmail.com');
+  const [sandboxName, setSandboxName] = useState('Michelle');
+  const [sandboxPicture, setSandboxPicture] = useState('girl');
   const [sandboxRole, setSandboxRole] = useState('parent');
   const [isSandboxFirstTime, setIsSandboxFirstTime] = useState(false);
 
@@ -86,9 +86,8 @@ function LoginPortal({ onLogin, googleClientId }) {
   // Preset quick login selector for instant testing
   const presets = [
     { email: 'parent@questgrow.com', password: 'password123', label: `👩 ${t('presetParentLabel', { names: 'Audrey & Richard' })}`, desc: t('presetParentDesc') },
-    { email: 'kid@questgrow.com', password: 'password123', label: `👦 ${t('presetKidLabel', { name: 'Leo' })}`, desc: t('presetKidDesc') },
-    { email: 'michelle@questgrow.com', password: 'password123', label: `👧 Michelle (${t('presetKid')})`, desc: t('presetKidReadOnly') },
-    { email: 'daniel@questgrow.com', password: 'password123', label: `👦 Daniel (${t('presetKid')})`, desc: t('presetKidReadOnly') }
+    { email: 'michelle@questgrow.com', password: 'password123', label: `👧 ${t('presetKidLabel', { name: 'Michelle' })}`, desc: t('presetKidDesc') },
+    { email: 'daniel@questgrow.com', password: 'password123', label: `👦 ${t('presetKidLabel', { name: 'Daniel' })}`, desc: t('presetKidDesc') }
   ];
 
   // Try to load standard Google Identity Services button

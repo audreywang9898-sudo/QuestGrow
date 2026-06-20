@@ -283,11 +283,7 @@ function KidPortal({
   const [tourStep, setTourStep] = useState(1);
 
   React.useEffect(() => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      clearAliveUtterances();
-    }
-    setTourSpeaking(false);
+    stopAllSpeech();
 
     if (!showTour) return;
     if (tourStep === 1) {
@@ -331,6 +327,23 @@ function KidPortal({
   const [speakingTaskId, setSpeakingTaskId] = useState(null);
   const [tourSpeaking, setTourSpeaking] = useState(false);
   const [proverbSpeaking, setProverbSpeaking] = useState(false);
+  const isProverbSpeakingRef = React.useRef(false);
+
+  const stopAllSpeech = () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.resume();
+        window.speechSynthesis.cancel();
+      } catch (e) {
+        console.error('Failed to cancel speech synthesis:', e);
+      }
+    }
+    clearAliveUtterances();
+    setSpeakingTaskId(null);
+    setTourSpeaking(false);
+    setProverbSpeaking(false);
+    isProverbSpeakingRef.current = false;
+  };
   const [showCompletedHistory, setShowCompletedHistory] = useState(false);
   const [showBackpackHistory, setShowBackpackHistory] = useState(false);
   const [swappingTaskId, setSwappingTaskId] = useState(null);
@@ -342,16 +355,11 @@ function KidPortal({
     }
 
     if (tourSpeaking) {
-      window.speechSynthesis.cancel();
-      clearAliveUtterances();
-      setTourSpeaking(false);
+      stopAllSpeech();
       return;
     }
 
-    window.speechSynthesis.cancel();
-    clearAliveUtterances();
-    setSpeakingTaskId(null); // Clear task speech status if any
-    setProverbSpeaking(false);
+    stopAllSpeech();
     setTourSpeaking(true);
 
     setTimeout(() => {
@@ -438,16 +446,11 @@ function KidPortal({
     const itemId = item.id || item.inventoryId || 'custom-drawn';
 
     if (speakingTaskId === itemId) {
-      window.speechSynthesis.cancel();
-      clearAliveUtterances();
-      setSpeakingTaskId(null);
+      stopAllSpeech();
       return;
     }
 
-    window.speechSynthesis.cancel();
-    clearAliveUtterances();
-    setProverbSpeaking(false);
-    setTourSpeaking(false);
+    stopAllSpeech();
     setSpeakingTaskId(itemId);
 
     // 100ms delay to clear call stack and allow speechSynthesis.cancel() to finalize
@@ -471,6 +474,40 @@ function KidPortal({
       utterance.lang = language === 'zh' ? 'zh-TW' : 'en-US';
       utterance.rate = 0.9; // Slightly slower for younger children
       utterance.pitch = 1.1; // Slightly higher pitch for kids
+
+      // Select system voices for task speech
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        const voices = window.speechSynthesis.getVoices();
+        let selectedVoice = null;
+        if (language === 'zh') {
+          const preferredZhNames = ['hanhan', 'yating', 'ting-ting', 'tingting', 'google 國語', 'google 臺灣', 'xiaoxiao', 'hsiaoyu', 'yaoyao', 'mei-jia', 'sin-ji'];
+          for (const name of preferredZhNames) {
+            const found = voices.find(v => v.name.toLowerCase().includes(name) && (v.lang.includes('zh') || v.lang.includes('zho')));
+            if (found) {
+              selectedVoice = found;
+              break;
+            }
+          }
+          if (!selectedVoice) {
+            selectedVoice = voices.find(v => v.lang.toLowerCase().includes('zh'));
+          }
+        } else {
+          const preferredEnNames = ['zira', 'samantha', 'aria', 'jenny', 'google us english'];
+          for (const name of preferredEnNames) {
+            const found = voices.find(v => v.name.toLowerCase().includes(name) && v.lang.includes('en'));
+            if (found) {
+              selectedVoice = found;
+              break;
+            }
+          }
+          if (!selectedVoice) {
+            selectedVoice = voices.find(v => v.lang.toLowerCase().includes('en'));
+          }
+        }
+        if (selectedVoice) {
+          utterance.voice = selectedVoice;
+        }
+      }
 
       utterance.onend = () => {
         setSpeakingTaskId(null);
@@ -504,20 +541,18 @@ function KidPortal({
     }
 
     if (proverbSpeaking) {
-      window.speechSynthesis.cancel();
-      clearAliveUtterances();
-      setProverbSpeaking(false);
+      stopAllSpeech();
       return;
     }
 
-    window.speechSynthesis.cancel();
-    clearAliveUtterances();
-    setSpeakingTaskId(null);
-    setTourSpeaking(false);
+    stopAllSpeech();
     setProverbSpeaking(true);
+    isProverbSpeakingRef.current = true;
 
-    // 100ms delay to clear call stack and allow speechSynthesis.cancel() to finalize
+    // 100ms delay to clear call stack and allow obedience to stopAllSpeech's cancel
     setTimeout(() => {
+      if (!isProverbSpeakingRef.current) return;
+
       const prefixZh = language === 'zh' ? '每日鼓勵：' : 'Daily Encouragement: ';
       const utterZh = new SpeechSynthesisUtterance(prefixZh + dailyProverb.contentZh);
       utterZh.lang = 'zh-TW';
@@ -569,9 +604,14 @@ function KidPortal({
         if (typeof window !== 'undefined' && window._activeUtterances) {
           window._activeUtterances = window._activeUtterances.filter(u => u !== utterZh);
         }
+        // Chain En speech only if proverb speaking is still active (not cancelled mid-speech)
+        if (isProverbSpeakingRef.current && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+          window.speechSynthesis.speak(utterEn);
+        }
       };
 
       utterEn.onend = () => {
+        isProverbSpeakingRef.current = false;
         setProverbSpeaking(false);
         if (activeUtterancesRef.current) {
           activeUtterancesRef.current = activeUtterancesRef.current.filter(u => u !== utterEn);
@@ -582,12 +622,20 @@ function KidPortal({
       };
 
       const handleErr = (u) => {
-        setProverbSpeaking(false);
         if (activeUtterancesRef.current) {
           activeUtterancesRef.current = activeUtterancesRef.current.filter(item => item !== u);
         }
         if (typeof window !== 'undefined' && window._activeUtterances) {
           window._activeUtterances = window._activeUtterances.filter(item => item !== u);
+        }
+        if (u === utterZh && isProverbSpeakingRef.current) {
+          // If Zh failed, fall back to speak En if still active
+          if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+            window.speechSynthesis.speak(utterEn);
+          }
+        } else {
+          isProverbSpeakingRef.current = false;
+          setProverbSpeaking(false);
         }
       };
 
@@ -598,7 +646,6 @@ function KidPortal({
       keepUtteranceAlive(utterEn);
 
       window.speechSynthesis.speak(utterZh);
-      window.speechSynthesis.speak(utterEn);
     }, 100);
   };
 
@@ -608,10 +655,7 @@ function KidPortal({
       window.speechSynthesis.getVoices();
     }
     return () => {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        clearAliveUtterances();
-      }
+      stopAllSpeech();
     };
   }, []);
 

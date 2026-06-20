@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  INITIAL_CHILD_STATS, 
+  EMPTY_CHILD_STATS,
   INITIAL_TASKS, 
   INITIAL_INVENTORY, 
   INITIAL_PARENT_GOALS, 
@@ -91,8 +91,8 @@ function App() {
   }, []);
 
   // --- Core States ---
-  const [children, setChildren] = useState([INITIAL_CHILD_STATS]);
-  const [activeChildId, setActiveChildId] = useState('child-default');
+  const [children, setChildren] = useState([]);
+  const [activeChildId, setActiveChildId] = useState('');
   const [drawnTasksMap, setDrawnTasksMap] = useState(() => {
     const local = localStorage.getItem('questgrow_drawn_tasks_map');
     return local ? JSON.parse(local) : {};
@@ -131,7 +131,7 @@ function App() {
     return new Date().toISOString().split('T')[0];
   };
 
-  const childStats = children.find(c => c.id === activeChildId) || children[0] || INITIAL_CHILD_STATS;
+  const childStats = children.find(c => c.id === activeChildId) || children[0] || EMPTY_CHILD_STATS;
 
   // --- Fetch Data from Backend ---
   const fetchAllData = async () => {
@@ -299,8 +299,15 @@ function App() {
   };
 
   const handleLogout = () => {
-    logEvent("user_logout", { email: currentUser.email });
+    logEvent("user_logout", { email: currentUser?.email || '' });
     setCurrentUser(null);
+    setChildren([]);
+    setActiveChildId('');
+    setTasks([]);
+    setInventory([]);
+    setWishlist([]);
+    setRedeemLogs([]);
+    setFamilyScore(0);
     showToast('已成功登出。', 'info');
   };
 
