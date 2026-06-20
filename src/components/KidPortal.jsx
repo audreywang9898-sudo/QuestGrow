@@ -73,6 +73,7 @@ function KidPortal({
   isReadOnly = false,
   googleClientId,
   onToggleEquip,
+  onCancelRedeem,
   gachaPool,
   familySettings = { zhuyinUnder8: true },
   onBuyTicketWithGold,
@@ -275,6 +276,8 @@ function KidPortal({
   const activeBadgeItem = inventory.find(i => i.type === '收藏卡' && i.status === '已使用');
   const activeBadge = activeBadgeItem ? activeBadgeItem.id : null;
   const [activeSubTab, setActiveSubTab] = useState('wishlist');
+  const [backpackSortBy, setBackpackSortBy] = useState('default');
+  const [backpackFilterType, setBackpackFilterType] = useState('all');
 
   // Onboarding Tour state
   const [showTour, setShowTour] = useState(() => {
@@ -2002,6 +2005,43 @@ function KidPortal({
         const activeInventory = inventory.filter(i => i.status === '未使用' || i.status === '待核銷' || (i.status === '已使用' && i.type === '收藏卡'));
         const historyInventory = inventory.filter(i => (i.status === '已使用' && i.type !== '收藏卡') || i.status === '已過期');
 
+        // Apply filtering
+        const filteredInventory = activeInventory.filter(item => {
+          if (backpackFilterType === 'all') return true;
+          return item.type === backpackFilterType;
+        });
+
+        // Apply sorting (default: expiry date ascending - nulls last, then type ascending)
+        const sortedInventory = [...filteredInventory].sort((a, b) => {
+          if (backpackSortBy === 'default') {
+            // 1. Expiry date (nulls last)
+            if (a.expireAt && !b.expireAt) return -1;
+            if (!a.expireAt && b.expireAt) return 1;
+            if (a.expireAt && b.expireAt) {
+              if (a.expireAt !== b.expireAt) {
+                return a.expireAt.localeCompare(b.expireAt);
+              }
+            }
+            // 2. Type secondary sort
+            if (a.type !== b.type) {
+              return a.type.localeCompare(b.type, 'zh-Hant');
+            }
+            return 0;
+          }
+          if (backpackSortBy === 'dateAcquired') {
+            const dateA = a.dateAcquired || '';
+            const dateB = b.dateAcquired || '';
+            return dateB.localeCompare(dateA); // newest first
+          }
+          if (backpackSortBy === 'rarity') {
+            const weights = { 'Mythic': 5, 'Legendary': 4, 'Epic': 3, 'Rare': 2, 'Common': 1 };
+            const weightA = weights[a.rarity] || 0;
+            const weightB = weights[b.rarity] || 0;
+            return weightB - weightA; // highest weight first
+          }
+          return 0;
+        });
+
         return (
           <div className="space-y-6 animate-success">
             {/* Animated 3D Interactive Backpack Header Console */}
@@ -2017,18 +2057,50 @@ function KidPortal({
               </h3>
             </div>
 
+            {/* Sorting and Filtering Controls */}
+            {activeInventory.length > 0 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-900/60 p-4 rounded-2xl border border-white/10 shadow-lg">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <span className="text-xs font-black text-slate-400 uppercase tracking-wider">{language === 'zh' ? '篩選類型' : 'Filter'}</span>
+                  <select
+                    value={backpackFilterType}
+                    onChange={(e) => setBackpackFilterType(e.target.value)}
+                    className="bg-slate-950 text-slate-200 text-xs font-bold border border-white/20 rounded-xl px-3 py-1.5 focus:outline-none focus:border-indigo-500 w-full sm:w-40"
+                  >
+                    <option value="all">{language === 'zh' ? '全部卡片' : 'All Cards'}</option>
+                    <option value="特權卡">{language === 'zh' ? '特權卡 (Privilege)' : 'Privilege'}</option>
+                    <option value="體驗卡">{language === 'zh' ? '體驗卡 (Experience)' : 'Experience'}</option>
+                    <option value="收藏卡">{language === 'zh' ? '收藏卡 (Collection)' : 'Collection'}</option>
+                  </select>
+                </div>
+                
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                  <span className="text-xs font-black text-slate-400 uppercase tracking-wider">{language === 'zh' ? '排序方式' : 'Sort By'}</span>
+                  <select
+                    value={backpackSortBy}
+                    onChange={(e) => setBackpackSortBy(e.target.value)}
+                    className="bg-slate-950 text-slate-200 text-xs font-bold border border-white/20 rounded-xl px-3 py-1.5 focus:outline-none focus:border-indigo-500 w-full sm:w-48"
+                  >
+                    <option value="default">{language === 'zh' ? '預設 (使用期限 & 類型)' : 'Default (Expiry & Type)'}</option>
+                    <option value="dateAcquired">{language === 'zh' ? '取得日期 (由新到舊)' : 'Date Acquired (Newest)'}</option>
+                    <option value="rarity">{language === 'zh' ? '稀有度 (由高到低)' : 'Rarity (High to Low)'}</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
             {/* Active Items Area */}
-            {activeInventory.length === 0 ? (
+            {sortedInventory.length === 0 ? (
               <div className="empty-state-card glass-panel p-8 text-center">
                 <div className="empty-state-icon">🎒</div>
-                <h4 className="text-md font-bold text-slate-300">{t('backpackEmpty')}</h4>
+                <h4 className="text-md font-bold text-slate-300">{activeInventory.length === 0 ? t('backpackEmpty') : (language === 'zh' ? '沒有符合篩選條件的道具卡。' : 'No cards match the filter.')}</h4>
                 <p className="text-xs text-slate-500 mt-2 max-w-sm mx-auto leading-normal">
-                  {t('backpackEmptyDesc')}
+                  {activeInventory.length === 0 ? t('backpackEmptyDesc') : (language === 'zh' ? '請嘗試更換其他篩選類別。' : 'Try selecting another category.')}
                 </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {activeInventory.map((item, idx) => {
+                {sortedInventory.map((item, idx) => {
                   const isExpired = item.status === '已過期';
                   const isRedeeming = item.inventoryId === redeemingId;
                   return (
@@ -2129,9 +2201,19 @@ function KidPortal({
                         )}
 
                         {item.status === '待核銷' && (
-                          <span className="text-[10px] text-amber-500/80 font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                            {language === 'zh' ? '等待家長審核' : 'Pending parent approval'}
-                          </span>
+                          <div className="flex flex-col items-end gap-1.5">
+                            <span className="text-[10px] text-amber-500/80 font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                              {language === 'zh' ? '等待家長審核' : 'Pending parent approval'}
+                            </span>
+                            {!isReadOnly && (
+                              <button
+                                onClick={() => onCancelRedeem(item.inventoryId)}
+                                className="px-2.5 py-1 bg-rose-600/25 border border-rose-500/35 hover:bg-rose-600/40 text-rose-350 text-[10px] font-bold rounded-lg transition-all active:scale-95 shadow-sm"
+                              >
+                                {language === 'zh' ? '回復核銷' : 'Revert Use'}
+                              </button>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>

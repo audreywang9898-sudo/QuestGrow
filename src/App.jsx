@@ -694,6 +694,16 @@ function App() {
     }
   };
 
+  const handleCancelRedeem = async (inventoryId) => {
+    try {
+      await api.cancelRedeem(inventoryId);
+      showToast('已取消核銷申請，卡片已還原。', 'info');
+      fetchAllData();
+    } catch (error) {
+      showToast(error.message || '取消卡片核銷失敗。', 'error');
+    }
+  };
+
   const handleApproveRedeem = async (inventoryId) => {
     try {
       await api.reviewRedeem(inventoryId, 'approve');
@@ -981,6 +991,7 @@ function App() {
             onSubmitTask={handleSubmitTask}
             onDrawCard={handleAwardGachaCard}
             onRequestRedeem={handleRequestRedeem}
+            onCancelRedeem={handleCancelRedeem}
             onConfirmRedeem={handleApproveRedeem}
             balancedIndex={getBalancedDevelopmentIndex()}
             onClaimWishlistItem={handleRedeemWishlist}

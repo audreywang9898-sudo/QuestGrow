@@ -1,5 +1,5 @@
 import express from 'express';
-import { getInventory, getRedeemLogs, drawGachaCard, requestRedeem, reviewRedeem, toggleEquipItem, buyTicketWithGold } from '../controllers/itemController.js';
+import { getInventory, getRedeemLogs, drawGachaCard, requestRedeem, reviewRedeem, toggleEquipItem, buyTicketWithGold, cancelRedeem } from '../controllers/itemController.js';
 import { authenticateToken, requireRole } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -11,5 +11,6 @@ router.post('/inventory/:inventoryId/redeem-request', authenticateToken, request
 router.post('/inventory/:inventoryId/redeem-review', authenticateToken, requireRole('parent'), reviewRedeem);
 router.post('/inventory/:inventoryId/toggle-equip', authenticateToken, toggleEquipItem);
 router.post('/buy-ticket', authenticateToken, requireRole('kid'), buyTicketWithGold);
+router.post('/inventory/:inventoryId/cancel-redeem', authenticateToken, requireRole('kid'), cancelRedeem);
 
 export default router;

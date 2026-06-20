@@ -508,4 +508,42 @@ export const buyTicketWithGold = async (req, res) => {
   }
 };
 
+// 8. Cancel Redeem Request (Kid only: revert status from '待核銷' to '未使用')
+export const cancelRedeem = async (req, res) => {
+  const childId = req.user.child_id;
+  const { inventoryId } = req.params;
+
+  if (!childId) {
+    return res.status(403).json({ message: '此操作僅限小孩帳號執行。 | This operation is only allowed for kid accounts.' });
+  }
+
+  try {
+    // Check ownership and status
+    const result = await pool.query(
+      'SELECT id, name, status FROM inventory WHERE id = $1 AND child_id = $2',
+      [inventoryId, childId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: '找不到此道具卡。 | Card not found.' });
+    }
+
+    const item = result.rows[0];
+
+    if (item.status !== '待核銷') {
+      return res.status(400).json({ message: '只有等待核銷的卡片可以取消申請。 | Only cards pending review can be cancelled.' });
+    }
+
+    await pool.query(
+      "UPDATE inventory SET status = '未使用' WHERE id = $1",
+      [inventoryId]
+    );
+
+    res.json({ message: `已成功回復核銷！卡片「${item.name}」已還原為未使用狀態。 | Cancelled redemption request successfully!` });
+  } catch (error) {
+    console.error('cancelRedeem error:', error);
+    res.status(500).json({ message: '取消核銷申請失敗，請稍後再試。 | Failed to cancel redemption request.' });
+  }
+};
+
 

@@ -286,6 +286,14 @@ export const api = {
     return handleResponse(res);
   },
 
+  cancelRedeem: async (inventoryId) => {
+    const res = await fetch(`${API_URL}/items/inventory/${inventoryId}/cancel-redeem`, {
+      method: 'POST',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
   reviewRedeem: async (inventoryId, action) => {
     const res = await fetch(`${API_URL}/items/inventory/${inventoryId}/redeem-review`, {
       method: 'POST',
