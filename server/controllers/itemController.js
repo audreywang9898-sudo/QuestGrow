@@ -1,5 +1,6 @@
 import pool from '../config/db.js';
 import { getMessage } from '../utils/messageManager.js';
+import { GACHA_POOL } from '../../src/utils/mockData.js';
 
 const getExpirationDate = (rarity) => {
   let days = 9999;
@@ -162,6 +163,34 @@ export const drawGachaCard = async (req, res) => {
       throw new Error(getMessage('GACHA_INSUFFICIENT_TICKETS'));
     }
 
+    // 1.5. Server-side 7-day cooldown validation with downgrade fallback
+    const familyResult = await pool.query('SELECT gacha_pool FROM families WHERE id = $1', [familyId]);
+    const familyGachaPool = (familyResult.rows.length > 0 && familyResult.rows[0].gacha_pool)
+      ? familyResult.rows[0].gacha_pool
+      : GACHA_POOL;
+
+    // Get all cards of the drawn rarity
+    const rarityPool = familyGachaPool[card.rarity]?.cards || [];
+    const rarityCardIds = rarityPool.map(c => c.id);
+
+    // Find which of these card IDs have been acquired by this child in the last 7 days
+    const recentDrawsResult = await pool.query(
+      `SELECT DISTINCT card_template_id 
+       FROM inventory 
+       WHERE child_id = $1 AND card_template_id = ANY($2) AND date_acquired >= CURRENT_DATE - 7`,
+      [childId, rarityCardIds]
+    );
+    const recentDrawnIds = new Set(recentDrawsResult.rows.map(r => r.card_template_id));
+
+    // If the drawn card is in the recent draws set
+    if (recentDrawnIds.has(card.id)) {
+      // Check if there is at least one card in this rarity that is NOT on cooldown
+      const hasAvailableCards = rarityCardIds.some(id => !recentDrawnIds.has(id));
+      if (hasAvailableCards) {
+        throw new Error('該獎勵卡片在 7 天內已獲得過，不能重複獲得。 | This reward card is on cooldown and cannot be drawn again.');
+      }
+    }
+
     // Deduct tickets (using server-validated cost)
     let newTickets = Math.max(0, child.tickets - safeCost);
     let newGold = child.gold;
@@ -201,30 +230,29 @@ export const drawGachaCard = async (req, res) => {
       [newTickets, newGold, newExp, newLevel, expNeeded, childId]
     );
 
-    // 3. For Non-Resource Cards, insert into inventory
+    // 3. For all cards, insert into inventory (resource cards are inserted with status '已使用')
     let newItem = null;
-    if (card.type !== "資源卡") {
-      const expireAt = getExpirationDate(card.rarity);
-      const insertResult = await pool.query(
-        `INSERT INTO inventory (child_id, card_template_id, name, type, rarity, description, status, expire_at)
-         VALUES ($1, $2, $3, $4, $5, $6, '未使用', $7)
-         RETURNING id, child_id, card_template_id, name, type, rarity, description, status, date_acquired, expire_at`,
-        [childId, card.id, card.name, card.type, card.rarity, card.desc, expireAt]
-      );
-      const row = insertResult.rows[0];
-      newItem = {
-        inventoryId: row.id,
-        childId: row.child_id,
-        id: row.card_template_id,
-        name: row.name,
-        type: row.type,
-        rarity: row.rarity,
-        desc: row.description,
-        status: row.status,
-        dateAcquired: row.date_acquired ? row.date_acquired.toISOString().split('T')[0] : null,
-        expireAt: row.expire_at ? row.expire_at.toISOString().split('T')[0] : null
-      };
-    }
+    const status = card.type === "資源卡" ? "已使用" : "未使用";
+    const expireAt = card.type === "資源卡" ? null : getExpirationDate(card.rarity);
+    const insertResult = await pool.query(
+      `INSERT INTO inventory (child_id, card_template_id, name, type, rarity, description, status, expire_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING id, child_id, card_template_id, name, type, rarity, description, status, date_acquired, expire_at`,
+      [childId, card.id, card.name, card.type, card.rarity, card.desc, status, expireAt]
+    );
+    const row = insertResult.rows[0];
+    newItem = {
+      inventoryId: row.id,
+      childId: row.child_id,
+      id: row.card_template_id,
+      name: row.name,
+      type: row.type,
+      rarity: row.rarity,
+      desc: row.description,
+      status: row.status,
+      dateAcquired: row.date_acquired ? row.date_acquired.toISOString().split('T')[0] : null,
+      expireAt: row.expire_at ? row.expire_at.toISOString().split('T')[0] : null
+    };
 
     await pool.query('COMMIT');
 

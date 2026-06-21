@@ -1209,7 +1209,30 @@ function KidPortal({
     else if (rand < 0.40) raritySelected = 'Rare';
     
     const pool = (gachaPool || GACHA_POOL)[raritySelected].cards;
-    const cardSelected = pool[Math.floor(Math.random() * pool.length)];
+
+    // Filter out cards drawn by the kid within the last 7 days.
+    // dateAcquired is in YYYY-MM-DD format.
+    const currentDateStr = simulatedDate || new Date().toISOString().split('T')[0];
+    const dateLimit = new Date(currentDateStr);
+    dateLimit.setDate(dateLimit.getDate() - 7);
+    const limitStr = dateLimit.toISOString().split('T')[0];
+
+    // Find template IDs that were acquired in the last 7 days
+    const recentDrawnIds = new Set(
+      (inventory || [])
+        .filter(item => item.dateAcquired && item.dateAcquired >= limitStr)
+        .map(item => item.id)
+    );
+
+    // Filter the pool
+    let filteredPool = pool.filter(card => !recentDrawnIds.has(card.id));
+
+    // Fallback: if all cards of this rarity are on cooldown, fall back to the original pool
+    if (filteredPool.length === 0) {
+      filteredPool = pool;
+    }
+
+    const cardSelected = filteredPool[Math.floor(Math.random() * filteredPool.length)];
 
     setTimeout(() => {
       setGachaState('revealing');
