@@ -1329,6 +1329,13 @@ function KidPortal({
 
   const fcmNotifications = getFCMNotifications();
 
+  const maxPointsWish = (() => {
+    if (!wishlist || wishlist.length === 0) return null;
+    const activeWishes = wishlist.filter(w => !w.isRedeemed);
+    if (activeWishes.length === 0) return null;
+    return activeWishes.reduce((max, w) => w.pointsNeeded > max.pointsNeeded ? w : max, activeWishes[0]);
+  })();
+
   return (
     <div className="space-y-6 relative">
       
@@ -1400,6 +1407,61 @@ function KidPortal({
           >
             {proverbSpeaking ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
           </button>
+        </div>
+      )}
+
+      {/* Highest Points Active Family Wish Card */}
+      {maxPointsWish && (
+        <div className="glass-panel p-5 bg-gradient-to-r from-slate-900 to-amber-500/5 border border-amber-500/25 shadow-[0_0_15px_rgba(245,158,11,0.1)] rounded-2xl flex flex-col md:flex-row items-center gap-4 hover:border-amber-500/40 hover:shadow-[0_0_20px_rgba(245,158,11,0.2)] transition-all duration-300">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-600/20 border border-amber-500/30 text-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.1)]">
+            <Trophy className="h-6 w-6 animate-bounce" />
+          </div>
+          
+          <div className="space-y-2 text-center md:text-left flex-1 w-full">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+              <div>
+                <div className="text-[10px] text-amber-400 font-black uppercase tracking-widest flex items-center justify-center md:justify-start gap-1">
+                  <span>{t('tabKidWishlist')}</span>
+                  {maxPointsWish.isUltimate && (
+                    <span className="bg-amber-500/20 text-amber-300 text-[9px] px-1 py-0.5 rounded border border-amber-500/30">
+                      {t('ultimatePrize')}
+                    </span>
+                  )}
+                </div>
+                <h4 className="text-base font-extrabold text-slate-200 leading-relaxed">
+                  {renderTextWithZhuyin(maxPointsWish.title)}
+                </h4>
+              </div>
+              
+              <div className="text-xs text-slate-300 font-bold sm:text-right">
+                {t('familyTotalPoints')}：<span className="text-amber-400 font-black">{familyScore}</span> / {maxPointsWish.pointsNeeded} Pts
+              </div>
+            </div>
+            
+            {/* Progress bar */}
+            <div className="space-y-1">
+              <div className="h-3 w-full bg-slate-950 border border-white/10 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-400 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(100, (familyScore / maxPointsWish.pointsNeeded) * 100)}%` }}
+                ></div>
+              </div>
+              <div className="flex justify-between text-[11px] text-slate-400 font-bold">
+                <span>{t('progress')}: {Math.min(100, Math.round((familyScore / maxPointsWish.pointsNeeded) * 100))}%</span>
+                <span>{t('pointsShortOfUnlock', { count: Math.max(0, maxPointsWish.pointsNeeded - familyScore) })}</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Claim Wishlist button right on the card */}
+          {familyScore >= maxPointsWish.pointsNeeded && !isReadOnly && (
+            <button
+              onClick={() => onClaimWishlistItem(maxPointsWish.id)}
+              className="w-full md:w-auto px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-900 rounded-xl text-xs font-black shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:from-emerald-400 hover:to-teal-300 transition-all hover:scale-105 active:scale-95 whitespace-nowrap"
+            >
+              {t('claimWishlistBtn')}
+            </button>
+          )}
         </div>
       )}
 
