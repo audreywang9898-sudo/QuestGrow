@@ -2248,38 +2248,17 @@ function KidPortal({
               </div>
 
               {/* Control Panel Area */}
-              <div className="gacha-control-panel p-5 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+              <div className="gacha-control-panel p-5 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                 
-                {/* Left: Mystery Chest Summon (Tickets 🎫) */}
-                <div className="space-y-3 text-center p-4 bg-slate-950/50 border border-white/5 rounded-2xl">
-                  <div className="text-sm font-black text-emerald-450 uppercase tracking-wider flex items-center justify-center gap-1.5">
-                    <span>🎫 {t('summonTitle')}</span>
+                {/* Left: Mystery Chest Summon (Tickets 🎫) with Rotary Dial */}
+                <div className="flex flex-col items-center justify-center p-4 bg-slate-950/50 border border-white/5 rounded-2xl">
+                  <div className="text-sm font-black text-emerald-450 uppercase tracking-wider mb-1.5 flex items-center justify-center gap-1.5">
+                    <span>🎫 {t('summonTitle') || '召喚獎勵'}</span>
                   </div>
-                  <p className="text-[10px] text-slate-400 leading-relaxed max-w-[160px] mx-auto">
-                    {t('summonDesc')}
+                  <p className="text-[10px] text-slate-400 leading-relaxed max-w-[200px] text-center mb-3">
+                    {language === 'zh' ? '轉動旋鈕即可隨機召喚一張獎勵卡片' : 'Twist the dial to summon a random reward card'}
                   </p>
-                  <div className="p-2 bg-slate-950/80 border border-white/5 rounded-xl font-bold text-xs">
-                    {t('availableTickets')}：<span className="text-cyan-400 text-sm">🎫 {stats.tickets}</span>
-                  </div>
-                  <button
-                    onClick={startDrawCard}
-                    disabled={stats.tickets < 1 || isDrawingGacha || isReadOnly}
-                    className={`w-full py-2 bg-[#00E676] text-[#111216] font-black rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
-                      stats.tickets >= 1 && !isDrawingGacha && !isReadOnly
-                        ? 'hover:bg-[#00c867] shadow-[0_0_10px_rgba(0,230,118,0.2)] hover:scale-[1.02] active:scale-95' 
-                        : 'opacity-40 cursor-not-allowed bg-slate-800 text-slate-500'
-                    }`}
-                  >
-                    {isDrawingGacha && <span className="spinner-inline"></span>}
-                    {isReadOnly ? t('readOnlyGachaBlock') : stats.tickets >= 1 ? t('openMysteryChest') : t('insufficientTickets')}
-                  </button>
-                </div>
-
-                {/* Center: Rotary Crank dial wheel */}
-                <div className="flex flex-col items-center justify-center py-2">
-                  <div className="text-[9px] text-slate-550 font-black uppercase tracking-widest mb-2">
-                    {language === 'zh' ? '旋轉按鈕抽卡' : 'Turn to draw'}
-                  </div>
+                  
                   <button
                     disabled={stats.tickets < 1 || isDrawingGacha || isReadOnly}
                     onClick={startDrawCard}
@@ -2295,13 +2274,18 @@ function KidPortal({
                       <div className="w-3 h-3 bg-amber-450 rounded-full animate-pulse"></div>
                     </div>
                   </button>
-                  <div className="text-[10px] text-amber-500 font-bold mt-2 animate-pulse">
-                    {isDrawingGacha ? (language === 'zh' ? '正在轉動中...' : 'Drawing...') : (language === 'zh' ? '⭐ 啟動扭蛋鈕 ⭐' : '⭐ Twist Dial ⭐')}
+                  
+                  <div className="text-[11px] text-amber-400 font-bold mt-3 animate-pulse">
+                    {isDrawingGacha ? (language === 'zh' ? '正在轉動中...' : 'Drawing...') : (language === 'zh' ? '⭐ 旋轉扭蛋鈕 ⭐' : '⭐ Twist Dial ⭐')}
+                  </div>
+
+                  <div className="w-full mt-3 p-2 bg-slate-950/80 border border-white/5 rounded-xl font-bold text-xs text-center">
+                    {isReadOnly ? t('readOnlyGachaBlock') : `${t('availableTickets')}：`}<span className="text-cyan-400 text-sm font-extrabold">🎫 {stats.tickets}</span>
                   </div>
                 </div>
 
                 {/* Right: Gold ticket vending machine (Gold 🪙) */}
-                <div className="space-y-3 text-center p-4 bg-gradient-to-b from-amber-950/20 to-slate-950/50 border border-amber-500/10 rounded-2xl">
+                <div className="space-y-3 text-center p-4 bg-gradient-to-b from-amber-950/20 to-slate-950/50 border border-amber-500/10 rounded-2xl h-full flex flex-col justify-between">
                   <div className="text-sm font-black text-amber-350 uppercase tracking-wider flex items-center justify-center gap-1.5">
                     <span>🏪 {t('vendingMachineTitle')}</span>
                   </div>
