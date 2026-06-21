@@ -123,6 +123,8 @@ function ParentPortal({
     } else if (tourStep === 6) {
       setActiveTab('reports');
     } else if (tourStep === 7) {
+      setActiveTab('leaderboard');
+    } else if (tourStep === 8) {
       setActiveTab('settings');
       setSettingsSubTab('parent');
     }
@@ -808,7 +810,7 @@ function ParentPortal({
           onClick={() => setActiveTab('settings')}
           className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
             activeTab === 'settings' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
-          } ${showTour && tourStep === 7 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse rounded' : ''}`}
+          } ${showTour && tourStep === 8 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse rounded' : ''}`}
         >
           <Settings className="h-4 w-4 text-[#00E676]" />
           {t('tabSettings')}
@@ -817,7 +819,7 @@ function ParentPortal({
           onClick={() => setActiveTab('leaderboard')}
           className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
             activeTab === 'leaderboard' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
-          }`}
+          } ${showTour && tourStep === 7 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse rounded' : ''}`}
         >
           <Trophy className="h-4 w-4 text-violet-400" />
           {t('tabLeaderboard')}
@@ -3649,7 +3651,7 @@ function ParentPortal({
             {/* Step Header */}
             <div className="flex justify-between items-center">
               <span className="text-xs bg-[#3661FF] text-white px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider">
-                {language === 'zh' ? `步驟 ${tourStep} / 7` : `Step ${tourStep} / 7`}
+                {language === 'zh' ? `步驟 ${tourStep} / 8` : `Step ${tourStep} / 8`}
               </span>
               <button 
                 onClick={() => {
@@ -3684,7 +3686,7 @@ function ParentPortal({
               
               <button
                 onClick={() => {
-                  if (tourStep === 7) {
+                  if (tourStep === 8) {
                     setShowTour(false);
                     localStorage.setItem('questgrow_parent_tour_seen', 'true');
                   } else {
@@ -3693,7 +3695,7 @@ function ParentPortal({
                 }}
                 className="px-4 py-1.5 rounded-[4px] text-xs font-black bg-[#3661FF] hover:bg-[#254edb] text-white transition-colors shadow-md"
               >
-                {tourStep === 7 ? t('tourFinish') : t('tourNext')}
+                {tourStep === 8 ? t('tourFinish') : t('tourNext')}
               </button>
             </div>
 
