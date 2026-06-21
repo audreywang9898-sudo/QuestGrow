@@ -1603,7 +1603,7 @@ function KidPortal({
 
           <div className="glass-panel p-6 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
             <div className="flex justify-center">
-              <svg width="200" height="200" viewBox="0 0 200 200" className="w-48 h-48 md:w-56 md:h-56">
+              <svg width="300" height="300" viewBox="0 0 200 200" className="w-[288px] h-[288px] md:w-[336px] md:h-[336px]">
                 {getGridPentagons().map((pts, i) => (
                   <polygon key={i} points={pts} className="radar-grid" />
                 ))}
@@ -1633,15 +1633,15 @@ function KidPortal({
                   ];
                   return ['智', '德', '群', '美', '體'].map((label, i) => {
                     const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
-                    const x = 100 + 80 * Math.cos(angle);
-                    const y = 100 + 80 * Math.sin(angle);
+                    const x = 100 + 85 * Math.cos(angle);
+                    const y = 100 + 85 * Math.sin(angle);
                     return (
                       <text 
                         key={i} 
                         x={x} 
                         y={y} 
                         fill={colors[i]} 
-                        fontSize="11" 
+                        fontSize="22" 
                         fontWeight="900" 
                         textAnchor="middle" 
                         dominantBaseline="middle"
