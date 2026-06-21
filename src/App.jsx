@@ -519,10 +519,18 @@ function App() {
       const createdTasks = results.map(r => r.task);
 
       if (role === 'kid') {
-        if (isArray && tasksToAdd.length > 1) {
-          showToast('🎉 抽選成功！德、智、體、群、美各 1 張任務已加入你的冒險任務庫。', 'success');
+        if (isArray && tasksToAdd.length > 0) {
           const newDrawnIds = createdTasks.map(t => t.id);
-          setDrawnTasksMap(prev => ({ ...prev, [activeChildId]: newDrawnIds }));
+          setDrawnTasksMap(prev => {
+            const existingIds = prev[activeChildId] || [];
+            const merged = Array.from(new Set([...existingIds, ...newDrawnIds])).slice(-5);
+            return { ...prev, [activeChildId]: merged };
+          });
+          if (tasksToAdd.length === 5) {
+            showToast('🎉 抽選成功！德、智、體、群、美各 1 張任務已加入你的冒險任務庫。', 'success');
+          } else {
+            showToast(`🎉 成功補充 ${tasksToAdd.length} 個任務！`, 'success');
+          }
         } else if (taskIdToSwap) {
           const realNewId = createdTasks[0].id;
           setDrawnTasksMap(prev => {

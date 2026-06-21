@@ -875,7 +875,107 @@ function KidPortal({
       }
     }
   };
-
+ 
+  // Supplement tasks up to 5 slots
+  const handleDrawMoreQuests = async () => {
+    if (isReadOnly || swappingTaskId !== null) return;
+ 
+    // Filter out completed tasks from drawnTaskIds
+    const validDrawnTaskIds = drawnTaskIds.filter(id => {
+      const t = tasks.find(task => task.id === id);
+      return t && t.status !== '已完成';
+    });
+ 
+    const currentActiveCount = validDrawnTaskIds.length;
+    const missingCount = 5 - currentActiveCount;
+    if (missingCount <= 0) return;
+ 
+    const childTasks = tasks.filter(t => !t.assignedTo || t.assignedTo === stats.id);
+    const candidatePool = childTasks.filter(t => t.status === '進行中' && !validDrawnTaskIds.includes(t.id));
+ 
+    // Shuffle candidate pool
+    const shuffledCandidates = [...candidatePool].sort(() => Math.random() - 0.5);
+    const tasksFromPool = shuffledCandidates.slice(0, Math.min(missingCount, shuffledCandidates.length));
+    const poolIds = tasksFromPool.map(t => t.id);
+ 
+    const remainingNeeded = missingCount - tasksFromPool.length;
+    
+    // Update local drawn IDs with filtered list + pool tasks first
+    const nextDrawnIds = [...validDrawnTaskIds, ...poolIds];
+    onUpdateDrawnTasks(nextDrawnIds);
+ 
+    if (remainingNeeded > 0) {
+      const currentTypes = [
+        ...validDrawnTaskIds.map(id => {
+          const t = tasks.find(task => task.id === id);
+          return t ? t.type : '';
+        }),
+        ...tasksFromPool.map(t => t.type)
+      ].filter(Boolean);
+ 
+      const allTypes = ['德', '智', '體', '群', '美'];
+      let missingTypes = allTypes.filter(cat => !currentTypes.includes(cat));
+ 
+      // Fetch names of completed tasks in the last 30 days to exclude them
+      const completedTaskNames = tasks
+        .filter(t => 
+          t.assignedTo === stats.id && 
+          t.status === '已完成' && 
+          t.completedAt && 
+          new Date(t.completedAt) >= new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+        )
+        .map(t => (t.name || '').toLowerCase().trim());
+ 
+      const newTasksToCreate = [];
+      for (let i = 0; i < remainingNeeded; i++) {
+        let targetType = missingTypes[i];
+        if (!targetType) {
+          targetType = allTypes[Math.floor(Math.random() * allTypes.length)];
+        }
+ 
+        let catTemplates = TASK_TEMPLATES.filter(t => t.type === targetType && !completedTaskNames.includes(t.name.toLowerCase().trim()));
+        if (catTemplates.length === 0) {
+          catTemplates = TASK_TEMPLATES.filter(t => t.type === targetType);
+        }
+        if (catTemplates.length === 0) {
+          catTemplates = TASK_TEMPLATES;
+        }
+ 
+        const randomTpl = catTemplates[Math.floor(Math.random() * catTemplates.length)];
+        const newId = `task-tpl-self-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 5)}-${stats.id}`;
+        
+        newTasksToCreate.push({
+          id: newId,
+          name: randomTpl.name,
+          description: randomTpl.description,
+          type: randomTpl.type,
+          difficulty: randomTpl.difficulty,
+          expReward: randomTpl.expReward,
+          goldReward: randomTpl.goldReward,
+          ticketReward: randomTpl.ticketReward,
+          attributeReward: randomTpl.attributeReward,
+          period: randomTpl.period,
+          status: '進行中',
+          assignedTo: stats.id,
+          dateCreated: simulatedDate || new Date().toISOString().split('T')[0]
+        });
+      }
+ 
+      if (newTasksToCreate.length > 0) {
+        setSwappingTaskId('draw-more');
+        try {
+          if (onAddTask) {
+            await onAddTask(newTasksToCreate);
+          }
+        } catch (error) {
+          console.error("Failed to draw more tasks:", error);
+        } finally {
+          setSwappingTaskId(null);
+        }
+      }
+    }
+  };
+ 
   // Reroll a single task - swap it for a random different available task of the same category
   const handleRerollTask = async (taskIdToSwap) => {
     if (swappingTaskId !== null) return;
@@ -1843,6 +1943,16 @@ function KidPortal({
               </div>
               
               <div className="flex flex-wrap items-center gap-3">
+                {!isReadOnly && activeTasksList.length > 0 && activeTasksList.length < 5 && (
+                  <button
+                    onClick={handleDrawMoreQuests}
+                    disabled={swappingTaskId !== null}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-xs font-black bg-[#00E676] hover:bg-[#00c867] text-[#111216] transition-all hover:scale-105 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <span>🎲</span>
+                    {language === 'zh' ? `補充 ${5 - activeTasksList.length} 個任務` : `Supplement ${5 - activeTasksList.length} Quests`}
+                  </button>
+                )}
                 <span className="text-xs text-slate-400 font-semibold">
                   {t('weeklyBalanceIndex')}：<span className="text-[#00E676] font-bold">{balancedIndex} 分</span>
                 </span>
