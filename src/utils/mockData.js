@@ -42,7 +42,7 @@ export const EMPTY_CHILD_STATS = {
   }
 };
 
-export const TASK_TEMPLATES = [
+const BASE_TASK_TEMPLATES = [
   {
     id: "t1",
     name: "閱讀好書 20 分鐘",
@@ -1496,6 +1496,98 @@ export const TASK_TEMPLATES = [
     icon: "Sparkles"
   }
 ];
+
+const generateExtraTemplates = () => {
+  const categories = [
+    {
+      type: '智',
+      attr: 'Wisdom',
+      icon: 'BookOpen',
+      verbs: ['深入閱讀', '探討學習', '邏輯解題', '複習溫習', '觀察記錄', '自主研究', '分析思考', '實作練習', '精讀賞析', '理財學習'],
+      nouns: ['科普新知與原理', '數理邏輯挑戰題', '英語常用生活對話', '歷史偉人傳記故事', '基礎程式邏輯關卡', '大自然昆蟲與生態', '理財記帳與儲蓄觀念', '語文寫作與成語典故', '星空與天文奧秘', '居家科學實驗步驟'],
+      desc: '深入理解並記錄心得，向家人展示學習成果。'
+    },
+    {
+      type: '德',
+      attr: 'Responsibility',
+      icon: 'Shield',
+      verbs: ['整理收納', '擦拭清潔', '分類整理', '主動分擔', '清洗刷洗', '物歸原位', '清掃整理', '妥善整理', '協助收拾', '自主維護'],
+      nouns: ['個人的書桌與抽屜', '自己的睡房與床鋪', '客廳公共區域地板', '玄關與全家鞋櫃', '餐後的餐具與廚房', '家中盆栽與陽台植物', '明天的上課書包與課本', '家庭的資源回收與垃圾', '浴室的鏡面與洗手台', '個人常穿鞋子與襪子'],
+      desc: '培養負責任的良好生活習慣，為家庭生活環境盡一份心力。'
+    },
+    {
+      type: '體',
+      attr: 'Courage',
+      icon: 'Compass',
+      verbs: ['趣味跳繩', '核心肌群', '超慢跑', '伸展瑜珈', '自主拉筋', '戶外騎車', '徒步健行', '球類基本功', '開合跳', '體能極限'],
+      nouns: ['挑戰 200 下', '鍛鍊 15 分鐘', '跑步 1.5 公里', '放鬆 10 分鐘', '鍛鍊柔軟度', '探險 20 分鐘', '健走 2 公里', '接球練習 50 次', '挑戰 100 下', '體能大躍進'],
+      desc: '持之以體魄鍛鍊，提升心肺耐力與身體協調度。'
+    },
+    {
+      type: '群',
+      attr: 'Empathy',
+      icon: 'Heart',
+      verbs: ['主動幫助', '貼心關懷', '搥背按摩', '寫感謝卡', '主動讚美', '傾聽分享', '陪伴聊天', '分擔家務', '製作點心', '分享收穫'],
+      nouns: ['辛苦工作的爸媽', '同住的手足與家人', '許久未見的長輩爺奶', '生病或有需要的同學', '學校的班級與夥伴', '社區的鄰里與環境', '一同合作的小夥伴', '家庭日常的生活瑣事', '彼此的心情與趣事', '每日的感恩小故事'],
+      desc: '展現同理心與社交合作能力，增進家庭與社會的和諧凝聚力。'
+    },
+    {
+      type: '美',
+      attr: 'Creativity',
+      icon: 'Palette',
+      verbs: ['創意繪製', '自主彈奏', '手作改造', '精心設計', '黏土捏塑', '剪紙拼貼', '歌唱練唱', '色彩塗鴉', '相片拍攝', '空間佈置'],
+      nouns: ['一幅想像力畫作', '一首動聽的樂器曲目', '廢棄寶特瓶創意擺飾', '一張感恩卡片封面', '一個可愛的角色模型', '一張立體剪紙作品', '一首英文勵志歌曲', '大自然的光影與風景', '日常生活的溫馨瞬間', '自己房間的角落擺設'],
+      desc: '發揮無限想像力與創造力，用美感點綴日常生活。'
+    }
+  ];
+
+  const list = [];
+  let idCounter = 1000;
+
+  categories.forEach(cat => {
+    for (let i = 0; i < 10; i++) {
+      for (let j = 0; j < 10; j++) {
+        const name = `${cat.verbs[i]}${cat.nouns[j]}`;
+        const difficultyList = ['簡單', '中等', '較難', '終極'];
+        const difficulty = difficultyList[(i + j) % 4];
+        
+        let expReward = 100;
+        let goldReward = 50;
+        let ticketReward = 1;
+        if (difficulty === '中等') {
+          expReward = 200;
+          goldReward = 100;
+        } else if (difficulty === '較難') {
+          expReward = 400;
+          goldReward = 200;
+          ticketReward = 2;
+        } else if (difficulty === '終極') {
+          expReward = 800;
+          goldReward = 400;
+          ticketReward = 3;
+        }
+
+        list.push({
+          id: `t-gen-${idCounter++}`,
+          name: name,
+          description: `${name}。${cat.desc}`,
+          type: cat.type,
+          difficulty: difficulty,
+          expReward: expReward,
+          goldReward: goldReward,
+          ticketReward: ticketReward,
+          attributeReward: cat.attr,
+          period: (i % 2 === 0) ? '每日' : '每週',
+          icon: cat.icon
+        });
+      }
+    }
+  });
+
+  return list;
+};
+
+export const TASK_TEMPLATES = [...BASE_TASK_TEMPLATES, ...generateExtraTemplates()];
 
 export const INITIAL_TASKS = [
   {
