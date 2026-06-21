@@ -807,15 +807,6 @@ function ParentPortal({
           {t('tabReports')}
         </button>
         <button
-          onClick={() => setActiveTab('settings')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
-            activeTab === 'settings' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
-          } ${showTour && tourStep === 8 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse rounded' : ''}`}
-        >
-          <Settings className="h-4 w-4 text-[#00E676]" />
-          {t('tabSettings')}
-        </button>
-        <button
           onClick={() => setActiveTab('leaderboard')}
           className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
             activeTab === 'leaderboard' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
@@ -823,6 +814,15 @@ function ParentPortal({
         >
           <Trophy className="h-4 w-4 text-violet-400" />
           {t('tabLeaderboard')}
+        </button>
+        <button
+          onClick={() => setActiveTab('settings')}
+          className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
+            activeTab === 'settings' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
+          } ${showTour && tourStep === 8 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse rounded' : ''}`}
+        >
+          <Settings className="h-4 w-4 text-[#00E676]" />
+          {t('tabSettings')}
         </button>
       </div>
 
