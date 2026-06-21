@@ -408,6 +408,8 @@ export const translations = {
     kidTourStep4Desc: "這裡會存放你所抽到的所有道具卡與徽章。點擊卡片可以「申請使用」它（需要爸媽審核同意），或者「裝備」你的收藏稱號，讓你的狀態欄變得超級酷炫！",
     kidTourStep5Title: "🎁 家庭願望清單 (Wishlist)",
     kidTourStep5Desc: "這是全家人的共同大願望！每次你完成任務，都會增加全家的「家庭總積分」。當積分集滿時，就可以兌換全家人的大願望囉！快去接任務，和小隊員們一起努力吧！",
+    kidTourStep6Title: "🏆 家庭排行榜 (Family Leaderboard)",
+    kidTourStep6Desc: "看看其他小隊成員們的成長排行吧！這裡會顯示大家最近獲得的成長分數與冒險狀態，透過健康的小競賽，讓大家更有動力一起升級成長！冒險小隊，出發！",
 
     // Gacha Config
     gachaPoolConfigTitle: "轉蛋獎勵卡片池配置",
@@ -871,6 +873,8 @@ export const translations = {
     kidTourStep4Desc: "This holds all cards and badges you've summoned. Click a card to 'Request Use' (pending parent approval), or 'Equip' titles/badges to make your profile stand out!",
     kidTourStep5Title: "🎁 Family Wishlist",
     kidTourStep5Desc: "These are the family's big goals! Completing tasks increases the Family Score. Once it is fully charged, the family reward can be claimed. Pick up your sword and start adventuring!",
+    kidTourStep6Title: "🏆 Family Leaderboard",
+    kidTourStep6Desc: "Check the podium standings and growth ranking of your family squad members! Compare your weekly growth points and motivate each other to level up together. Let the adventure begin!",
 
     // Gacha Config
     gachaPoolConfigTitle: "Gacha Reward Pool Configuration",

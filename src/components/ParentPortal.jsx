@@ -737,7 +737,7 @@ function ParentPortal({
           <ShieldCheck className="h-4 w-4 text-emerald-400" />
           {t('parentPrivacyNotice')}
         </span>
-        <span className="text-xs text-slate-500 font-medium">{t('simulatedDateLabel')} {simulatedDate}</span>
+        <span className="text-xs text-slate-400 font-medium">{t('simulatedDateLabel')} {simulatedDate}</span>
       </div>
 
       {/* Restart Tour button */}
@@ -1615,7 +1615,7 @@ function ParentPortal({
                   </h4>
                   
                   <div className="space-y-2">
-                    <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                    <label className="block text-[10px] text-slate-200 font-bold uppercase tracking-wider">
                       {t('cannedReasonTitle')}
                     </label>
                     <div className="grid grid-cols-1 gap-1">
@@ -1629,7 +1629,7 @@ function ParentPortal({
                           className={`text-left px-3 py-1.5 text-xs rounded-lg border transition-all ${
                             selectedCannedReason === reason 
                               ? 'bg-rose-500/20 border-rose-500/50 text-rose-200' 
-                              : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-200'
+                              : 'bg-white/5 border-white/5 text-slate-200 hover:bg-white/10 hover:text-white'
                           }`}
                         >
                           {reason}
@@ -1639,7 +1639,7 @@ function ParentPortal({
                   </div>
 
                   <div className="space-y-2">
-                    <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                    <label className="block text-[10px] text-slate-200 font-bold uppercase tracking-wider">
                       {t('customReasonTitle')}
                     </label>
                     <textarea
@@ -1649,7 +1649,7 @@ function ParentPortal({
                         setSelectedCannedReason('');
                       }}
                       placeholder={t('customReasonPlaceholder')}
-                      className="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none"
+                      className="w-full bg-slate-900 border border-white/15 rounded-lg p-2.5 text-xs text-slate-100 placeholder-slate-400 focus:outline-none"
                       rows="3"
                     />
                   </div>
@@ -1778,7 +1778,7 @@ function ParentPortal({
                           <div key={task.id} className="p-3 bg-white/5 border border-white/5 rounded-xl space-y-1">
                             <div className="flex justify-between items-center text-xs">
                               <span className="font-bold text-slate-200">{task.name}</span>
-                              <span className="text-[10px] text-slate-500">{task.dateCreated}</span>
+                              <span className="text-[10px] text-slate-400">{task.dateCreated}</span>
                             </div>
                             <p className="text-[11px] text-slate-400 leading-normal">{task.description}</p>
                             <div className="flex items-center justify-between text-[9px] text-emerald-450 font-bold mt-1">
@@ -1804,7 +1804,7 @@ function ParentPortal({
                           <div key={log.id} className="p-3 bg-white/5 border border-white/5 rounded-xl space-y-1">
                             <div className="flex justify-between items-center text-xs">
                               <span className="font-bold text-slate-200">{log.cardName}</span>
-                              <span className="text-[10px] text-slate-500">{log.dateRedeemed}</span>
+                              <span className="text-[10px] text-slate-400">{log.dateRedeemed}</span>
                             </div>
                             <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium pt-1">
                               <span>{language === 'zh' ? '使用者：' : 'User: '}<strong className="text-cyan-400">{log.kidName}</strong></span>

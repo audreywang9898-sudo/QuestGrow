@@ -67,4 +67,12 @@ for (const cls of expectedCssClasses) {
 }
 console.log('✓ index.css defines all required gamification classes.');
 
+// 5. Verify Kid onboarding tour step count is updated to 6
+const has6Steps = kidContent.includes('步驟 ${tourStep} / 6') || kidContent.includes('Step ${tourStep} / 6');
+if (!has6Steps) {
+  console.error('❌ Kid onboarding tour step count in KidPortal.jsx is not updated to 6 steps!');
+  process.exit(1);
+}
+console.log('✓ Kid onboarding tour has 6 steps.');
+
 console.log('=== ALL CHECKS PASSED SUCCESSFULLY ===');

@@ -1377,7 +1377,7 @@ function KidPortal({
           </div>
         </div>
 
-        <span className="text-xs text-slate-500 font-medium">{t('simulatedDateLabel')} {simulatedDate}</span>
+        <span className="text-xs text-slate-400 font-medium">{t('simulatedDateLabel')} {simulatedDate}</span>
       </div>
 
       {/* Daily Proverb Card */}
@@ -1393,7 +1393,7 @@ function KidPortal({
             <div className="text-sm font-extrabold text-slate-200 leading-relaxed">
               {renderTextWithZhuyin(dailyProverb.contentZh)}
             </div>
-            <div className="text-xs font-semibold text-slate-400 italic font-mono">
+            <div className="text-xs font-semibold text-slate-300 italic font-mono">
               {dailyProverb.contentEn}
             </div>
           </div>
@@ -2534,7 +2534,7 @@ function KidPortal({
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                     {/* Left: 6x4 RPG Inventory Grid */}
                     <div className="lg:col-span-2 space-y-2">
-                      <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider px-1">
+                      <div className="text-[10px] text-slate-300 font-bold uppercase tracking-wider px-1">
                         {language === 'zh' ? '冒險背包欄位 (6 x 4 Grid)' : 'Backpack Slots (6 x 4 Grid)'}
                       </div>
                       <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
@@ -2608,7 +2608,7 @@ function KidPortal({
                             }`}>
                               {activeSelection.rarity}
                             </span>
-                            <span className="text-[10px] text-slate-500 font-mono">{activeSelection.dateAcquired}</span>
+                            <span className="text-[10px] text-slate-350 font-mono">{activeSelection.dateAcquired}</span>
                           </div>
 
                           {/* Card Title & Speech Chaining */}
@@ -2716,7 +2716,7 @@ function KidPortal({
                           </div>
                         </div>
                       ) : (
-                        <div className="glass-panel p-6 border-white/5 text-center text-slate-500 text-xs italic">
+                        <div className="glass-panel p-6 border-white/5 text-center text-slate-300 text-xs italic">
                           🎒 {language === 'zh' ? '點擊或懸停背包中的道具來查看詳情' : 'Click a card slot to inspect details'}
                         </div>
                       )}
@@ -2777,7 +2777,7 @@ function KidPortal({
                                   )}
                                 </button>
                               </span>
-                              <span className="text-[10px] text-slate-500">{item.dateAcquired}</span>
+                              <span className="text-[10px] text-slate-400">{item.dateAcquired}</span>
                             </div>
                             <p className="text-[11px] text-slate-400 leading-normal">{renderTextWithZhuyin(item.desc)}</p>
                             <div className="flex items-center justify-between text-[9px] font-bold mt-1.5 pt-1 border-t border-white/5">
@@ -3038,7 +3038,7 @@ function KidPortal({
             {/* Step Header */}
             <div className="flex justify-between items-center">
               <span className="text-xs bg-[#3661FF] text-white px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider">
-                {language === 'zh' ? `步驟 ${tourStep} / 5` : `Step ${tourStep} / 5`}
+                {language === 'zh' ? `步驟 ${tourStep} / 6` : `Step ${tourStep} / 6`}
               </span>
               <button 
                 onClick={() => {
@@ -3107,7 +3107,7 @@ function KidPortal({
                 }}
                 className="px-4 py-1.5 rounded-[4px] text-xs font-black bg-[#3661FF] hover:bg-[#254edb] text-white transition-colors shadow-md"
               >
-                {tourStep === 5 ? t('tourFinish') : t('tourNext')}
+                {tourStep === 6 ? t('tourFinish') : t('tourNext')}
               </button>
             </div>
 
