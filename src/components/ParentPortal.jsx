@@ -1489,235 +1489,263 @@ function ParentPortal({
 
           {/* Right Column: Pending Audits & History Logs */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center flex-wrap gap-2">
-                <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
-                  <ClipboardCheck className="h-5 w-5 text-violet-400" />
-                  {t('auditTitleTasks')} ({pendingTasks.length})
-                </h3>
-                {pendingTasks.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setShowBulkTasksConfirm(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-xs font-black bg-[#00E676] text-[#111216] hover:bg-[#00c867] transition-all shadow-md transform hover:scale-105 active:scale-95"
-                  >
-                    <Check className="h-3.5 w-3.5" />
-                    {t('bulkApproveTasksBtn')}
-                  </button>
+            <div className="guild-bounty-wood p-6 rounded-2xl space-y-6 border-4 border-[#4a382c] shadow-lg">
+              {/* Pending Tasks */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center flex-wrap gap-2">
+                  <h3 className="text-lg font-bold text-amber-100 flex items-center gap-2">
+                    <ClipboardCheck className="h-5 w-5 text-amber-400" />
+                    {t('auditTitleTasks')} ({pendingTasks.length})
+                  </h3>
+                  {pendingTasks.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowBulkTasksConfirm(true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-xs font-black bg-[#00E676] text-[#111216] hover:bg-[#00c867] transition-all shadow-md transform hover:scale-105 active:scale-95"
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                      {t('bulkApproveTasksBtn')}
+                    </button>
+                  )}
+                </div>
+
+                {pendingTasks.length === 0 ? (
+                  <div className="bg-white/5 border border-white/10 rounded-xl p-8 text-center text-slate-400 text-sm">
+                    {t('noPendingTasks')}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {pendingTasks.map((task) => {
+                      const isBoss = task.difficulty === '較難' || task.difficulty === '終極';
+                      const getBossLabel = (diff) => {
+                        if (diff === '較難') return t('eliteBossLabel');
+                        if (diff === '終極') return t('ultimateBossLabel');
+                        return null;
+                      };
+                      const cardClass = `p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all relative rounded-2xl ${
+                        isBoss ? 'boss-quest-card' : 'guild-scroll border-[#bfa470]/50 text-slate-800 shadow-sm'
+                      }`;
+
+                      return (
+                        <div key={task.id} className={cardClass}>
+                          <div className="space-y-2 flex-1">
+                            <div className="flex items-center gap-3 flex-wrap">
+                              {isBoss && (
+                                <span className="bg-red-600 text-white px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider animate-pulse flex items-center gap-1 shadow-sm mr-1">
+                                  {getBossLabel(task.difficulty)}
+                                </span>
+                              )}
+                              <span className={`text-md font-bold ${isBoss ? 'text-slate-200' : 'text-slate-900 font-extrabold'}`}>
+                                {task.name}
+                              </span>
+                              {task.isRepeated && (
+                                <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider border ${
+                                  isBoss 
+                                    ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' 
+                                    : 'bg-amber-100 text-amber-800 border-amber-300'
+                                }`}>
+                                  {language === 'zh' ? '⚠️ 30天內重複完成任務' : '⚠️ 30-Day Repeated Quest'}
+                                </span>
+                              )}
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getAttributeColor(task.type)}`}>
+                                {translateType(task.type)} | {language === 'zh' ? '難度' : 'Difficulty'} {translateDifficulty(task.difficulty)}
+                              </span>
+                            </div>
+                            
+                            <p className={`text-xs ${isBoss ? 'text-slate-400' : 'text-amber-955/80 font-medium'}`}>
+                              {task.description}
+                            </p>
+                          
+                            {task.submission && (
+                              <div className={`p-3 rounded-xl space-y-2 border ${
+                                isBoss ? 'bg-white/5 border-white/5' : 'bg-amber-900/5 border-amber-900/10'
+                              }`}>
+                                <div className={`text-[11px] flex items-center gap-1 ${
+                                  isBoss ? 'text-slate-400' : 'text-[#5c442e]/70'
+                                }`}>
+                                  <MessageSquare className="h-3 w-3" />
+                                  {t('childNotesLabel')}
+                                </div>
+                                <p className={`text-xs font-semibold ${
+                                  isBoss ? 'text-slate-200' : 'text-[#4e361d]'
+                                }`}>{task.submission.notes}</p>
+                                {task.submission.photo && (
+                                  <button 
+                                    onClick={() => setPreviewPhotoUrl(task.submission.photo)}
+                                    className={`flex items-center gap-1 text-[11px] font-bold ${
+                                      isBoss ? 'text-cyan-400 hover:text-cyan-300' : 'text-indigo-700 hover:text-indigo-900'
+                                    }`}
+                                  >
+                                    <Eye className="h-3.5 w-3.5" />
+                                    {t('viewProofPhoto')}
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2 whitespace-nowrap">
+                            <button
+                              onClick={() => onApproveTask(task.id)}
+                              className="flex items-center gap-1.5 px-4 py-2 rounded-[4px] text-xs font-black bg-[#00E676] text-[#111216] hover:bg-[#00c867] transition-colors shadow-sm"
+                            >
+                              <Check className="h-4 w-4" />
+                              {t('approve')}
+                            </button>
+                            <button
+                              onClick={() => setRejectingTaskId(task.id)}
+                              className="flex items-center gap-1.5 px-4 py-2 rounded-[4px] text-xs font-black bg-[#FF4747] text-white hover:bg-[#ff3030] transition-colors shadow-sm"
+                            >
+                              <X className="h-4 w-4" />
+                              {t('reject')}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
 
-              {pendingTasks.length === 0 ? (
-                <div className="glass-panel p-8 text-center text-slate-500 text-sm">
-                  {t('noPendingTasks')}
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {pendingTasks.map((task) => {
-                    const isBoss = task.difficulty === '較難' || task.difficulty === '終極';
-                    const getBossLabel = (diff) => {
-                      if (diff === '較難') return t('eliteBossLabel');
-                      if (diff === '終極') return t('ultimateBossLabel');
-                      return null;
-                    };
-                    const cardClass = `p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all relative ${
-                      isBoss ? 'boss-quest-card' : 'glass-panel border border-white/10'
-                    }`;
-
-                    return (
-                      <div key={task.id} className={cardClass}>
-                        <div className="space-y-2 flex-1">
-                          <div className="flex items-center gap-3 flex-wrap">
-                            {isBoss && (
-                              <span className="bg-red-600 text-white px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider animate-pulse flex items-center gap-1 shadow-sm mr-1">
-                                {getBossLabel(task.difficulty)}
-                              </span>
-                            )}
-                            <span className="text-md font-bold text-slate-200">{task.name}</span>
-                            {task.isRepeated && (
-                              <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider">
-                                {language === 'zh' ? '⚠️ 30天內重複完成任務' : '⚠️ 30-Day Repeated Quest'}
-                              </span>
-                            )}
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getAttributeColor(task.type)}`}>
-                              {translateType(task.type)} | {language === 'zh' ? '難度' : 'Difficulty'} {translateDifficulty(task.difficulty)}
-                            </span>
-                          </div>
-                          
-                          <p className="text-xs text-slate-400">{task.description}</p>
-                        
-                        {task.submission && (
-                          <div className="p-3 bg-white/5 border border-white/5 rounded-xl space-y-2">
-                            <div className="text-[11px] text-slate-400 flex items-center gap-1">
-                              <MessageSquare className="h-3 w-3" />
-                              {t('childNotesLabel')}
-                            </div>
-                            <p className="text-xs text-slate-200 font-semibold">{task.submission.notes}</p>
-                            {task.submission.photo && (
-                              <button 
-                                onClick={() => setPreviewPhotoUrl(task.submission.photo)}
-                                className="flex items-center gap-1 text-[11px] text-cyan-400 hover:text-cyan-300 font-bold"
-                              >
-                                <Eye className="h-3.5 w-3.5" />
-                                {t('viewProofPhoto')}
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-2 whitespace-nowrap">
+              {rejectingTaskId && (
+                <div className="glass-panel p-5 border border-rose-500/30 bg-[#1e1717] space-y-4 max-w-md animate-success rounded-2xl shadow-xl">
+                  <h4 className="text-sm font-extrabold text-rose-300 flex items-center gap-1.5 uppercase tracking-wider">
+                    <AlertCircle className="h-5 w-5" />
+                    {t('rejectionReasonTitle')}
+                  </h4>
+                  
+                  <div className="space-y-2">
+                    <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                      {t('cannedReasonTitle')}
+                    </label>
+                    <div className="grid grid-cols-1 gap-1">
+                      {cannedReasons.map((reason, idx) => (
                         <button
-                          onClick={() => onApproveTask(task.id)}
-                          className="flex items-center gap-1.5 px-4 py-2 rounded-[4px] text-xs font-black bg-[#00E676] text-[#111216] hover:bg-[#00c867] transition-colors"
+                          key={idx}
+                          onClick={() => {
+                            setSelectedCannedReason(reason);
+                            setRejectReason('');
+                          }}
+                          className={`text-left px-3 py-1.5 text-xs rounded-lg border transition-all ${
+                            selectedCannedReason === reason 
+                              ? 'bg-rose-500/20 border-rose-500/50 text-rose-200' 
+                              : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-200'
+                          }`}
                         >
-                          <Check className="h-4 w-4" />
-                          {t('approve')}
+                          {reason}
                         </button>
-                        <button
-                          onClick={() => setRejectingTaskId(task.id)}
-                          className="flex items-center gap-1.5 px-4 py-2 rounded-[4px] text-xs font-black bg-[#FF4747] text-white hover:bg-[#ff3030] transition-colors"
-                        >
-                          <X className="h-4 w-4" />
-                          {t('reject')}
-                        </button>
-                      </div>
+                      ))}
                     </div>
-                  );})}
-                </div>
-              )}
-            </div>
+                  </div>
 
-            {rejectingTaskId && (
-              <div className="glass-panel p-5 border border-rose-500/30 bg-rose-955/20 space-y-4 max-w-md animate-success">
-                <h4 className="text-sm font-extrabold text-rose-300 flex items-center gap-1.5 uppercase tracking-wider">
-                  <AlertCircle className="h-5 w-5" />
-                  {t('rejectionReasonTitle')}
-                </h4>
-                
-                <div className="space-y-2">
-                  <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                    {t('cannedReasonTitle')}
-                  </label>
-                  <div className="grid grid-cols-1 gap-1">
-                    {cannedReasons.map((reason, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => {
-                          setSelectedCannedReason(reason);
-                          setRejectReason('');
-                        }}
-                        className={`text-left px-3 py-1.5 text-xs rounded-lg border transition-all ${
-                          selectedCannedReason === reason 
-                            ? 'bg-rose-500/20 border-rose-500/50 text-rose-200' 
-                            : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-200'
-                        }`}
-                      >
-                        {reason}
-                      </button>
-                    ))}
+                  <div className="space-y-2">
+                    <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                      {t('customReasonTitle')}
+                    </label>
+                    <textarea
+                      value={rejectReason}
+                      onChange={(e) => {
+                        setRejectReason(e.target.value);
+                        setSelectedCannedReason('');
+                      }}
+                      placeholder={t('customReasonPlaceholder')}
+                      className="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none"
+                      rows="3"
+                    />
+                  </div>
+
+                  <div className="flex gap-2 justify-end">
+                    <button onClick={submitRejection} className="px-4 py-2 rounded-[4px] text-xs font-black bg-[#FF4747] text-white hover:bg-[#ff3030]">{t('confirmReject')}</button>
+                    <button onClick={() => { setRejectingTaskId(null); setRejectReason(''); setSelectedCannedReason(''); }} className="px-4 py-2 rounded-[4px] text-xs font-bold bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white">{t('cancel')}</button>
                   </div>
                 </div>
+              )}
 
-                <div className="space-y-2">
-                  <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                    {t('customReasonTitle')}
-                  </label>
-                  <textarea
-                    value={rejectReason}
-                    onChange={(e) => {
-                      setRejectReason(e.target.value);
-                      setSelectedCannedReason('');
-                    }}
-                    placeholder={t('customReasonPlaceholder')}
-                    className="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none"
-                    rows="3"
-                  />
+              {/* Pending Redemptions with V2 Expired warning and block protection */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center flex-wrap gap-2">
+                  <h3 className="text-lg font-bold text-amber-100 flex items-center gap-2">
+                    <ClipboardCheck className="h-5 w-5 text-amber-400" />
+                    {t('auditTitleRedeems')} ({pendingRedemptions.length})
+                  </h3>
+                  {pendingRedemptions.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowBulkRedeemsConfirm(true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-xs font-black bg-[#00E676] text-[#111216] hover:bg-[#00c867] transition-all shadow-md transform hover:scale-105 active:scale-95"
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                      {t('bulkApproveRedeemsBtn')}
+                    </button>
+                  )}
                 </div>
 
-                <div className="flex gap-2 justify-end">
-                  <button onClick={submitRejection} className="px-4 py-2 rounded-[4px] text-xs font-black bg-[#FF4747] text-white hover:bg-[#ff3030]">{t('confirmReject')}</button>
-                  <button onClick={() => { setRejectingTaskId(null); setRejectReason(''); setSelectedCannedReason(''); }} className="px-4 py-2 rounded-[4px] text-xs font-bold bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white">{t('cancel')}</button>
-                </div>
-              </div>
-            )}
+                {pendingRedemptions.length === 0 ? (
+                  <div className="bg-white/5 border border-white/10 rounded-xl p-8 text-center text-slate-400 text-sm">
+                    {t('noPendingRedeems')}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {pendingRedemptions.map((item) => {
+                      const isExpired = item.expireAt && item.expireAt < simulatedDate;
+                      return (
+                        <div 
+                          key={item.inventoryId} 
+                          className={`p-5 border flex flex-col justify-between gap-4 rounded-2xl ${
+                            isExpired 
+                              ? 'border-rose-500/30 bg-rose-955/10 text-slate-350 shadow-sm' 
+                              : 'guild-scroll border-[#bfa470]/50 text-slate-800 shadow-sm'
+                          }`}
+                        >
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className={`px-2 py-0.5 text-[9px] font-black rounded-md uppercase tracking-wider ${getRarityBadge(item.rarity)}`}>
+                                {item.rarity} | {item.type}
+                              </span>
+                              <span className={`text-[10px] font-bold ${isExpired ? 'text-slate-400' : 'text-[#5c442e]/70'}`}>
+                                {t('applicantLabel', { name: children.find(c => c.id === item.ownerId)?.name || stats.name })}
+                              </span>
+                            </div>
+                            <h4 className={`text-md font-bold ${isExpired ? 'text-slate-100' : 'text-[#4e361d]'}`}>
+                              {item.name}
+                            </h4>
+                            <p className={`text-xs ${isExpired ? 'text-slate-400' : 'text-[#5c442e]/90 font-medium'}`}>
+                              {item.desc}
+                            </p>
+                            {item.expireAt && (
+                              <p className={`text-[10px] font-extrabold ${isExpired ? 'text-rose-450' : 'text-slate-500'}`}>
+                                {t('expiredLabel')} {item.expireAt} {isExpired && t('expiredAlert')}
+                              </p>
+                            )}
+                          </div>
 
-            {/* Pending Redemptions with V2 Expired warning and block protection */}
-            <div className="space-y-4">
-              <div className="flex justify-between items-center flex-wrap gap-2">
-                <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
-                  <ClipboardCheck className="h-5 w-5 text-indigo-400" />
-                  {t('auditTitleRedeems')} ({pendingRedemptions.length})
-                </h3>
-                {pendingRedemptions.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setShowBulkRedeemsConfirm(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-xs font-black bg-[#00E676] text-[#111216] hover:bg-[#00c867] transition-all shadow-md transform hover:scale-105 active:scale-95"
-                  >
-                    <Check className="h-3.5 w-3.5" />
-                    {t('bulkApproveRedeemsBtn')}
-                  </button>
+                          <div className="flex gap-2 border-t border-black/5 pt-3 mt-1">
+                            <button
+                              disabled={isExpired}
+                              onClick={() => onApproveRedeem(item.inventoryId)}
+                              className={`flex-1 py-2 rounded-[4px] text-xs font-black transition-all ${
+                                isExpired 
+                                  ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-750' 
+                                  : 'bg-[#00E676] text-[#111216] hover:bg-[#00c867] shadow-sm'
+                              }`}
+                            >
+                              {isExpired ? t('cardExpiredBlock') : t('confirmApprove')}
+                            </button>
+                            <button
+                              onClick={() => onRejectRedeem(item.inventoryId)}
+                              className="px-3 py-2 rounded-[4px] text-xs font-bold bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white transition-colors shadow-sm"
+                            >
+                              {isExpired ? t('reclaimCard') : t('rejectRedeem')}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
-
-              {pendingRedemptions.length === 0 ? (
-                <div className="glass-panel p-8 text-center text-slate-500 text-sm">
-                  {t('noPendingRedeems')}
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {pendingRedemptions.map((item) => {
-                    const isExpired = item.expireAt && item.expireAt < simulatedDate;
-                    return (
-                      <div 
-                        key={item.inventoryId} 
-                        className={`glass-panel p-5 border flex flex-col justify-between gap-4 ${
-                          isExpired ? 'border-rose-500/30 bg-rose-950/10' : 'border-amber-500/20 bg-amber-500/5'
-                        }`}
-                      >
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className={`px-2 py-0.5 text-[9px] font-black rounded-md uppercase tracking-wider ${getRarityBadge(item.rarity)}`}>
-                              {item.rarity} | {item.type}
-                            </span>
-                            <span className="text-[10px] text-slate-400 font-bold">{t('applicantLabel', { name: children.find(c => c.id === item.ownerId)?.name || stats.name })}</span>
-                          </div>
-                          <h4 className="text-md font-bold text-slate-100">{item.name}</h4>
-                          <p className="text-xs text-slate-400">{item.desc}</p>
-                          {item.expireAt && (
-                            <p className={`text-[10px] font-extrabold ${isExpired ? 'text-rose-400' : 'text-slate-400'}`}>
-                              {t('expiredLabel')} {item.expireAt} {isExpired && t('expiredAlert')}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="flex gap-2 border-t border-white/5 pt-3 mt-1">
-                          <button
-                            disabled={isExpired}
-                            onClick={() => onApproveRedeem(item.inventoryId)}
-                            className={`flex-1 py-2 rounded-[4px] text-xs font-black transition-all ${
-                              isExpired 
-                                ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-750' 
-                                : 'bg-[#00E676] text-[#111216] hover:bg-[#00c867]'
-                            }`}
-                          >
-                            {isExpired ? t('cardExpiredBlock') : t('confirmApprove')}
-                          </button>
-                          <button
-                            onClick={() => onRejectRedeem(item.inventoryId)}
-                            className="px-3 py-2 rounded-[4px] text-xs font-bold bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white transition-colors"
-                          >
-                            {isExpired ? t('reclaimCard') : t('rejectRedeem')}
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
             </div>
-
+            
             {/* Collapsible History Section */}
             <div className="border-t border-white/10 pt-6 space-y-4">
               <div className="flex items-center justify-between">

@@ -352,6 +352,7 @@ function KidPortal({
   const [showCompletedHistory, setShowCompletedHistory] = useState(false);
   const [showBackpackHistory, setShowBackpackHistory] = useState(false);
   const [swappingTaskId, setSwappingTaskId] = useState(null);
+  const [selectedGridItem, setSelectedGridItem] = useState(null);
 
   const handleSpeakTourStep = (stepNum) => {
     if (!('speechSynthesis' in window)) {
@@ -1619,27 +1620,44 @@ function KidPortal({
               </div>
             </div>
 
-            <div className="w-full space-y-2">
-              <div className="flex justify-between items-end text-xs font-bold px-1">
-                <span className="text-sm text-amber-300">Level {stats.level}</span>
-                <span className="text-slate-400">{stats.exp} / {stats.expNeeded} EXP</span>
+            <div className="w-full space-y-3">
+              {/* HP Bar */}
+              <div className="w-full space-y-1">
+                <div className="flex justify-between items-end text-[10px] font-black uppercase tracking-wider px-1">
+                  <span className="text-slate-400">❤️ HP / Stamina</span>
+                  <span className="text-rose-400">100 / 100 HP</span>
+                </div>
+                <div className="hp-metallic-bar w-full">
+                  <div 
+                    className="hp-metallic-fill"
+                    style={{ width: `100%` }}
+                  ></div>
+                </div>
               </div>
-              <div className="h-3 w-full bg-slate-900 rounded-full border border-white/5 overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-violet-500 to-cyan-400 rounded-full transition-all duration-500"
-                  style={{ width: `${(stats.exp / stats.expNeeded) * 100}%` }}
-                ></div>
+
+              {/* EXP Bar */}
+              <div className="w-full space-y-1">
+                <div className="flex justify-between items-end text-[10px] font-black uppercase tracking-wider px-1">
+                  <span className="text-slate-400">⚡ EXP / Progress</span>
+                  <span className="text-amber-300">Level {stats.level} ({stats.exp} / {stats.expNeeded} EXP)</span>
+                </div>
+                <div className="exp-metallic-bar w-full">
+                  <div 
+                    className="exp-metallic-fill transition-all duration-500"
+                    style={{ width: `${Math.min(100, (stats.exp / stats.expNeeded) * 100)}%` }}
+                  ></div>
+                </div>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4 w-full">
-              <div className="glass-panel p-3 border-white/5 bg-white/5">
-                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{t('goldLabel')}</div>
-                <div className="text-lg font-black text-amber-400 mt-1">🪙 {stats.gold}</div>
+              <div className="glass-panel p-4 border border-amber-500/20 bg-gradient-to-br from-slate-900 to-amber-500/5 hover:border-amber-500/40 hover:shadow-[0_0_15px_rgba(245,158,11,0.15)] transition-all duration-300 rounded-2xl">
+                <div className="text-[10px] text-amber-400 font-black uppercase tracking-widest">{t('goldLabel')}</div>
+                <div className="text-lg font-black text-amber-400 mt-1 drop-shadow-[0_0_6px_rgba(245,158,11,0.4)]">🪙 {stats.gold}</div>
               </div>
-              <div className="glass-panel p-3 border-white/5 bg-white/5">
-                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{t('ticketsLabel')}</div>
-                <div className="text-lg font-black text-cyan-400 mt-1">🎫 {stats.tickets}</div>
+              <div className="glass-panel p-4 border border-cyan-500/20 bg-gradient-to-br from-slate-900 to-cyan-500/5 hover:border-cyan-500/40 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-300 rounded-2xl">
+                <div className="text-[10px] text-cyan-400 font-black uppercase tracking-widest">{t('ticketsLabel')}</div>
+                <div className="text-lg font-black text-cyan-400 mt-1 drop-shadow-[0_0_6px_rgba(6,182,212,0.4)]">🎫 {stats.tickets}</div>
               </div>
             </div>
 
@@ -1841,11 +1859,41 @@ function KidPortal({
         } else {
           // Define themed dungeon categories configuration
           const categoriesConfig = [
-            { type: '德', key: 'dungeonVirtue', color: 'border-emerald-500/25 bg-emerald-500/5 text-[#16a34a]', icon: '🛡️' },
-            { type: '智', key: 'dungeonWisdom', color: 'border-[#0284c7]/25 bg-[#0284c7]/5 text-[#0284c7]', icon: '🔮' },
-            { type: '體', key: 'dungeonCourage', color: 'border-[#ea580c]/25 bg-[#ea580c]/5 text-[#ea580c]', icon: '⚡' },
-            { type: '群', key: 'dungeonEmpathy', color: 'border-[#db2777]/25 bg-[#db2777]/5 text-[#db2777]', icon: '🤝' },
-            { type: '美', key: 'dungeonCreativity', color: 'border-[#7c3aed]/25 bg-[#7c3aed]/5 text-[#7c3aed]', icon: '🎨' },
+            { 
+              type: '德', 
+              key: 'dungeonVirtue', 
+              color: 'border-emerald-500/35 bg-emerald-500/10 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.15)]', 
+              bgStyle: 'bg-gradient-to-r from-slate-900 via-emerald-950/20 to-slate-900 border border-emerald-500/10 shadow-lg',
+              icon: '🛡️' 
+            },
+            { 
+              type: '智', 
+              key: 'dungeonWisdom', 
+              color: 'border-cyan-500/35 bg-cyan-500/10 text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.15)]', 
+              bgStyle: 'bg-gradient-to-r from-slate-900 via-cyan-950/20 to-slate-900 border border-cyan-500/10 shadow-lg',
+              icon: '🔮' 
+            },
+            { 
+              type: '體', 
+              key: 'dungeonCourage', 
+              color: 'border-orange-500/35 bg-orange-500/10 text-orange-400 shadow-[0_0_12px_rgba(249,115,22,0.15)]', 
+              bgStyle: 'bg-gradient-to-r from-slate-900 via-orange-950/20 to-slate-900 border border-orange-500/10 shadow-lg',
+              icon: '⚡' 
+            },
+            { 
+              type: '群', 
+              key: 'dungeonEmpathy', 
+              color: 'border-pink-500/35 bg-pink-500/10 text-pink-400 shadow-[0_0_12px_rgba(236,72,153,0.15)]', 
+              bgStyle: 'bg-gradient-to-r from-slate-900 via-pink-950/20 to-slate-900 border border-pink-500/10 shadow-lg',
+              icon: '🤝' 
+            },
+            { 
+              type: '美', 
+              key: 'dungeonCreativity', 
+              color: 'border-purple-500/35 bg-purple-500/10 text-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.15)]', 
+              bgStyle: 'bg-gradient-to-r from-slate-900 via-purple-950/20 to-slate-900 border border-purple-500/10 shadow-lg',
+              icon: '🎨' 
+            },
           ];
 
           activeContent = (
@@ -1860,12 +1908,12 @@ function KidPortal({
                   if (catTasks.length === 0) return null;
 
                   return (
-                    <div key={cat.type} className="space-y-3 bg-[#FFFFFF]/35 p-4 rounded-xl border border-dashed border-slate-200">
-                      <div className={`flex items-center justify-between px-3 py-2 rounded-lg border ${cat.color}`}>
+                    <div key={cat.type} className={`space-y-3 p-5 rounded-2xl ${cat.bgStyle}`}>
+                      <div className={`flex items-center justify-between px-4 py-2 rounded-xl border ${cat.color}`}>
                         <span className="text-sm font-black flex items-center gap-1.5">
                           {cat.icon} {renderTextWithZhuyin(t(cat.key))}
                         </span>
-                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200">
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-950 border border-white/5 text-slate-300">
                           {catTasks.length} {language === 'zh' ? '個任務' : 'Quests'}
                         </span>
                       </div>
@@ -2169,64 +2217,124 @@ function KidPortal({
         <div className="glass-panel p-6 flex flex-col items-center justify-center min-h-[400px] text-center relative overflow-hidden animate-success">
           
           {gachaState === 'idle' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
-              {/* Left Column: Mystery Chest Summon */}
-              <div className="space-y-5 flex flex-col items-center text-center p-5 bg-white/[0.02] border border-white/5 rounded-2xl">
-                <div className="text-6xl animate-float">🎁</div>
-                <div className="space-y-2">
-                  <h3 className="text-lg font-black text-amber-400">{t('summonTitle')}</h3>
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    {t('summonDesc')}
-                  </p>
-                </div>
-                <div className="p-3 bg-white/5 border border-white/5 rounded-xl font-bold text-sm w-full">
-                  {t('availableTickets')}：<span className="text-cyan-400 text-lg">🎫 {stats.tickets}</span>
-                </div>
-                <button
-                  onClick={startDrawCard}
-                  disabled={stats.tickets < 1 || isDrawingGacha || isReadOnly}
-                  className={`w-full py-3 rounded-[4px] font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
-                    stats.tickets >= 1 && !isDrawingGacha && !isReadOnly
-                      ? 'bg-[#00E676] text-[#111216] hover:bg-[#00c867] shadow-md border-t border-white/20' 
-                      : 'bg-[#252529] border border-[#35363A] text-slate-500 cursor-not-allowed'
-                  }`}
-                >
-                  {isDrawingGacha && <span className="spinner-inline"></span>}
-                  {isReadOnly ? t('readOnlyGachaBlock') : isDrawingGacha ? t('summoning') : stats.tickets >= 1 ? t('openMysteryChest') : t('insufficientTickets')}
-                </button>
+            <div className="gacha-cabinet w-full max-w-2xl flex flex-col items-stretch overflow-hidden">
+              
+              {/* Header neon board */}
+              <div className="gacha-neon-header py-4 text-center border-b-2 border-indigo-500/30">
+                <h3 className="text-xl font-black text-white tracking-widest uppercase flex items-center justify-center gap-2">
+                  <span>🎰 QUEST SUMMONER</span>
+                  <span className="text-xs bg-slate-950/60 text-[#f43f5e] border border-[#f43f5e]/30 px-2 py-0.5 rounded font-mono">V.3</span>
+                  <span>冒險扭蛋機</span>
+                </h3>
+                <p className="text-[10px] text-slate-200 mt-1 font-bold uppercase tracking-wider">
+                  {language === 'zh' ? '用幸運與累積的努力 召喚稀有寶藏卡牌' : 'Summon rare treasure cards with your hard-earned points'}
+                </p>
               </div>
 
-              {/* Right Column: Gold Vending Machine */}
-              <div className="space-y-5 flex flex-col items-center text-center p-5 bg-gradient-to-b from-amber-950/20 to-transparent border border-amber-500/10 rounded-2xl relative overflow-hidden">
-                {/* Decorative shimmer */}
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-400/5 via-transparent to-amber-400/5 pointer-events-none"></div>
+              {/* Glass Tube window showing mystery cards/eggs */}
+              <div className="gacha-glass-area h-36 flex items-center justify-around relative overflow-hidden px-6">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none z-10"></div>
                 
-                <div className="text-6xl relative z-10" style={{ animation: 'float 3s ease-in-out infinite 0.5s' }}>🏪</div>
-                <div className="space-y-2 relative z-10">
-                  <h3 className="text-lg font-black text-amber-300">{t('vendingMachineTitle')}</h3>
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    {t('vendingMachineDesc')}
+                {/* Visual mystery capsules floating */}
+                <div className="text-4xl animate-bounce" style={{ animationDelay: '0.1s' }}>🔴</div>
+                <div className="text-4xl animate-bounce" style={{ animationDelay: '0.4s' }}>🔵</div>
+                <div className="text-4xl animate-bounce" style={{ animationDelay: '0.2s' }}>🟡</div>
+                <div className="text-4xl animate-bounce" style={{ animationDelay: '0.5s' }}>🟢</div>
+                <div className="text-4xl animate-bounce" style={{ animationDelay: '0.3s' }}>🟣</div>
+                
+                {/* Neon tubes */}
+                <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-[#f43f5e] opacity-40 shadow-[0_0_8px_#f43f5e]"></div>
+                <div className="absolute right-4 top-0 bottom-0 w-0.5 bg-[#a855f7] opacity-40 shadow-[0_0_8px_#a855f7]"></div>
+              </div>
+
+              {/* Control Panel Area */}
+              <div className="gacha-control-panel p-5 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                
+                {/* Left: Mystery Chest Summon (Tickets 🎫) */}
+                <div className="space-y-3 text-center p-4 bg-slate-950/50 border border-white/5 rounded-2xl">
+                  <div className="text-sm font-black text-emerald-450 uppercase tracking-wider flex items-center justify-center gap-1.5">
+                    <span>🎫 {t('summonTitle')}</span>
+                  </div>
+                  <p className="text-[10px] text-slate-400 leading-relaxed max-w-[160px] mx-auto">
+                    {t('summonDesc')}
                   </p>
+                  <div className="p-2 bg-slate-950/80 border border-white/5 rounded-xl font-bold text-xs">
+                    {t('availableTickets')}：<span className="text-cyan-400 text-sm">🎫 {stats.tickets}</span>
+                  </div>
+                  <button
+                    onClick={startDrawCard}
+                    disabled={stats.tickets < 1 || isDrawingGacha || isReadOnly}
+                    className={`w-full py-2 bg-[#00E676] text-[#111216] font-black rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                      stats.tickets >= 1 && !isDrawingGacha && !isReadOnly
+                        ? 'hover:bg-[#00c867] shadow-[0_0_10px_rgba(0,230,118,0.2)] hover:scale-[1.02] active:scale-95' 
+                        : 'opacity-40 cursor-not-allowed bg-slate-800 text-slate-500'
+                    }`}
+                  >
+                    {isDrawingGacha && <span className="spinner-inline"></span>}
+                    {isReadOnly ? t('readOnlyGachaBlock') : stats.tickets >= 1 ? t('openMysteryChest') : t('insufficientTickets')}
+                  </button>
                 </div>
-                <div className="p-3 bg-white/5 border border-white/5 rounded-xl font-bold text-sm w-full relative z-10">
-                  <div className="flex items-center justify-between">
-                    <span>{t('goldLabel')}：<span className="text-amber-400 text-lg">🪙 {stats.gold}</span></span>
-                    <span className="text-[10px] text-slate-500 font-bold uppercase">300 🪙 = 1 🎫</span>
+
+                {/* Center: Rotary Crank dial wheel */}
+                <div className="flex flex-col items-center justify-center py-2">
+                  <div className="text-[9px] text-slate-550 font-black uppercase tracking-widest mb-2">
+                    {language === 'zh' ? '旋轉按鈕抽卡' : 'Turn to draw'}
+                  </div>
+                  <button
+                    disabled={stats.tickets < 1 || isDrawingGacha || isReadOnly}
+                    onClick={startDrawCard}
+                    className={`gacha-rotary-knob w-20 h-20 rounded-full flex items-center justify-center relative active:scale-95 transition-all ${
+                      stats.tickets < 1 || isDrawingGacha || isReadOnly ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'
+                    }`}
+                    style={{ transform: isDrawingGacha ? 'rotate(360deg)' : 'rotate(0deg)' }}
+                  >
+                    {/* Metallic core indicator */}
+                    <div className="w-12 h-3 bg-slate-400 rounded-full absolute"></div>
+                    <div className="w-3 h-12 bg-slate-400 rounded-full absolute"></div>
+                    <div className="w-8 h-8 bg-slate-700 border-2 border-slate-500 rounded-full z-10 flex items-center justify-center">
+                      <div className="w-3 h-3 bg-amber-450 rounded-full animate-pulse"></div>
+                    </div>
+                  </button>
+                  <div className="text-[10px] text-amber-500 font-bold mt-2 animate-pulse">
+                    {isDrawingGacha ? (language === 'zh' ? '正在轉動中...' : 'Drawing...') : (language === 'zh' ? '⭐ 啟動扭蛋鈕 ⭐' : '⭐ Twist Dial ⭐')}
                   </div>
                 </div>
-                <button
-                  onClick={handleBuyTicket}
-                  disabled={stats.gold < 300 || isBuyingTicket || isReadOnly}
-                  className={`w-full py-3 rounded-[4px] font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 relative z-10 ${
-                    stats.gold >= 300 && !isBuyingTicket && !isReadOnly
-                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-[#111216] hover:from-amber-400 hover:to-amber-500 shadow-md shadow-amber-500/20 border-t border-white/20' 
-                      : 'bg-[#252529] border border-[#35363A] text-slate-500 cursor-not-allowed'
-                  }`}
-                >
-                  {isBuyingTicket && <span className="spinner-inline"></span>}
-                  {isReadOnly ? t('readOnlyGachaBlock') : isBuyingTicket ? '...' : stats.gold >= 300 ? t('buyTicketBtn') : t('insufficientGold')}
-                </button>
+
+                {/* Right: Gold ticket vending machine (Gold 🪙) */}
+                <div className="space-y-3 text-center p-4 bg-gradient-to-b from-amber-950/20 to-slate-950/50 border border-amber-500/10 rounded-2xl">
+                  <div className="text-sm font-black text-amber-350 uppercase tracking-wider flex items-center justify-center gap-1.5">
+                    <span>🏪 {t('vendingMachineTitle')}</span>
+                  </div>
+                  <p className="text-[10px] text-slate-400 leading-relaxed max-w-[160px] mx-auto">
+                    {t('vendingMachineDesc')}
+                  </p>
+                  <div className="p-2 bg-slate-950/80 border border-white/5 rounded-xl font-bold text-xs flex justify-between items-center">
+                    <span>🪙 {stats.gold}</span>
+                    <span className="text-[9px] text-slate-550 uppercase">300 🪙 = 1 🎫</span>
+                  </div>
+                  <button
+                    onClick={handleBuyTicket}
+                    disabled={stats.gold < 300 || isBuyingTicket || isReadOnly}
+                    className={`w-full py-2 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                      stats.gold >= 300 && !isBuyingTicket && !isReadOnly
+                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-[#111216] hover:from-amber-400 hover:to-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.2)] hover:scale-[1.02] active:scale-95' 
+                        : 'opacity-40 cursor-not-allowed bg-slate-800 text-slate-500'
+                    }`}
+                  >
+                    {isBuyingTicket && <span className="spinner-inline"></span>}
+                    {isReadOnly ? t('readOnlyGachaBlock') : isBuyingTicket ? '...' : stats.gold >= 300 ? t('buyTicketBtn') : t('insufficientGold')}
+                  </button>
+                </div>
+
               </div>
+              
+              {/* Outbox coin slot / capsule roll container */}
+              <div className="p-2 bg-slate-950 border-t-2 border-slate-900 text-center flex items-center justify-center gap-4 text-[10px] text-slate-600 font-mono">
+                <span>INSERT COIN</span>
+                <span className="w-1.5 h-3 bg-rose-500 rounded-sm animate-pulse"></span>
+                <span>TICKET DISPENSER</span>
+              </div>
+
             </div>
           )}
 
@@ -2399,127 +2507,223 @@ function KidPortal({
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {sortedInventory.map((item, idx) => {
-                  const isExpired = item.status === '已過期';
-                  const isRedeeming = item.inventoryId === redeemingId;
-                  return (
-                    <div 
-                      key={item.inventoryId}
-                      style={{ animationDelay: `${idx * 80}ms` }}
-                      className={`glass-panel p-5 border-2 flex flex-col justify-between gap-4 bg-gradient-to-b from-slate-900 to-slate-950 animate-backpack-item ${
-                        isRedeeming ? 'item-redeeming' : ''
-                      } ${
-                        isExpired ? 'border-white/5 opacity-55' : getRarityClass(item.rarity)
-                      }`}
-                    >
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className={`px-2 py-0.5 text-[9px] font-black rounded-md uppercase tracking-wider ${
-                            isExpired ? 'bg-slate-800 text-slate-500 border border-slate-700' : getRarityBadge(item.rarity)
-                          }`}>
-                            {item.rarity}
-                          </span>
-                          <span className="text-[10px] text-slate-500">{item.dateAcquired}</span>
-                        </div>
+              (() => {
+                // Keep selected item within the current list
+                const activeSelection = selectedGridItem && sortedInventory.some(i => i.inventoryId === selectedGridItem.inventoryId)
+                  ? selectedGridItem 
+                  : sortedInventory[0];
 
-                        <h4 className={`text-md font-bold ${isExpired ? 'text-slate-500 line-through' : 'text-slate-100'} flex items-center gap-1.5`}>
-                          {renderTextWithZhuyin(item.name)}
-                          <button
-                            type="button"
-                            onClick={() => handleSpeak(item, 'backpack')}
-                            className={`kid-speak-btn p-1.5 ml-1 ${
-                              speakingTaskId === item.inventoryId ? 'is-speaking' : ''
-                            }`}
-                            title={language === 'zh' ? '語音讀道具卡' : 'Read Card Out Loud'}
-                          >
-                            {speakingTaskId === item.inventoryId ? (
-                              <VolumeX className="h-4 w-4" />
-                            ) : (
-                              <Volume2 className="h-4 w-4" />
-                            )}
-                          </button>
-                        </h4>
-                        <p className="text-xs text-slate-400">{renderTextWithZhuyin(item.desc)}</p>
-                        {item.expireAt && (
-                          <p className={`text-[10px] font-bold ${isExpired ? 'text-rose-500' : 'text-slate-500'}`}>
-                            {t('expiryDate')}: {item.expireAt} {isExpired && `(${t('cardExpired')})`}
-                          </p>
-                        )}
+                // Function to get grid slot emoji thumbnail based on item type
+                const getItemIcon = (type) => {
+                  if (type === '資源卡') return '💎';
+                  if (type === '特權卡') return '🔑';
+                  if (type === '體驗卡') return '👟';
+                  if (type === '收藏卡') return '🏆';
+                  return '📦';
+                };
+
+                const getRaritySlotBorderClass = (rarity) => {
+                  if (rarity === 'Mythic') return 'rpg-slot-mythic';
+                  if (rarity === 'Legendary') return 'rpg-slot-legendary';
+                  if (rarity === 'Epic') return 'rpg-slot-epic';
+                  if (rarity === 'Rare') return 'rpg-slot-rare';
+                  return 'rpg-slot-common';
+                };
+
+                return (
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                    {/* Left: 6x4 RPG Inventory Grid */}
+                    <div className="lg:col-span-2 space-y-2">
+                      <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider px-1">
+                        {language === 'zh' ? '冒險背包欄位 (6 x 4 Grid)' : 'Backpack Slots (6 x 4 Grid)'}
                       </div>
-
-                      <div className="flex items-center justify-between gap-2 border-t border-white/5 pt-3 mt-1">
-                        
-                        <div className="flex items-center gap-1">
-                          {item.status === '未使用' && <Clock className="h-3.5 w-3.5 text-cyan-400" />}
-                          {item.status === '待核銷' && <Clock className="h-3.5 w-3.5 text-amber-400 animate-pulse" />}
-                          {item.status === '已使用' && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />}
-                          {item.status === '已過期' && <Ban className="h-3.5 w-3.5 text-rose-500" />}
-                          <span className={`text-xs font-bold ${
-                            item.status === '未使用' ? 'text-cyan-400' :
-                            item.status === '待核銷' ? 'text-amber-400' :
-                            item.status === '已使用' ? 'text-emerald-400' : 'text-rose-500'
-                          }`}>
-                            {item.status === '未使用' ? t('voucherStatusUnused') :
-                             item.status === '待核銷' ? t('voucherStatusPending') :
-                             item.status === '已使用' ? t('voucherStatusUsed') :
-                             t('voucherStatusExpired')}
-                          </span>
-                        </div>
-
-                        {item.status === '未使用' && (
-                          isReadOnly ? (
-                            <span className="text-[10px] text-slate-500 italic">
-                              {t('readOnlyTag')}
-                            </span>
-                          ) : item.type === '收藏卡' ? (
-                            <button
-                              onClick={() => onToggleEquip(item.inventoryId)}
-                              className="px-3 py-1 bg-[#00E676] text-[#111216] hover:bg-[#00c867] text-xs font-black rounded-[4px] transition-colors"
-                            >
-                              {language === 'zh' ? '佩戴展示' : 'Display'}
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => handleRedeemClick(item.inventoryId, false)}
-                              className="px-3 py-1 bg-[#3661FF] text-white hover:bg-[#4e75ff] text-xs font-black rounded-[4px] transition-colors"
-                            >
-                              {language === 'zh' ? '出示核銷' : 'Use'}
-                            </button>
-                          )
-                        )}
-
-                        {item.status === '已使用' && item.type === '收藏卡' && (
-                          isReadOnly ? null : (
-                            <button
-                              onClick={() => onToggleEquip(item.inventoryId)}
-                              className="px-3 py-1 bg-[#FF4747] text-white hover:bg-rose-700 text-xs font-black rounded-[4px] transition-colors"
-                            >
-                              {language === 'zh' ? '取下徽章' : 'Unequip'}
-                            </button>
-                          )
-                        )}
-
-                        {item.status === '待核銷' && (
-                          <div className="flex flex-col items-end gap-1.5">
-                            <span className="text-[10px] text-amber-500/80 font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                              {language === 'zh' ? '等待家長審核' : 'Pending parent approval'}
-                            </span>
-                            {!isReadOnly && (
-                              <button
-                                onClick={() => onCancelRedeem(item.inventoryId)}
-                                className="px-2.5 py-1 bg-rose-600/25 border border-rose-500/35 hover:bg-rose-600/40 text-rose-350 text-[10px] font-bold rounded-lg transition-all active:scale-95 shadow-sm"
+                      <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+                        {Array.from({ length: 24 }).map((_, slotIdx) => {
+                          const item = sortedInventory[slotIdx];
+                          if (!item) {
+                            // Empty slot
+                            return (
+                              <div 
+                                key={`empty-${slotIdx}`}
+                                className="rpg-grid-slot aspect-square flex items-center justify-center border border-white/5 bg-slate-950/40 text-slate-800"
                               >
-                                {language === 'zh' ? '回復核銷' : 'Revert Use'}
-                              </button>
-                            )}
-                          </div>
-                        )}
+                                <span className="text-lg opacity-20">⚙️</span>
+                              </div>
+                            );
+                          }
+
+                          // Occupied slot
+                          const isSelected = activeSelection && activeSelection.inventoryId === item.inventoryId;
+                          const isExpired = item.status === '已過期';
+                          const isPending = item.status === '待核銷';
+
+                          return (
+                            <button
+                              key={item.inventoryId}
+                              type="button"
+                              onClick={() => setSelectedGridItem(item)}
+                              className={`rpg-grid-slot aspect-square flex flex-col items-center justify-center p-1 cursor-pointer transition-all ${
+                                getRaritySlotBorderClass(item.rarity)
+                              } ${
+                                isSelected 
+                                  ? 'ring-2 ring-indigo-500 bg-indigo-500/10 border-indigo-400' 
+                                  : ''
+                              } ${
+                                isExpired ? 'opacity-55' : ''
+                              }`}
+                            >
+                              {/* Rarity/Status Indicators */}
+                              <div className="absolute top-1 right-1 flex gap-0.5">
+                                {isPending && (
+                                  <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-ping"></span>
+                                )}
+                                {item.status === '已使用' && item.type === '收藏卡' && (
+                                  <span className="text-[8px] leading-none">✨</span>
+                                )}
+                              </div>
+                              
+                              <span className="text-2xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+                                {getItemIcon(item.type)}
+                              </span>
+                              
+                              <span className="text-[8px] font-black text-slate-400 mt-1 truncate max-w-full px-0.5">
+                                {item.name}
+                              </span>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+
+                    {/* Right: Detailed Inspector Panel */}
+                    <div className="lg:col-span-1">
+                      {activeSelection ? (
+                        <div className={`rpg-tooltip-card p-5 border-2 ${getRarityClass(activeSelection.rarity)} flex flex-col gap-4 shadow-2xl relative animate-backpack-item`}>
+                          {/* Card Rarity Badge & Date */}
+                          <div className="flex items-center justify-between">
+                            <span className={`px-2 py-0.5 text-[9px] font-black rounded-md uppercase tracking-wider ${
+                              activeSelection.status === '已過期' 
+                                ? 'bg-slate-800 text-slate-500 border border-slate-700' 
+                                : getRarityBadge(activeSelection.rarity)
+                            }`}>
+                              {activeSelection.rarity}
+                            </span>
+                            <span className="text-[10px] text-slate-500 font-mono">{activeSelection.dateAcquired}</span>
+                          </div>
+
+                          {/* Card Title & Speech Chaining */}
+                          <div className="space-y-1">
+                            <h4 className={`text-lg font-black ${activeSelection.status === '已過期' ? 'text-slate-500 line-through' : 'text-slate-100'} flex items-center gap-1`}>
+                              {getItemIcon(activeSelection.type)} {renderTextWithZhuyin(activeSelection.name)}
+                              <button
+                                type="button"
+                                onClick={() => handleSpeak(activeSelection, 'backpack')}
+                                className={`kid-speak-btn p-1.5 ml-1 ${
+                                  speakingTaskId === activeSelection.inventoryId ? 'is-speaking' : ''
+                                }`}
+                                title={language === 'zh' ? '語音讀道具卡' : 'Read Card Out Loud'}
+                              >
+                                {speakingTaskId === activeSelection.inventoryId ? (
+                                  <VolumeX className="h-4.5 w-4.5" />
+                                ) : (
+                                  <Volume2 className="h-4.5 w-4.5" />
+                                )}
+                              </button>
+                            </h4>
+                            <div className="text-[10px] text-slate-500 font-bold">
+                              {language === 'zh' ? '卡片類型：' : 'Card Type: '}{activeSelection.type}
+                            </div>
+                          </div>
+
+                          {/* Card Lore / Desc */}
+                          <p className="text-xs text-slate-350 leading-relaxed bg-black/30 p-3 rounded-xl border border-white/5">
+                            {renderTextWithZhuyin(activeSelection.desc)}
+                          </p>
+
+                          {activeSelection.expireAt && (
+                            <p className={`text-[10px] font-bold ${activeSelection.status === '已過期' ? 'text-rose-500' : 'text-slate-500'}`}>
+                              📅 {t('expiryDate')}: {activeSelection.expireAt} {activeSelection.status === '已過期' && `(${t('cardExpired')})`}
+                            </p>
+                          )}
+
+                          {/* Status and Action Buttons */}
+                          <div className="flex flex-col gap-3 border-t border-white/5 pt-3 mt-1">
+                            <div className="flex items-center gap-1.5">
+                              {activeSelection.status === '未使用' && <Clock className="h-4 w-4 text-cyan-400" />}
+                              {activeSelection.status === '待核銷' && <Clock className="h-4 w-4 text-amber-400 animate-pulse" />}
+                              {activeSelection.status === '已使用' && <CheckCircle2 className="h-4 w-4 text-emerald-400" />}
+                              {activeSelection.status === '已過期' && <Ban className="h-4 w-4 text-rose-500" />}
+                              <span className={`text-xs font-black uppercase tracking-wider ${
+                                activeSelection.status === '未使用' ? 'text-cyan-400' :
+                                activeSelection.status === '待核銷' ? 'text-amber-400' :
+                                activeSelection.status === '已使用' ? 'text-emerald-400' : 'text-rose-500'
+                              }`}>
+                                {activeSelection.status === '未使用' ? t('voucherStatusUnused') :
+                                 activeSelection.status === '待核銷' ? t('voucherStatusPending') :
+                                 activeSelection.status === '已使用' ? t('voucherStatusUsed') :
+                                 t('voucherStatusExpired')}
+                              </span>
+                            </div>
+
+                            {activeSelection.status === '未使用' && (
+                              isReadOnly ? (
+                                <span className="text-xs text-slate-500 italic text-center py-2 bg-white/5 rounded-lg border border-white/5">
+                                  ⚠️ {t('readOnlyTag')}
+                                </span>
+                              ) : activeSelection.type === '收藏卡' ? (
+                                <button
+                                  onClick={() => onToggleEquip(activeSelection.inventoryId)}
+                                  className="w-full py-2 bg-[#00E676] text-[#111216] hover:bg-[#00c867] text-xs font-black rounded-xl transition-all shadow-[0_0_12px_rgba(0,230,118,0.25)] hover:scale-[1.02] active:scale-95"
+                                >
+                                  {language === 'zh' ? '佩戴展示徽章' : 'Equip Badge'}
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleRedeemClick(activeSelection.inventoryId, false)}
+                                  className="w-full py-2 bg-[#3661FF] text-white hover:bg-[#4e75ff] text-xs font-black rounded-xl transition-all shadow-[0_0_12px_rgba(54,97,255,0.25)] hover:scale-[1.02] active:scale-95"
+                                >
+                                  {language === 'zh' ? '出示核銷卡片' : 'Use Card'}
+                                </button>
+                              )
+                            )}
+
+                            {activeSelection.status === '已使用' && activeSelection.type === '收藏卡' && (
+                              isReadOnly ? null : (
+                                <button
+                                  onClick={() => onToggleEquip(activeSelection.inventoryId)}
+                                  className="w-full py-2 bg-[#FF4747] text-white hover:bg-rose-700 text-xs font-black rounded-xl transition-all hover:scale-[1.02] active:scale-95"
+                                >
+                                  {language === 'zh' ? '取下佩戴徽章' : 'Unequip Badge'}
+                                </button>
+                              )
+                            )}
+
+                            {activeSelection.status === '待核銷' && (
+                              <div className="flex flex-col gap-2">
+                                <span className="text-xs text-amber-500 font-bold bg-amber-500/10 py-2 rounded-xl border border-amber-500/20 text-center">
+                                  ⏳ {language === 'zh' ? '等待家長審核中...' : 'Pending parent approval...'}
+                                </span>
+                                {!isReadOnly && (
+                                  <button
+                                    onClick={() => onCancelRedeem(activeSelection.inventoryId)}
+                                    className="w-full py-2 bg-rose-600/25 border border-rose-500/35 hover:bg-rose-600/40 text-rose-350 text-xs font-bold rounded-xl transition-all active:scale-95 shadow-sm"
+                                  >
+                                    {language === 'zh' ? '取消核銷要求' : 'Revert Use Request'}
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="glass-panel p-6 border-white/5 text-center text-slate-500 text-xs italic">
+                          🎒 {language === 'zh' ? '點擊或懸停背包中的道具來查看詳情' : 'Click a card slot to inspect details'}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()
             )}
 
             {/* Collapsible History Section for Used & Expired Items */}

@@ -845,6 +845,161 @@ th[class*="bg-white/5"] {
   z-index: 10;
 }
 
+/* Phase 3: Visual Gamification Styles */
+
+/* Retro RPG Grid Bag Slots */
+.rpg-grid-slot {
+  background: rgba(17, 18, 22, 0.7);
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 4px 6px rgba(0, 0, 0, 0.6), 0 1px 2px rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.rpg-grid-slot:hover {
+  background: rgba(27, 28, 34, 0.85);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4), 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Rarity-specific slot border glows */
+.rpg-slot-common { border-color: rgba(148, 163, 184, 0.2) !important; }
+.rpg-slot-common:hover { box-shadow: 0 0 10px rgba(148, 163, 184, 0.25), inset 0 2px 4px rgba(0,0,0,0.4); border-color: rgba(148, 163, 184, 0.5) !important; }
+
+.rpg-slot-rare { border-color: rgba(59, 130, 246, 0.25) !important; }
+.rpg-slot-rare:hover { box-shadow: 0 0 12px rgba(59, 130, 246, 0.35), inset 0 2px 4px rgba(0,0,0,0.4); border-color: rgba(59, 130, 246, 0.6) !important; }
+
+.rpg-slot-epic { border-color: rgba(168, 85, 247, 0.3) !important; }
+.rpg-slot-epic:hover { box-shadow: 0 0 15px rgba(168, 85, 247, 0.45), inset 0 2px 4px rgba(0,0,0,0.4); border-color: rgba(168, 85, 247, 0.7) !important; }
+
+.rpg-slot-legendary { border-color: rgba(245, 158, 11, 0.35) !important; }
+.rpg-slot-legendary:hover { box-shadow: 0 0 18px rgba(245, 158, 11, 0.55), inset 0 2px 4px rgba(0,0,0,0.4); border-color: rgba(245, 158, 11, 0.8) !important; }
+
+.rpg-slot-mythic { border-color: rgba(239, 68, 68, 0.4) !important; }
+.rpg-slot-mythic:hover { box-shadow: 0 0 22px rgba(239, 68, 68, 0.65), inset 0 2px 4px rgba(0,0,0,0.4); border-color: rgba(239, 68, 68, 0.9) !important; }
+
+/* Metallic Neon HP/Mana/EXP Bars */
+.exp-metallic-bar {
+  background: #0d0e12;
+  border: 3px solid #23252d;
+  box-shadow: 0 0 0 1px #3a3d4a, inset 0 2px 5px rgba(0,0,0,0.8);
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+  height: 20px;
+}
+
+.exp-metallic-fill {
+  background: linear-gradient(90deg, #8b5cf6, #ec4899, #8b5cf6);
+  background-size: 200% 100%;
+  animation: shine-flow 2.5s infinite linear;
+  box-shadow: 0 0 8px rgba(139, 92, 246, 0.6), inset 0 1px 1px rgba(255,255,255,0.4);
+  height: 100%;
+  border-radius: 4px;
+}
+
+@keyframes shine-flow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* HP Red Bar */
+.hp-metallic-bar {
+  background: #0d0e12;
+  border: 3px solid #23252d;
+  box-shadow: 0 0 0 1px #3a3d4a, inset 0 2px 5px rgba(0,0,0,0.8);
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+  height: 20px;
+}
+
+.hp-metallic-fill {
+  background: linear-gradient(90deg, #ef4444, #f97316, #ef4444);
+  background-size: 200% 100%;
+  animation: shine-flow 2s infinite linear;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6), inset 0 1px 1px rgba(255,255,255,0.4);
+  height: 100%;
+  border-radius: 4px;
+}
+
+/* RPG Tooltip Card */
+.rpg-tooltip-card {
+  background: rgba(15, 17, 23, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
+}
+
+/* Retro Gacha Arcade Cabinet */
+.gacha-cabinet {
+  background: radial-gradient(circle at top, #262938 0%, #151622 100%);
+  border: 4px solid #373e5c;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 30px rgba(55, 62, 92, 0.3), inset 0 2px 10px rgba(255,255,255,0.1);
+  border-radius: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.gacha-neon-header {
+  background: linear-gradient(90deg, #f43f5e, #a855f7, #ec4899);
+  text-shadow: 0 0 8px rgba(244, 63, 94, 0.6), 0 0 15px rgba(168, 85, 247, 0.5);
+  box-shadow: 0 4px 15px rgba(168, 85, 247, 0.25), inset 0 -2px 0 rgba(0,0,0,0.2);
+}
+
+.gacha-glass-area {
+  background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 70%, rgba(0,0,0,0.3) 100%);
+  border: 2px solid rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 5px 25px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.gacha-control-panel {
+  background: #252836;
+  border-top: 3px solid #3e445b;
+  box-shadow: inset 0 2px 5px rgba(255,255,255,0.05);
+}
+
+.gacha-rotary-knob {
+  background: linear-gradient(135deg, #4b5563 0%, #1f2937 100%);
+  border: 3px solid #6b7280;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.2);
+  transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.gacha-rotary-knob:hover {
+  border-color: #f59e0b;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.2);
+}
+
+/* Parent Guild Bounty Scroll */
+.guild-scroll {
+  background: linear-gradient(135deg, #fdf8e6 0%, #f4e8c1 100%);
+  border: 2px solid #bfa470;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15), inset 0 0 15px rgba(139, 92, 26, 0.15);
+  position: relative;
+}
+
+.guild-scroll-header {
+  font-family: 'Outfit', 'Noto Sans TC', sans-serif;
+  color: #5c3e1e;
+  border-bottom: 2px dashed rgba(92, 62, 30, 0.25);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.guild-bounty-wood {
+  background-color: #211c16;
+  background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 0),
+                    radial-gradient(rgba(255,255,255,0.02) 2px, transparent 0);
+  background-size: 24px 24px, 48px 48px;
+  border: 6px solid #4a382c;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 4px 20px rgba(0,0,0,0.4);
+}
+
 
 
 
