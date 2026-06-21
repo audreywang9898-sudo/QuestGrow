@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { triggerConfetti, playCoinSound, playLevelUpSound } from './utils/sfx';
 import { 
   EMPTY_CHILD_STATS,
   INITIAL_TASKS, 
@@ -135,6 +136,21 @@ function App() {
   };
 
   const childStats = children.find(c => c.id === activeChildId) || children[0] || EMPTY_CHILD_STATS;
+
+  // --- Dynamic Level Up Detection & Confetti Celebration ---
+  const prevLevelRef = useRef(childStats?.level);
+  useEffect(() => {
+    if (childStats && childStats.id) {
+      if (prevLevelRef.current !== undefined && childStats.level > prevLevelRef.current) {
+        triggerConfetti();
+        playLevelUpSound();
+        showToast(`🎉 恭喜！你升級到了 Lv. ${childStats.level}！`, 'success');
+      }
+      prevLevelRef.current = childStats.level;
+    } else {
+      prevLevelRef.current = undefined;
+    }
+  }, [childStats, children]);
 
   // --- Fetch Data from Backend ---
   const fetchAllData = async () => {
@@ -673,6 +689,7 @@ function App() {
     try {
       await api.reviewTask(taskId, 'approve');
       showToast('任務審核通過，發放獎勵！', 'success');
+      playCoinSound();
       fetchAllData();
     } catch (error) {
       showToast(error.message || '審核通過動作失敗。', 'error');
@@ -695,6 +712,7 @@ function App() {
     try {
       await Promise.all(pendingTasks.map(task => api.reviewTask(task.id, 'approve')));
       showToast('所有待核准任務已完成審核並發放獎勵！', 'success');
+      playCoinSound();
       fetchAllData();
     } catch (error) {
       showToast(error.message || '一鍵審核任務失敗。', 'error');
@@ -708,6 +726,7 @@ function App() {
     try {
       await Promise.all(pendingRedemptions.map(item => api.reviewRedeem(item.inventoryId, 'approve')));
       showToast('所有待核銷特權已核准使用！', 'success');
+      playCoinSound();
       fetchAllData();
     } catch (error) {
       showToast(error.message || '一鍵核銷特權失敗。', 'error');
@@ -731,6 +750,7 @@ function App() {
     try {
       await api.buyTicketWithGold();
       showToast('🎉 成功使用 300 金幣兌換 1 張抽卡券！', 'success');
+      playCoinSound();
       fetchAllData();
     } catch (error) {
       showToast(error.message || '兌換失敗，請稍後再試。', 'error');
@@ -762,6 +782,7 @@ function App() {
     try {
       await api.reviewRedeem(inventoryId, 'approve');
       showToast('已核准卡片使用！全家獲得 +50 積分！', 'success');
+      playCoinSound();
       fetchAllData();
     } catch (error) {
       showToast(error.message || '核准卡片使用失敗。', 'error');

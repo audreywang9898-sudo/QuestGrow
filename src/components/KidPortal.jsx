@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { GACHA_POOL, TASK_TEMPLATES } from '../utils/mockData';
+import { playCoinSound, playGachaShakeSound, playGachaRevealSound, triggerConfetti } from '../utils/sfx';
 import { useLanguage } from './LanguageContext';
 import Avatar from './Avatar';
 import FamilyLeaderboardView from './FamilyLeaderboardView';
@@ -1199,6 +1200,7 @@ function KidPortal({
 
     setIsDrawingGacha(true);
     setGachaState('shaking');
+    playGachaShakeSound();
     
     // Random select rarity based on PRD v2 weights
     const rand = Math.random();
@@ -1237,11 +1239,20 @@ function KidPortal({
     setTimeout(() => {
       setGachaState('revealing');
       setDrawnCard(cardSelected);
+      playGachaRevealSound(cardSelected.rarity);
+      if (cardSelected.rarity === 'Legendary' || cardSelected.rarity === 'Mythic') {
+        triggerConfetti();
+      }
       
       setTimeout(() => {
         setGachaState('shown');
         onDrawCard(cardSelected, 1);
         setIsDrawingGacha(false); // unlock drawing state
+        if (cardSelected.type === '資源卡') {
+          setTimeout(() => {
+            playCoinSound();
+          }, 300);
+        }
       }, 800);
     }, 1200);
   };
@@ -1253,6 +1264,7 @@ function KidPortal({
     setIsBuyingTicket(true);
     try {
       await onBuyTicketWithGold();
+      playCoinSound();
     } finally {
       setIsBuyingTicket(false);
     }
