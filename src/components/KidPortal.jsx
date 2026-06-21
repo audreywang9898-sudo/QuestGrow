@@ -70,6 +70,7 @@ function KidPortal({
   currentUser,
   onLinkGoogleAccount,
   onAddTask,
+  onEditTask,
   isReadOnly = false,
   googleClientId,
   onToggleEquip,
@@ -875,31 +876,63 @@ function KidPortal({
     }
   };
 
-  // Reroll a single task - swap it for a random different available task
+  // Reroll a single task - swap it for a random different available task of the same category
   const handleRerollTask = async (taskIdToSwap) => {
     if (swappingTaskId !== null) return;
 
+    const targetTask = tasks.find(t => t.id === taskIdToSwap);
+    if (!targetTask) return;
+    const targetType = targetTask.type;
+
     const childTasks = tasks.filter(t => !t.assignedTo || t.assignedTo === stats.id);
     
-    // Pool: available tasks not currently in the drawn list
+    // Pool: available tasks of the same category not currently in the drawn list
     const candidatePool = childTasks.filter(t =>
       t.status === '進行中' &&
+      t.type === targetType &&
       !drawnTaskIds.includes(t.id)
     );
 
+    // Fetch names of completed tasks in the last 30 days
+    const completedTaskNames = tasks
+      .filter(t => 
+        t.assignedTo === stats.id && 
+        t.status === '已完成' && 
+        t.completedAt && 
+        new Date(t.completedAt) >= new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+      )
+      .map(t => (t.name || '').toLowerCase().trim());
+
     if (candidatePool.length > 0) {
-      const shuffled = [...candidatePool].sort(() => Math.random() - 0.5);
+      // Exclude recently completed tasks from candidate pool
+      const filteredPool = candidatePool.filter(t => !completedTaskNames.includes((t.name || '').toLowerCase().trim()));
+      const finalPool = filteredPool.length > 0 ? filteredPool : candidatePool;
+
+      const shuffled = [...finalPool].sort(() => Math.random() - 0.5);
       const newTask = shuffled[0];
       const newDrawnTaskIds = drawnTaskIds.map(id => id === taskIdToSwap ? newTask.id : id);
+      
+      // Update swap count of target task if matched from pool (since we don't delete, but we should make sure it inherits swap_count of 1)
+      if (onEditTask) {
+        await onEditTask(newTask.id, { swapCount: (targetTask.swapCount || 0) + 1 });
+      }
+
       onUpdateDrawnTasks(newDrawnTaskIds);
     } else {
-      // Fallback: draw a new random template from TASK_TEMPLATES matching the swapped task's type
-      const targetTask = tasks.find(t => t.id === taskIdToSwap);
-      const targetType = targetTask ? targetTask.type : '智';
+      // Fallback: draw a new random template from TASK_TEMPLATES matching the swapped task's type and excluding 30-day completed tasks
+      const catTemplates = TASK_TEMPLATES.filter(t => {
+        const isSameType = t.type === targetType;
+        const isNotCurrent = t.name !== targetTask.name;
+        const isNotCompletedRecently = !completedTaskNames.includes(t.name.toLowerCase().trim());
+        return isSameType && isNotCurrent && isNotCompletedRecently;
+      });
+
+      const templatesToUse = catTemplates.length > 0 
+        ? catTemplates 
+        : TASK_TEMPLATES.filter(t => t.type === targetType && t.name !== targetTask.name);
       
-      const catTemplates = TASK_TEMPLATES.filter(t => t.type === targetType && t.name !== (targetTask ? targetTask.name : ''));
-      const templatesToUse = catTemplates.length > 0 ? catTemplates : TASK_TEMPLATES;
-      const randomTpl = templatesToUse[Math.floor(Math.random() * templatesToUse.length)];
+      const fallbackTemplates = templatesToUse.length > 0 ? templatesToUse : TASK_TEMPLATES.filter(t => t.type === targetType);
+      const randomTpl = fallbackTemplates[Math.floor(Math.random() * fallbackTemplates.length)];
       
       const newTaskObj = {
         name: randomTpl.name,
@@ -913,7 +946,8 @@ function KidPortal({
         period: randomTpl.period,
         status: '進行中',
         assignedTo: stats.id,
-        dateCreated: simulatedDate || new Date().toISOString().split('T')[0]
+        dateCreated: simulatedDate || new Date().toISOString().split('T')[0],
+        swapCount: (targetTask.swapCount || 0) + 1
       };
 
       setSwappingTaskId(taskIdToSwap);
@@ -1635,6 +1669,11 @@ function KidPortal({
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-md font-extrabold text-slate-200">{renderTextWithZhuyin(task.name)}</span>
+                              {task.isRepeated && (
+                                <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider">
+                                  {language === 'zh' ? '⚠️ 30天內重複完成任務' : '⚠️ 30-Day Repeated Quest'}
+                                </span>
+                              )}
                               <button
                                 type="button"
                                 onClick={() => handleSpeak(task)}
@@ -1665,7 +1704,7 @@ function KidPortal({
                           <span className={`text-xs font-bold border px-2 py-0.5 rounded-full whitespace-nowrap ${getTypeBadgeColor(task.type)}`}>
                             {translateType(task.type)} | {t('taskDifficultyLabel')} {translateDifficulty(task.difficulty)}
                           </span>
-                           {!isReadOnly && task.status === '進行中' && !task.rejectionReason && (
+                           {!isReadOnly && task.status === '進行中' && !task.rejectionReason && (!task.swapCount || task.swapCount < 1) && (
                             <button
                               onClick={() => handleRerollTask(task.id)}
                               disabled={swappingTaskId !== null}

@@ -102,6 +102,53 @@ function AdminPortal({ currentUser, onLogout }) {
         </div>
       )}
 
+      {/* 🔔 系統即時通知 (System Live Notifications) */}
+      <div className="bg-white p-6 border border-slate-200 rounded-2xl shadow-sm space-y-4 animate-success">
+        <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
+          <span className="relative flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-450 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
+          </span>
+          系統即時通知 (System Live Notifications)
+        </h3>
+        
+        {stats?.notifications && stats.notifications.length > 0 ? (
+          <div className="max-h-60 overflow-y-auto space-y-2.5 pr-2 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+            {stats.notifications.map((n) => (
+              <div 
+                key={n.id} 
+                className="flex items-start justify-between gap-4 p-3 bg-rose-50/20 hover:bg-rose-50/40 border border-rose-100/50 rounded-xl transition-all"
+              >
+                <div className="space-y-1">
+                  <div className="text-xs font-black text-slate-800 flex items-center gap-2">
+                    <span className="bg-rose-100 border border-rose-200 text-rose-700 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider">
+                      {n.title}
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-semibold font-mono">
+                      {new Date(n.createdAt).toLocaleString(language === 'en' ? 'en-US' : 'zh-TW', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 font-bold leading-relaxed mt-0.5">
+                    {n.message}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="py-6 text-center text-slate-400 text-xs font-bold bg-slate-50/50 border border-dashed border-slate-200 rounded-xl">
+            📭 目前尚無新使用者登入通知。
+          </div>
+        )}
+      </div>
+
       {/* Analytics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Card 1: Online Users */}

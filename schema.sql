@@ -32,9 +32,10 @@ CREATE TABLE users (
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
-    role VARCHAR(50) NOT NULL CHECK (role IN ('parent', 'kid')),
+    role VARCHAR(50) NOT NULL CHECK (role IN ('parent', 'kid', 'admin')),
     avatar TEXT DEFAULT 'boy',
     google_id VARCHAR(255) UNIQUE,
+    login_count INT DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -76,6 +77,9 @@ CREATE TABLE tasks (
     status VARCHAR(50) DEFAULT '進行中' CHECK (status IN ('未指派', '進行中', '待覆核', '已完成', '已退回')),
     rejection_reason TEXT,
     submission JSONB, -- { "notes": "...", "photo": "..." }
+    completed_at TIMESTAMP WITH TIME ZONE,
+    is_repeated BOOLEAN DEFAULT FALSE,
+    swap_count INT DEFAULT 0,
     date_created DATE DEFAULT CURRENT_DATE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -228,4 +232,14 @@ CREATE TABLE daily_proverbs (
     content_zh VARCHAR(500) NOT NULL,
     content_en VARCHAR(500) NOT NULL
 );
+
+CREATE TABLE admin_notifications (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 

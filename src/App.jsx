@@ -115,6 +115,9 @@ function App() {
     contentZh: "千里之行，始於足下。",
     contentEn: "A journey of a thousand miles begins with a single step."
   });
+
+  // --- Cooldown Warning Confirmation Modal ---
+  const [cooldownWarning, setCooldownWarning] = useState(null);
   
   // --- Toast State ---
   const [toasts, setToasts] = useState([]);
@@ -488,7 +491,7 @@ function App() {
   };
 
   // --- Task Operations ---
-  const handleAddTask = async (newTaskOrTasks, taskIdToSwap) => {
+  const handleAddTask = async (newTaskOrTasks, taskIdToSwap, force = false) => {
     try {
       const isArray = Array.isArray(newTaskOrTasks);
       const tasksToAdd = isArray ? newTaskOrTasks : [newTaskOrTasks];
@@ -505,7 +508,9 @@ function App() {
           attributeReward: task.attributeReward,
           period: task.period,
           assignedTo: task.assignedTo || activeChildId,
-          status: task.status
+          status: task.status,
+          force: force,
+          swapCount: task.swapCount || 0
         };
         return api.addTask(apiTaskData);
       });
@@ -525,6 +530,13 @@ function App() {
             const updatedIds = currentIds.map(id => id === taskIdToSwap ? realNewId : id);
             return { ...prev, [activeChildId]: updatedIds };
           });
+
+          // Delete the old swapped task from database to prevent clutter
+          try {
+            await api.deleteTask(taskIdToSwap);
+          } catch (e) {
+            console.error("Failed to delete swapped task from DB:", e);
+          }
         }
       } else {
         showToast('任務指派成功！', 'success');
@@ -533,17 +545,51 @@ function App() {
       await fetchAllData();
       return createdTasks;
     } catch (error) {
+      if (error.code === 'TASK_COOLDOWN_WARNING') {
+        return new Promise((resolve) => {
+          setCooldownWarning({
+            message: error.message,
+            onConfirm: async () => {
+              setCooldownWarning(null);
+              const result = await handleAddTask(newTaskOrTasks, taskIdToSwap, true);
+              resolve(result);
+            },
+            onCancel: () => {
+              setCooldownWarning(null);
+              resolve(false);
+            }
+          });
+        });
+      }
       showToast(error.message || '任務指派失敗。', 'error');
-      return null;
+      return false;
     }
   };
 
-  const handleEditTask = async (taskId, updatedFields) => {
+  const handleEditTask = async (taskId, updatedFields, force = false) => {
     try {
-      await api.editTask(taskId, updatedFields);
-      fetchAllData();
+      await api.editTask(taskId, { ...updatedFields, force });
+      await fetchAllData();
+      return true;
     } catch (error) {
+      if (error.code === 'TASK_COOLDOWN_WARNING') {
+        return new Promise((resolve) => {
+          setCooldownWarning({
+            message: error.message,
+            onConfirm: async () => {
+              setCooldownWarning(null);
+              const result = await handleEditTask(taskId, updatedFields, true);
+              resolve(result);
+            },
+            onCancel: () => {
+              setCooldownWarning(null);
+              resolve(false);
+            }
+          });
+        });
+      }
       showToast(error.message || '編輯任務失敗。', 'error');
+      return false;
     }
   };
 
@@ -1003,6 +1049,7 @@ function App() {
             onUpdateChildProfile={handleUpdateChildProfile}
             currentUser={currentUser}
             onAddTask={handleAddTask}
+            onEditTask={handleEditTask}
             onLinkGoogleAccount={handleLinkGoogleAccount}
             isReadOnly={currentUser && currentUser.role === 'kid' && activeChildId !== currentUser.childId}
             googleClientId={googleClientId}
@@ -1058,6 +1105,39 @@ function App() {
           />
         )}
       </main>
+
+      {/* ⚠️ 任務冷卻提示彈出視窗 (Task Cooldown Warning Modal) */}
+      {cooldownWarning && (
+        <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
+          <div className="glass-panel p-6 border border-amber-500/30 max-w-md w-full space-y-4 animate-scale-up">
+            <div className="flex items-center gap-3 text-amber-500">
+              <AlertCircle className="h-6 w-6 text-amber-500 shrink-0" />
+              <h3 className="text-lg font-black text-amber-500 animate-pulse">
+                {language === 'zh' ? '任務重複指派提醒' : 'Duplicate Task Assignment'}
+              </h3>
+            </div>
+            <p className="text-sm text-slate-300 leading-relaxed font-semibold">
+              {cooldownWarning.message}
+            </p>
+            <div className="flex gap-3 justify-end pt-2">
+              <button
+                type="button"
+                onClick={cooldownWarning.onConfirm}
+                className="px-4 py-2 rounded-[4px] text-xs font-black bg-amber-600 hover:bg-amber-700 text-white transition-colors"
+              >
+                {language === 'zh' ? '確認強制指派' : 'Force Assign'}
+              </button>
+              <button
+                type="button"
+                onClick={cooldownWarning.onCancel}
+                className="px-4 py-2 rounded-[4px] text-xs font-bold bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white transition-colors"
+              >
+                {language === 'zh' ? '取消' : 'Cancel'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <footer className="py-6 text-center text-xs text-slate-500 border-t border-white/5 mt-auto">
         <p>© 2026 QuestGrow Family Growth OS. 符合台灣個資法、兒少權益保障法及 PWA, COPPA & GDPR-K 隱私合規規範。</p>

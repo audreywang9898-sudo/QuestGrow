@@ -52,9 +52,24 @@ export const getAdminStats = async (req, res) => {
     });
 
 
+    // 3. Query admin notifications
+    const notificationsResult = await pool.query(`
+      SELECT 
+        id,
+        user_id AS "userId",
+        title,
+        message,
+        is_read AS "isRead",
+        created_at AS "createdAt"
+      FROM admin_notifications
+      ORDER BY created_at DESC
+      LIMIT 50
+    `);
+
     res.json({
       onlineUsers: onlineCount,
-      members: membersList
+      members: membersList,
+      notifications: notificationsResult.rows
     });
   } catch (error) {
     console.error('getAdminStats error:', error);

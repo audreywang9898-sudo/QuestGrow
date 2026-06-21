@@ -390,14 +390,14 @@ function ParentPortal({
     }
   };
 
-  const submitNewTask = (e) => {
+  const submitNewTask = async (e) => {
     e.preventDefault();
     if (!taskName) return;
 
     const rewards = difficultyRewardsMap[taskDifficulty] || difficultyRewardsMap["中等"];
     
     if (taskAssignedTo === 'all') {
-      children.forEach(child => {
+      const promises = children.map(child => {
         const newTask = {
           id: "task-custom-" + Date.now() + "-" + child.id,
           name: `${taskName} (${child.name})`,
@@ -413,8 +413,12 @@ function ParentPortal({
           assignedTo: child.id,
           dateCreated: new Date().toISOString().split('T')[0]
         };
-        onAddTask(newTask);
+        return onAddTask(newTask);
       });
+      const results = await Promise.all(promises);
+      if (results.some(r => r === false)) {
+        return; // Stay open on failure/cancellation
+      }
     } else {
       const selectedChildObj = children.find(c => c.id === taskAssignedTo);
       const newTask = {
@@ -432,7 +436,8 @@ function ParentPortal({
         assignedTo: taskAssignedTo,
         dateCreated: new Date().toISOString().split('T')[0]
       };
-      onAddTask(newTask);
+      const result = await onAddTask(newTask);
+      if (result === false) return; // Stay open on failure/cancellation
     }
 
     setTaskName('');
@@ -1509,8 +1514,13 @@ function ParentPortal({
                   {pendingTasks.map((task) => (
                     <div key={task.id} className="glass-panel p-5 border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="space-y-2 flex-1">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 flex-wrap">
                           <span className="text-md font-bold text-slate-200">{task.name}</span>
+                          {task.isRepeated && (
+                            <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider">
+                              {language === 'zh' ? '⚠️ 30天內重複完成任務' : '⚠️ 30-Day Repeated Quest'}
+                            </span>
+                          )}
                           <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getAttributeColor(task.type)}`}>
                             {translateType(task.type)} | {language === 'zh' ? '難度' : 'Difficulty'} {translateDifficulty(task.difficulty)}
                           </span>
@@ -2041,7 +2051,14 @@ function ParentPortal({
                                 <div className="space-y-2">
                                   <div className="flex items-start justify-between gap-2">
                                     <div>
-                                      <h4 className="text-md font-bold text-slate-200">{task.name}</h4>
+                                      <h4 className="text-md font-bold text-slate-200 flex items-center gap-2 flex-wrap">
+                                        {task.name}
+                                        {task.isRepeated && (
+                                          <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider shrink-0">
+                                            {language === 'zh' ? '⚠️ 30天內重複完成任務' : '⚠️ 30-Day Repeated Quest'}
+                                          </span>
+                                        )}
+                                      </h4>
                                       <p className="text-xs text-slate-400 mt-1">{task.description}</p>
                                     </div>
                                     <span className={`px-2 py-0.5 rounded text-xs font-bold border ${getAttributeColor(task.type)}`}>

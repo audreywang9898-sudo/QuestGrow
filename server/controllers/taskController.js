@@ -27,7 +27,7 @@ export const getTasks = async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT id, family_id, assigned_to, name, description, type, difficulty, exp_reward, gold_reward, ticket_reward, attribute_reward, period, status, rejection_reason, submission, date_created, created_at
+      `SELECT id, family_id, assigned_to, name, description, type, difficulty, exp_reward, gold_reward, ticket_reward, attribute_reward, period, status, rejection_reason, submission, date_created, created_at, completed_at, is_repeated, swap_count
        FROM tasks 
        WHERE family_id = $1 
        ORDER BY created_at DESC`,
@@ -55,7 +55,10 @@ export const getTasks = async (req, res) => {
       rejectionReason: row.rejection_reason,
       submission: row.submission,
       dateCreated: row.date_created ? row.date_created.toISOString().split('T')[0] : null,
-      createdAt: row.created_at
+      createdAt: row.created_at,
+      completedAt: row.completed_at,
+      isRepeated: row.is_repeated,
+      swapCount: row.swap_count
     }));
 
     res.json(mapped);
@@ -71,7 +74,8 @@ export const addTask = async (req, res) => {
   const { 
     name, description, type, difficulty, 
     expReward, goldReward, ticketReward, 
-    attributeReward, period, assignedTo, status 
+    attributeReward, period, assignedTo, status,
+    force, swapCount
   } = req.body;
 
   if (!name || !type || !difficulty) {
@@ -99,17 +103,42 @@ export const addTask = async (req, res) => {
   // Set initial status: if child is assigned, it starts as '進行中'; else '未指派'
   const initialStatus = status || (dbAssignedTo ? '進行中' : '未指派');
 
+  const isForce = force === true || force === 'true';
+  let isRepeated = false;
+
   try {
+    if (dbAssignedTo) {
+      const recentCompleted = await pool.query(
+        `SELECT id FROM tasks 
+         WHERE assigned_to = $1 
+           AND LOWER(TRIM(name)) = LOWER(TRIM($2)) 
+           AND status = '已完成' 
+           AND COALESCE(completed_at, created_at) >= CURRENT_TIMESTAMP - INTERVAL '30 days'
+         LIMIT 1`,
+        [dbAssignedTo, name]
+      );
+      if (recentCompleted.rows.length > 0) {
+        if (!isForce) {
+          return res.status(409).json({
+            code: 'TASK_COOLDOWN_WARNING',
+            message: `該孩子在 30 天內已完成過此任務（名稱：${name}），確定要再次指派嗎？`
+          });
+        } else {
+          isRepeated = true;
+        }
+      }
+    }
+
     const result = await pool.query(
       `INSERT INTO tasks (
          family_id, assigned_to, name, description, type, difficulty, 
-         exp_reward, gold_reward, ticket_reward, attribute_reward, period, status
-       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+         exp_reward, gold_reward, ticket_reward, attribute_reward, period, status, is_repeated, swap_count
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
        RETURNING *`,
       [
         familyId, dbAssignedTo, name, description || '', type, difficulty,
         expReward || 100, goldReward || 50, ticketReward || 1, attributeReward || null,
-        period || '每日', initialStatus
+        period || '每日', initialStatus, isRepeated, swapCount || 0
       ]
     );
 
@@ -131,7 +160,10 @@ export const addTask = async (req, res) => {
       rejectionReason: row.rejection_reason,
       submission: row.submission,
       dateCreated: row.date_created,
-      createdAt: row.created_at
+      createdAt: row.created_at,
+      completedAt: row.completed_at,
+      isRepeated: row.is_repeated,
+      swapCount: row.swap_count
     };
 
     res.status(201).json({
@@ -153,11 +185,52 @@ export const editTask = async (req, res) => {
   try {
     // Check if task exists and belongs to the family
     const verifyTask = await pool.query(
-      'SELECT id FROM tasks WHERE id = $1 AND family_id = $2',
+      'SELECT id, name, assigned_to, status FROM tasks WHERE id = $1 AND family_id = $2',
       [taskId, familyId]
     );
     if (verifyTask.rows.length === 0) {
       return res.status(404).json({ message: getMessage('TASK_NOT_FOUND') });
+    }
+    const currentTask = verifyTask.rows[0];
+
+    const targetName = fields.name !== undefined ? fields.name : currentTask.name;
+    let targetAssignedTo = fields.assignedTo !== undefined ? fields.assignedTo : currentTask.assigned_to;
+    if (targetAssignedTo === 'general') targetAssignedTo = null;
+
+    const isForce = fields.force === true || fields.force === 'true';
+    let isRepeated = false;
+
+    if (targetAssignedTo) {
+      const recentCompleted = await pool.query(
+        `SELECT id FROM tasks 
+         WHERE assigned_to = $1 
+           AND LOWER(TRIM(name)) = LOWER(TRIM($2)) 
+           AND status = '已完成' 
+           AND id <> $3
+           AND COALESCE(completed_at, created_at) >= CURRENT_TIMESTAMP - INTERVAL '30 days'
+         LIMIT 1`,
+        [targetAssignedTo, targetName, taskId]
+      );
+      if (recentCompleted.rows.length > 0) {
+        if (!isForce) {
+          return res.status(409).json({
+            code: 'TASK_COOLDOWN_WARNING',
+            message: `該孩子在 30 天內已完成過此任務（名稱：${targetName}），確定要再次指派嗎？`
+          });
+        } else {
+          isRepeated = true;
+        }
+      }
+    }
+
+    // Include is_repeated and completed_at changes
+    fields.isRepeated = isRepeated;
+    if (fields.status !== undefined) {
+      if (fields.status === '已完成') {
+        fields.completedAt = new Date();
+      } else {
+        fields.completedAt = null;
+      }
     }
 
     const updateFields = [];
@@ -178,7 +251,10 @@ export const editTask = async (req, res) => {
       period: 'period',
       status: 'status',
       rejectionReason: 'rejection_reason',
-      submission: 'submission'
+      submission: 'submission',
+      isRepeated: 'is_repeated',
+      completedAt: 'completed_at',
+      swapCount: 'swap_count'
     };
 
     Object.entries(fields).forEach(([key, val]) => {
@@ -422,7 +498,7 @@ export const reviewTask = async (req, res) => {
 
       // 4. Update Task Status
       await pool.query(
-        'UPDATE tasks SET status = \'已完成\' WHERE id = $1',
+        'UPDATE tasks SET status = \'已完成\', completed_at = CURRENT_TIMESTAMP WHERE id = $1',
         [taskId]
       );
 

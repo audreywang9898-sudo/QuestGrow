@@ -26,7 +26,9 @@ const getHeaders = () => {
 const handleResponse = async (response) => {
   const data = await response.json();
   if (!response.ok) {
-    throw new Error(data.message || '請求失敗，請稍後再試。');
+    const error = new Error(data.message || '請求失敗，請稍後再試。');
+    error.code = data.code;
+    throw error;
   }
   return data;
 };

@@ -31,6 +31,33 @@ const generateToken = (user) => {
   );
 };
 
+const checkFirstLoginAndNotify = async (userId) => {
+  try {
+    const userRes = await pool.query(
+      'SELECT id, name, email, role, login_count FROM users WHERE id = $1',
+      [userId]
+    );
+    if (userRes.rows.length === 0) return;
+    const user = userRes.rows[0];
+    
+    if ((user.login_count === 0 || user.login_count === null) && user.role !== 'admin') {
+      const title = '🔔 新使用者首次登入';
+      const message = `新會員 ${user.name} (${user.email}) 角色：${user.role} 首次登入系統！`;
+      await pool.query(
+        'INSERT INTO admin_notifications (user_id, title, message) VALUES ($1, $2, $3)',
+        [user.id, title, message]
+      );
+    }
+    
+    await pool.query(
+      'UPDATE users SET login_count = COALESCE(login_count, 0) + 1 WHERE id = $1',
+      [userId]
+    );
+  } catch (err) {
+    console.error('Error in checkFirstLoginAndNotify:', err);
+  }
+};
+
 // 1. Standard Registration (Register a new Parent + Family)
 export const registerParent = async (req, res) => {
   const { email, password, name, avatar } = req.body;
@@ -76,6 +103,8 @@ export const registerParent = async (req, res) => {
     user.onboardingCompleted = user.onboarding_completed;
     const token = generateToken(user);
 
+    await checkFirstLoginAndNotify(user.id);
+
     res.status(201).json({
       message: getMessage('REGISTRATION_SUCCESS'),
       token,
@@ -120,6 +149,8 @@ export const login = async (req, res) => {
     user.childId = user.child_id;
     user.onboardingCompleted = user.onboarding_completed;
     const token = generateToken(user);
+
+    await checkFirstLoginAndNotify(user.id);
 
     res.json({
       message: getMessage('LOGIN_SUCCESS'),
@@ -193,6 +224,9 @@ export const googleLogin = async (req, res) => {
       user.childId = user.child_id;
       user.onboardingCompleted = user.onboarding_completed;
       const token = generateToken(user);
+
+      await checkFirstLoginAndNotify(user.id);
+
       return res.json({
         message: getMessage('GOOGLE_LOGIN_SUCCESS'),
         token,
@@ -246,6 +280,8 @@ export const googleLogin = async (req, res) => {
       onboardingCompleted: newUser.rows[0].onboarding_completed
     };
     const token = generateToken(user);
+
+    await checkFirstLoginAndNotify(user.id);
 
     res.status(201).json({
       message: getMessage('GOOGLE_REG_LOGIN_SUCCESS'),
