@@ -1513,22 +1513,38 @@ function ParentPortal({
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {pendingTasks.map((task) => (
-                    <div key={task.id} className="glass-panel p-5 border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div className="space-y-2 flex-1">
-                        <div className="flex items-center gap-3 flex-wrap">
-                          <span className="text-md font-bold text-slate-200">{task.name}</span>
-                          {task.isRepeated && (
-                            <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider">
-                              {language === 'zh' ? '⚠️ 30天內重複完成任務' : '⚠️ 30-Day Repeated Quest'}
+                  {pendingTasks.map((task) => {
+                    const isBoss = task.difficulty === '較難' || task.difficulty === '終極';
+                    const getBossLabel = (diff) => {
+                      if (diff === '較難') return t('eliteBossLabel');
+                      if (diff === '終極') return t('ultimateBossLabel');
+                      return null;
+                    };
+                    const cardClass = `p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all relative ${
+                      isBoss ? 'boss-quest-card' : 'glass-panel border border-white/10'
+                    }`;
+
+                    return (
+                      <div key={task.id} className={cardClass}>
+                        <div className="space-y-2 flex-1">
+                          <div className="flex items-center gap-3 flex-wrap">
+                            {isBoss && (
+                              <span className="bg-red-600 text-white px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider animate-pulse flex items-center gap-1 shadow-sm mr-1">
+                                {getBossLabel(task.difficulty)}
+                              </span>
+                            )}
+                            <span className="text-md font-bold text-slate-200">{task.name}</span>
+                            {task.isRepeated && (
+                              <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider">
+                                {language === 'zh' ? '⚠️ 30天內重複完成任務' : '⚠️ 30-Day Repeated Quest'}
+                              </span>
+                            )}
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getAttributeColor(task.type)}`}>
+                              {translateType(task.type)} | {language === 'zh' ? '難度' : 'Difficulty'} {translateDifficulty(task.difficulty)}
                             </span>
-                          )}
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getAttributeColor(task.type)}`}>
-                            {translateType(task.type)} | {language === 'zh' ? '難度' : 'Difficulty'} {translateDifficulty(task.difficulty)}
-                          </span>
-                        </div>
-                        
-                        <p className="text-xs text-slate-400">{task.description}</p>
+                          </div>
+                          
+                          <p className="text-xs text-slate-400">{task.description}</p>
                         
                         {task.submission && (
                           <div className="p-3 bg-white/5 border border-white/5 rounded-xl space-y-2">
@@ -1567,7 +1583,7 @@ function ParentPortal({
                         </button>
                       </div>
                     </div>
-                  ))}
+                  );})}
                 </div>
               )}
             </div>
@@ -2048,49 +2064,66 @@ function ParentPortal({
                             </h4>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {group.tasks.map((task) => (
-                              <div key={task.id} className="p-4 bg-slate-900/60 border border-white/5 rounded-xl flex flex-col justify-between gap-4">
-                                <div className="space-y-2">
-                                  <div className="flex items-start justify-between gap-2">
-                                    <div>
-                                      <h4 className="text-md font-bold text-slate-200 flex items-center gap-2 flex-wrap">
-                                        {task.name}
-                                        {task.isRepeated && (
-                                          <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider shrink-0">
-                                            {language === 'zh' ? '⚠️ 30天內重複完成任務' : '⚠️ 30-Day Repeated Quest'}
-                                          </span>
-                                        )}
-                                      </h4>
-                                      <p className="text-xs text-slate-400 mt-1">{task.description}</p>
+                            {group.tasks.map((task) => {
+                              const isBoss = task.difficulty === '較難' || task.difficulty === '終極';
+                              const getBossLabel = (diff) => {
+                                if (diff === '較難') return t('eliteBossLabel');
+                                if (diff === '終極') return t('ultimateBossLabel');
+                                return null;
+                              };
+                              const cardClass = `p-4 flex flex-col justify-between gap-4 relative transition-all ${
+                                isBoss ? 'boss-quest-card' : 'bg-slate-900/60 border border-white/5 rounded-xl'
+                              }`;
+
+                              return (
+                                <div key={task.id} className={cardClass}>
+                                  <div className="space-y-2">
+                                    <div className="flex items-start justify-between gap-2">
+                                      <div>
+                                        <h4 className="text-md font-bold text-slate-200 flex items-center gap-2 flex-wrap">
+                                          {isBoss && (
+                                            <span className="bg-red-650 text-white px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider animate-pulse flex items-center gap-1 shadow-sm mr-1">
+                                              {getBossLabel(task.difficulty)}
+                                            </span>
+                                          )}
+                                          {task.name}
+                                          {task.isRepeated && (
+                                            <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider shrink-0">
+                                              {language === 'zh' ? '⚠️ 30天內重複完成任務' : '⚠️ 30-Day Repeated Quest'}
+                                            </span>
+                                          )}
+                                        </h4>
+                                        <p className="text-xs text-slate-400 mt-1">{task.description}</p>
+                                      </div>
+                                      <span className={`px-2 py-0.5 rounded text-xs font-bold border ${getAttributeColor(task.type)}`}>
+                                        {translateType(task.type)} | {language === 'zh' ? '難度' : 'Difficulty'} {translateDifficulty(task.difficulty)}
+                                      </span>
                                     </div>
-                                    <span className={`px-2 py-0.5 rounded text-xs font-bold border ${getAttributeColor(task.type)}`}>
-                                      {translateType(task.type)} | {language === 'zh' ? '難度' : 'Difficulty'} {translateDifficulty(task.difficulty)}
+                                    <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-400 bg-white/5 p-2 rounded-lg border border-white/5">
+                                      <span>{language === 'zh' ? '週期：' : 'Frequency: '}<span className="text-slate-200 font-bold">{translatePeriod(task.period)}</span></span>
+                                      <span>{t('expLabel')}：<span className="text-violet-400 font-bold">+{task.expReward} EXP</span></span>
+                                      <span>{t('goldLabel')}：<span className="text-amber-400 font-bold">🪙 {task.goldReward || 0}</span></span>
+                                      <span>{t('ticketsLabel')}：<span className="text-cyan-400 font-bold">🎫 {task.ticketReward || 1}</span></span>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center justify-between border-t border-white/5 pt-3 mt-1">
+                                    <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                                      task.status === '已完成' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                                      task.status === '待覆核' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20 animate-pulse' :
+                                      'bg-slate-500/10 text-slate-400 border border-slate-500/20'
+                                    }`}>
+                                      {language === 'zh' ? '狀態' : 'Status'}: {translateStatus(task.status)}
                                     </span>
-                                  </div>
-                                  <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-400 bg-white/5 p-2 rounded-lg border border-white/5">
-                                    <span>{language === 'zh' ? '週期：' : 'Frequency: '}<span className="text-slate-200 font-bold">{translatePeriod(task.period)}</span></span>
-                                    <span>{t('expLabel')}：<span className="text-violet-400 font-bold">+{task.expReward} EXP</span></span>
-                                    <span>{t('goldLabel')}：<span className="text-amber-400 font-bold">🪙 {task.goldReward || 0}</span></span>
-                                    <span>{t('ticketsLabel')}：<span className="text-cyan-400 font-bold">🎫 {task.ticketReward || 1}</span></span>
+                                    <button
+                                      onClick={() => setDeleteConfirm({ show: true, type: 'task', id: task.id, title: task.name })}
+                                      className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-white/5 rounded-lg transition-colors"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </button>
                                   </div>
                                 </div>
-                                <div className="flex items-center justify-between border-t border-white/5 pt-3 mt-1">
-                                  <span className={`text-xs font-bold px-2 py-0.5 rounded ${
-                                    task.status === '已完成' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                                    task.status === '待覆核' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20 animate-pulse' :
-                                    'bg-slate-500/10 text-slate-400 border border-slate-500/20'
-                                  }`}>
-                                    {language === 'zh' ? '狀態' : 'Status'}: {translateStatus(task.status)}
-                                  </span>
-                                  <button
-                                    onClick={() => setDeleteConfirm({ show: true, type: 'task', id: task.id, title: task.name })}
-                                    className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-white/5 rounded-lg transition-colors"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </button>
-                                </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       );

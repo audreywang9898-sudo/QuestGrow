@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { GACHA_POOL, TASK_TEMPLATES } from '../utils/mockData';
-import { playCoinSound, playGachaShakeSound, playGachaRevealSound, triggerConfetti } from '../utils/sfx';
+import { playCoinSound, playGachaShakeSound, playGachaRevealSound, triggerConfetti, playBossBattleSound } from '../utils/sfx';
 import { useLanguage } from './LanguageContext';
 import Avatar from './Avatar';
 import FamilyLeaderboardView from './FamilyLeaderboardView';
@@ -1273,6 +1273,13 @@ function KidPortal({
   // Submit task with simulated network latency to test disabled spinner states
   const handleTaskSubmit = (taskId) => {
     if (isSubmittingApi) return;
+    
+    // Check if the submitted task is a boss quest
+    const task = tasks.find(t => t.id === taskId);
+    if (task && (task.difficulty === '較難' || task.difficulty === '終極')) {
+      playBossBattleSound();
+    }
+    
     setIsSubmittingApi(true);
 
     // Simulate API delay
@@ -1770,193 +1777,240 @@ function KidPortal({
             </div>
           );
         } else {
+          // Define themed dungeon categories configuration
+          const categoriesConfig = [
+            { type: '德', key: 'dungeonVirtue', color: 'border-emerald-500/25 bg-emerald-500/5 text-[#16a34a]', icon: '🛡️' },
+            { type: '智', key: 'dungeonWisdom', color: 'border-[#0284c7]/25 bg-[#0284c7]/5 text-[#0284c7]', icon: '🔮' },
+            { type: '體', key: 'dungeonCourage', color: 'border-[#ea580c]/25 bg-[#ea580c]/5 text-[#ea580c]', icon: '⚡' },
+            { type: '群', key: 'dungeonEmpathy', color: 'border-[#db2777]/25 bg-[#db2777]/5 text-[#db2777]', icon: '🤝' },
+            { type: '美', key: 'dungeonCreativity', color: 'border-[#7c3aed]/25 bg-[#7c3aed]/5 text-[#7c3aed]', icon: '🎨' },
+          ];
+
           activeContent = (
             <>
               <div className="text-[10px] text-slate-500 font-bold mb-3">
                 {t('refreshQuestsTip')}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {activeTasksList.map((task) => {
-                  const isSubmitting = submittingTaskId === task.id;
-                  const hasCorrection = task.status === '進行中' && task.rejectionReason;
+              <div className="space-y-6">
+                {categoriesConfig.map(cat => {
+                  const catTasks = activeTasksList.filter(t => t.type === cat.type);
+                  if (catTasks.length === 0) return null;
 
                   return (
-                    <div 
-                      key={task.id} 
-                      className={`glass-panel p-5 border transition-all flex flex-col justify-between gap-4 relative ${
-                        hasCorrection 
-                          ? 'border-rose-500/30 bg-rose-500/5' 
-                          : task.status === '待覆核' 
-                            ? 'border-amber-500/20 bg-amber-500/5 opacity-80' 
-                            : 'border-white/5 hover:border-violet-500/20'
-                      }`}
-                    >
-                      {/* V2 Loading Block overlay during API simulation */}
-                      {isSubmitting && isSubmittingApi && (
-                        <div className="loading-blocker">
-                          <div className="spinner-overlay"></div>
-                        </div>
-                      )}
-
-                      <div className="space-y-2">
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-md font-extrabold text-slate-200">{renderTextWithZhuyin(task.name)}</span>
-                              {task.isRepeated && (
-                                <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider">
-                                  {language === 'zh' ? '⚠️ 30天內重複完成任務' : '⚠️ 30-Day Repeated Quest'}
-                                </span>
-                              )}
-                              <button
-                                type="button"
-                                onClick={() => handleSpeak(task)}
-                                className={`kid-speak-btn p-1.5 ml-1 ${
-                                  speakingTaskId === task.id ? 'is-speaking' : ''
-                                }`}
-                                title={language === 'zh' ? '語音讀任務' : 'Read Quest Out Loud'}
-                              >
-                                {speakingTaskId === task.id ? (
-                                  <VolumeX className="h-4 w-4" />
-                                ) : (
-                                  <Volume2 className="h-4 w-4" />
-                                )}
-                              </button>
-                              {hasCorrection && (
-                                <span className="bg-rose-500 text-slate-900 px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider animate-pulse">
-                                  {t('taskStatusRejected')}
-                                </span>
-                              )}
-                              {task.status === '待覆核' && (
-                                <span className="bg-amber-500/25 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded text-[10px] font-bold">
-                                  {t('taskStatusPending')}
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs text-slate-400 mt-1">{renderTextWithZhuyin(task.description)}</p>
-                          </div>
-                          <span className={`text-xs font-bold border px-2 py-0.5 rounded-full whitespace-nowrap ${getTypeBadgeColor(task.type)}`}>
-                            {translateType(task.type)} | {t('taskDifficultyLabel')} {translateDifficulty(task.difficulty)}
-                          </span>
-                           {!isReadOnly && task.status === '進行中' && !task.rejectionReason && (!task.swapCount || task.swapCount < 1) && (
-                            <button
-                              onClick={() => handleRerollTask(task.id)}
-                              disabled={swappingTaskId !== null}
-                              title={language === 'zh' ? '換一個任務' : 'Swap this quest'}
-                              className={`flex items-center gap-1 px-2 py-1 text-[10px] font-bold rounded-lg transition-all shrink-0 ${
-                                swappingTaskId !== null 
-                                  ? 'opacity-50 cursor-not-allowed text-slate-500 bg-white/5 border border-white/5' 
-                                  : 'text-slate-400 hover:text-violet-300 bg-white/5 hover:bg-violet-500/15 border border-white/10 hover:border-violet-500/30'
-                              }`}
-                            >
-                              {swappingTaskId === task.id ? (
-                                <>
-                                  <span className="animate-spin mr-1">⏳</span>
-                                  {language === 'zh' ? '更換中...' : 'Swapping...'}
-                                </>
-                              ) : (
-                                <>
-                                  <span>🔄</span>
-                                  {language === 'zh' ? '換一個' : 'Swap'}
-                                </>
-                              )}
-                            </button>
-                          )}
-                        </div>
-
-                        {hasCorrection && (
-                          <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs mt-1">
-                            <span className="font-bold">❌ {t('parentRejectionReason')}：</span> {task.rejectionReason}
-                          </div>
-                        )}
-
-                        <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-400 bg-white/5 p-2 rounded-lg border border-white/5">
-                          <span>{t('expLabel')}：<span className="text-violet-400 font-bold">+{task.expReward} EXP</span></span>
-                          <span>{t('goldLabel')}：<span className="text-amber-400 font-bold">🪙 {task.goldReward || 50}</span></span>
-                          <span>{t('taskTypeLabel')}：<span className={getAttributeColor(task.attributeReward)}>{translateType(task.attributeReward)}</span></span>
-                          <span>{t('ticketsLabel')}：<span className="text-cyan-400 font-bold">+{task.ticketReward || 1} 🎫</span></span>
-                        </div>
+                    <div key={cat.type} className="space-y-3 bg-[#FFFFFF]/35 p-4 rounded-xl border border-dashed border-slate-200">
+                      <div className={`flex items-center justify-between px-3 py-2 rounded-lg border ${cat.color}`}>
+                        <span className="text-sm font-black flex items-center gap-1.5">
+                          {cat.icon} {renderTextWithZhuyin(t(cat.key))}
+                        </span>
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200">
+                          {catTasks.length} {language === 'zh' ? '個任務' : 'Quests'}
+                        </span>
                       </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {catTasks.map((task) => {
+                          const isSubmitting = submittingTaskId === task.id;
+                          const hasCorrection = task.status === '進行中' && task.rejectionReason;
+                          const isBoss = task.difficulty === '較難' || task.difficulty === '終極';
+                          
+                          const getBossLabel = (diff) => {
+                            if (diff === '較難') return t('eliteBossLabel');
+                            if (diff === '終極') return t('ultimateBossLabel');
+                            return null;
+                          };
 
-                      {task.status !== '待覆核' && (
-                        <div className="mt-2 pt-2 border-t border-white/5">
-                          {isReadOnly ? (
-                            <div className="text-center text-slate-500 font-bold text-xs py-2 bg-slate-900/40 rounded border border-white/5">
-                              👀 {t('readOnlyTaskBlock')}
-                            </div>
-                          ) : !isSubmitting ? (
-                            <button
-                              onClick={() => setSubmittingTaskId(task.id)}
-                              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-[4px] text-xs font-black bg-[#3661FF] hover:bg-[#4e75ff] text-white transition-colors uppercase tracking-wider"
+                          const cardClass = `p-5 flex flex-col justify-between gap-4 relative transition-all ${
+                            isBoss
+                              ? `boss-quest-card ${task.status === '待覆核' ? 'opacity-80' : ''} ${hasCorrection ? 'ring-2 ring-rose-500/50' : ''}`
+                              : `glass-panel border ${
+                                  hasCorrection 
+                                    ? 'border-rose-500/30 bg-rose-500/5' 
+                                    : task.status === '待覆核' 
+                                      ? 'border-amber-500/20 bg-amber-500/5 opacity-80' 
+                                      : 'border-white/5 hover:border-violet-500/20'
+                                }`
+                          }`;
+
+                          return (
+                            <div 
+                              key={task.id} 
+                              className={cardClass}
                             >
-                              <Send className="h-3.5 w-3.5" />
-                              {t('submitReviewBtn')}
-                            </button>
-                          ) : (
-                            <div className="space-y-3">
-                              <div>
-                                <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">
-                                  {t('messageToParents')}
-                                </label>
-                                <input 
-                                  type="text"
-                                  value={submissionNotes}
-                                  onChange={(e) => setSubmissionNotes(e.target.value)}
-                                  placeholder={language === 'zh' ? "e.g. 我已經整理好了喔，乾乾淨淨！" : "e.g. I have cleaned it up!"}
-                                  className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-violet-500"
-                                />
+                              {/* V2 Loading Block overlay during API simulation */}
+                              {isSubmitting && isSubmittingApi && (
+                                <div className="loading-blocker">
+                                  <div className="spinner-overlay"></div>
+                                </div>
+                              )}
+
+                              <div className="space-y-2">
+                                <div className="flex items-start justify-between gap-2">
+                                  <div>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      {isBoss && (
+                                        <span className="bg-red-600 text-white px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider animate-pulse flex items-center gap-1 shadow-sm mr-1">
+                                          {getBossLabel(task.difficulty)}
+                                        </span>
+                                      )}
+                                      <span className="text-md font-extrabold text-slate-200">{renderTextWithZhuyin(task.name)}</span>
+                                      {task.isRepeated && (
+                                        <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider">
+                                          {language === 'zh' ? '⚠️ 30天內重複完成任務' : '⚠️ 30-Day Repeated Quest'}
+                                        </span>
+                                      )}
+                                      <button
+                                        type="button"
+                                        onClick={() => handleSpeak(task)}
+                                        className={`kid-speak-btn p-1.5 ml-1 ${
+                                          speakingTaskId === task.id ? 'is-speaking' : ''
+                                        }`}
+                                        title={language === 'zh' ? '語音讀任務' : 'Read Quest Out Loud'}
+                                      >
+                                        {speakingTaskId === task.id ? (
+                                          <VolumeX className="h-4 w-4" />
+                                        ) : (
+                                          <Volume2 className="h-4 w-4" />
+                                        )}
+                                      </button>
+                                      {hasCorrection && (
+                                        <span className="bg-rose-500 text-slate-900 px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider animate-pulse">
+                                          {t('taskStatusRejected')}
+                                        </span>
+                                      )}
+                                      {task.status === '待覆核' && (
+                                        <span className="bg-amber-500/25 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded text-[10px] font-bold">
+                                          {t('taskStatusPending')}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <p className="text-xs text-slate-400 mt-1">{renderTextWithZhuyin(task.description)}</p>
+                                  </div>
+                                  <span className={`text-xs font-bold border px-2 py-0.5 rounded-full whitespace-nowrap ${getTypeBadgeColor(task.type)}`}>
+                                    {translateType(task.type)} | {t('taskDifficultyLabel')} {translateDifficulty(task.difficulty)}
+                                  </span>
+                                  {!isReadOnly && task.status === '進行中' && !task.rejectionReason && (!task.swapCount || task.swapCount < 1) && (
+                                    <button
+                                      onClick={() => handleRerollTask(task.id)}
+                                      disabled={swappingTaskId !== null}
+                                      title={language === 'zh' ? '換一個任務' : 'Swap this quest'}
+                                      className={`flex items-center gap-1 px-2 py-1 text-[10px] font-bold rounded-lg transition-all shrink-0 ${
+                                        swappingTaskId !== null 
+                                          ? 'opacity-50 cursor-not-allowed text-slate-500 bg-white/5 border border-white/5' 
+                                          : 'text-slate-400 hover:text-violet-300 bg-white/5 hover:bg-violet-500/15 border border-white/10 hover:border-violet-500/30'
+                                      }`}
+                                    >
+                                      {swappingTaskId === task.id ? (
+                                        <>
+                                          <span className="animate-spin mr-1">⏳</span>
+                                          {language === 'zh' ? '更換中...' : 'Swapping...'}
+                                        </>
+                                      ) : (
+                                        <>
+                                          <span>🔄</span>
+                                          {language === 'zh' ? '換一個' : 'Swap'}
+                                        </>
+                                      )}
+                                    </button>
+                                  )}
+                                </div>
+
+                                {hasCorrection && (
+                                  <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs mt-1">
+                                    <span className="font-bold">❌ {t('parentRejectionReason')}：</span> {task.rejectionReason}
+                                  </div>
+                                )}
+
+                                <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-400 bg-white/5 p-2 rounded-lg border border-white/5">
+                                  <span>{t('expLabel')}：<span className="text-violet-400 font-bold">+{task.expReward} EXP</span></span>
+                                  <span>{t('goldLabel')}：<span className="text-amber-400 font-bold">🪙 {task.goldReward || 50}</span></span>
+                                  <span>{t('taskTypeLabel')}：<span className={getAttributeColor(task.attributeReward)}>{translateType(task.attributeReward)}</span></span>
+                                  <span>{t('ticketsLabel')}：<span className="text-cyan-400 font-bold">+{task.ticketReward || 1} 🎫</span></span>
+                                </div>
                               </div>
 
-                              {/* V2 Real HTML5 File Validation Input */}
-                              <div>
-                                <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">
-                                  {t('uploadProofPhoto')}
-                                </label>
-                                <input 
-                                  type="file"
-                                  accept="image/png, image/jpeg"
-                                  onChange={handlePhotoUpload}
-                                  className="w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-white/10 file:text-slate-200 hover:file:bg-white/15 file:cursor-pointer"
-                                />
-                                {photoError && (
-                                  <p className="text-[10px] text-rose-400 font-bold mt-1.5 flex items-center gap-1">
-                                    <AlertTriangle className="h-3 w-3 shrink-0" />
-                                    {photoError}
-                                  </p>
-                                )}
-                                {submissionPhoto && (
-                                  <p className="text-[10px] text-emerald-450 font-bold mt-1">
-                                    {t('photoLoaded')}
-                                  </p>
-                                )}
-                              </div>
+                              {task.status !== '待覆核' && (
+                                <div className="mt-2 pt-2 border-t border-white/5">
+                                  {isReadOnly ? (
+                                    <div className="text-center text-slate-500 font-bold text-xs py-2 bg-slate-900/40 rounded border border-white/5">
+                                      👀 {t('readOnlyTaskBlock')}
+                                    </div>
+                                  ) : !isSubmitting ? (
+                                    <button
+                                      onClick={() => setSubmittingTaskId(task.id)}
+                                      className="w-full flex items-center justify-center gap-1.5 py-2 rounded-[4px] text-xs font-black bg-[#3661FF] hover:bg-[#4e75ff] text-white transition-colors uppercase tracking-wider"
+                                    >
+                                      <Send className="h-3.5 w-3.5" />
+                                      {t('submitReviewBtn')}
+                                    </button>
+                                  ) : (
+                                    <div className="space-y-3">
+                                      <div>
+                                        <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">
+                                          {t('messageToParents')}
+                                        </label>
+                                        <input 
+                                          type="text"
+                                          value={submissionNotes}
+                                          onChange={(e) => setSubmissionNotes(e.target.value)}
+                                          placeholder={language === 'zh' ? "e.g. 我已經整理好了喔，乾乾淨淨！" : "e.g. I have cleaned it up!"}
+                                          className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-violet-500"
+                                        />
+                                      </div>
 
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => handleTaskSubmit(task.id)}
-                                  disabled={isSubmittingApi}
-                                  className="flex-1 py-1.5 rounded-[4px] text-xs font-black bg-[#00E676] hover:bg-[#00c867] text-[#111216] transition-colors flex items-center justify-center gap-1.5"
-                                >
-                                  {isSubmittingApi && <span className="spinner-inline"></span>}
-                                  {isSubmittingApi ? t('submitting') : t('submitReviewBtn')}
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setSubmittingTaskId(null);
-                                    setSubmissionNotes('');
-                                    setSubmissionPhoto('');
-                                    setPhotoError('');
-                                  }}
-                                  className="px-3 py-1.5 rounded-[4px] text-xs font-bold bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white transition-colors"
-                                >
-                                  {t('cancel')}
-                                </button>
-                              </div>
+                                      {/* V2 Real HTML5 File Validation Input */}
+                                      <div>
+                                        <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">
+                                          {t('uploadProofPhoto')}
+                                        </label>
+                                        <input 
+                                          type="file"
+                                          accept="image/png, image/jpeg"
+                                          onChange={handlePhotoUpload}
+                                          className="w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-white/10 file:text-slate-200 hover:file:bg-white/15 file:cursor-pointer"
+                                        />
+                                        {photoError && (
+                                          <p className="text-[10px] text-rose-400 font-bold mt-1.5 flex items-center gap-1">
+                                            <AlertTriangle className="h-3 w-3 shrink-0" />
+                                            {photoError}
+                                          </p>
+                                        )}
+                                        {submissionPhoto && (
+                                          <p className="text-[10px] text-emerald-450 font-bold mt-1">
+                                            {t('photoLoaded')}
+                                          </p>
+                                        )}
+                                      </div>
+
+                                      <div className="flex gap-2">
+                                        <button
+                                          onClick={() => handleTaskSubmit(task.id)}
+                                          disabled={isSubmittingApi}
+                                          className="flex-1 py-1.5 rounded-[4px] text-xs font-black bg-[#00E676] hover:bg-[#00c867] text-[#111216] transition-colors flex items-center justify-center gap-1.5"
+                                        >
+                                          {isSubmittingApi && <span className="spinner-inline"></span>}
+                                          {isSubmittingApi ? t('submitting') : t('submitReviewBtn')}
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            setSubmittingTaskId(null);
+                                            setSubmissionNotes('');
+                                            setSubmissionPhoto('');
+                                            setPhotoError('');
+                                          }}
+                                          className="px-3 py-1.5 rounded-[4px] text-xs font-bold bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white transition-colors"
+                                        >
+                                          {t('cancel')}
+                                        </button>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-                      )}
+                          );
+                        })}
+                      </div>
                     </div>
                   );
                 })}

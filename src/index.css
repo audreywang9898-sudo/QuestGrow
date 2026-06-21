@@ -797,5 +797,54 @@ th[class*="bg-white/5"] {
   box-shadow: 0 0 8px rgba(0, 230, 118, 0.6);
 }
 
+/* Phase 2: Boss Quests Lava Glowing & Animations */
+@keyframes lava-flow {
+  0% {
+    border-color: #ef4444;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.35), inset 0 0 4px rgba(239, 68, 68, 0.15);
+  }
+  50% {
+    border-color: #f97316;
+    box-shadow: 0 0 18px rgba(249, 115, 22, 0.7), inset 0 0 8px rgba(249, 115, 22, 0.3);
+  }
+  100% {
+    border-color: #ef4444;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.35), inset 0 0 4px rgba(239, 68, 68, 0.15);
+  }
+}
+
+@keyframes bar-glow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.boss-quest-card {
+  position: relative;
+  background: linear-gradient(135deg, #FFFFFF 0%, #FFF3F3 100%) !important;
+  border: 2px solid #ef4444 !important;
+  border-radius: 8px !important;
+  animation: lava-flow 3s infinite ease-in-out;
+  overflow: hidden;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.boss-quest-card:hover {
+  transform: translateY(-2px) scale(1.01);
+}
+
+/* Glowing top red-orange gradient bar */
+.boss-quest-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(to right, #ef4444, #f97316, #ef4444);
+  animation: bar-glow 1.5s infinite ease-in-out;
+  z-index: 10;
+}
+
+
 
 

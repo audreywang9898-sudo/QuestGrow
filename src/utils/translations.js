@@ -455,7 +455,14 @@ export const translations = {
     parentWizardSkipBtn: "之後再說，先進入工作台",
     dailyProverbLabel: "💡 每日鼓勵 | Daily Encouragement",
     startSpeaking: "語音朗讀",
-    stopSpeaking: "停止朗讀"
+    stopSpeaking: "停止朗讀",
+    dungeonVirtue: "🛡️ 德行修煉副本",
+    dungeonWisdom: "🔮 智慧神殿副本",
+    dungeonCourage: "⚡ 風暴峽谷副本",
+    dungeonEmpathy: "🤝 共感森林副本",
+    dungeonCreativity: "🎨 飛空浮島副本",
+    eliteBossLabel: "👿 精英魔王",
+    ultimateBossLabel: "☠️ 終極魔王"
   },
   en: {
     // Header
@@ -911,6 +918,13 @@ export const translations = {
     parentWizardSkipBtn: "Do it later, enter desk",
     dailyProverbLabel: "💡 Daily Encouragement",
     startSpeaking: "Read Aloud",
-    stopSpeaking: "Stop Reading"
+    stopSpeaking: "Stop Reading",
+    dungeonVirtue: "🛡️ Virtue Training Campaign",
+    dungeonWisdom: "🔮 Temple of Wisdom Campaign",
+    dungeonCourage: "⚡ Storm Canyon Campaign",
+    dungeonEmpathy: "🤝 Empathy Forest Campaign",
+    dungeonCreativity: "🎨 Floating Island Campaign",
+    eliteBossLabel: "👿 Elite Boss",
+    ultimateBossLabel: "☠️ Ultimate Boss"
   }
 };

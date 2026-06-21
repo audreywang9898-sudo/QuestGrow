@@ -198,3 +198,68 @@ export const playGachaRevealSound = (rarity) => {
     });
   } catch (e) {}
 };
+
+// 6. Synthesize Retro Boss Challenge sound (tension arpeggio followed by triumphant resolution chords)
+export const playBossBattleSound = () => {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const now = ctx.currentTime;
+    
+    // Play a single note helper
+    const playTone = (freq, time, duration, vol = 0.08, type = 'sawtooth') => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, time);
+      gain.gain.setValueAtTime(vol, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + duration - 0.01);
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(time);
+      osc.stop(time + duration);
+    };
+    
+    // Phase A: Tension - Diminished/Chromatic Retro Arpeggio
+    const tensionNotes = [
+      { f: 261.63, t: 0.0 },  // C4
+      { f: 311.13, t: 0.1 },  // Eb4
+      { f: 369.99, t: 0.2 },  // F#4 (tritone tension!)
+      { f: 440.00, t: 0.3 },  // A4
+      { f: 523.25, t: 0.4 },  // C5
+      { f: 493.88, t: 0.5 },  // B4
+      { f: 466.16, t: 0.6 }   // Bb4
+    ];
+    
+    tensionNotes.forEach(note => {
+      playTone(note.f, now + note.t, 0.12, 0.08, 'sawtooth');
+    });
+    
+    // Phase B: Resolution - Ascending Power Chord Hits
+    // Hit 1: C Major (C5, E5, G5) at +0.8s
+    const chordC = [523.25, 659.25, 783.99];
+    chordC.forEach(f => {
+      playTone(f, now + 0.8, 0.25, 0.06, 'triangle');
+      playTone(f, now + 0.8, 0.25, 0.04, 'sine');
+    });
+    
+    // Hit 2: F Major (F5, A5, C6) at +1.0s
+    const chordF = [698.46, 880.00, 1046.50];
+    chordF.forEach(f => {
+      playTone(f, now + 1.0, 0.25, 0.06, 'triangle');
+      playTone(f, now + 1.0, 0.25, 0.04, 'sine');
+    });
+    
+    // Hit 3: G Major / Triumph resolution (G5, B5, D6, G6) at +1.2s
+    const chordG = [783.99, 987.77, 1174.66, 1567.98];
+    chordG.forEach(f => {
+      playTone(f, now + 1.2, 0.6, 0.06, 'sawtooth');
+      playTone(f, now + 1.2, 0.6, 0.06, 'triangle');
+    });
+  } catch (e) {
+    console.warn("Boss Audio Context block:", e);
+  }
+};
+
