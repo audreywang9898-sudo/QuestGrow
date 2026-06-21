@@ -3444,7 +3444,7 @@ function ParentPortal({
                   <div className="glass-panel p-4 border-white/5 bg-slate-950/40 space-y-4">
                     <div className="text-xs text-slate-400 font-bold uppercase text-center">{t('radarTitle')}</div>
                     <div className="flex justify-center">
-                      <svg width="225" height="225" viewBox="0 0 200 200" className="w-[216px] h-[216px]">
+                      <svg width="225" height="225" viewBox="-20 -20 240 240" className="w-[216px] h-[216px]">
                         {[0.3, 0.6, 1.0].map((level, i) => (
                           <polygon key={i} points={[[0,0],[0,0],[0,0],[0,0],[0,0]].map((_, j) => {
                             const angle = (j * 2 * Math.PI / 5) - Math.PI / 2;
@@ -3492,7 +3492,7 @@ function ParentPortal({
                                 x={x} 
                                 y={y} 
                                 fill={colors[i]} 
-                                fontSize="22" 
+                                fontSize="16" 
                                 fontWeight="900" 
                                 textAnchor="middle" 
                                 dominantBaseline="middle"
