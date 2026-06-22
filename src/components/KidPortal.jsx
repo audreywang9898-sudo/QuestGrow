@@ -1492,19 +1492,19 @@ function KidPortal({
               <Bell className="h-4 w-4" />
               {t('pushNotificationLogsTitle')}
             </h4>
-            <button onClick={() => setShowNotifications(false)} className="text-zinc-300 hover:text-white text-xs font-bold">{t('close')}</button>
+            <button onClick={() => setShowNotifications(false)} className="text-slate-400 hover:text-slate-200 text-xs font-bold">{t('close')}</button>
           </div>
           {fcmNotifications.length === 0 ? (
-            <p className="text-xs text-zinc-300 text-center py-4">{t('noNotifications')}</p>
+            <p className="text-xs text-slate-400 text-center py-4">{t('noNotifications')}</p>
           ) : (
             <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
               {fcmNotifications.map(n => (
                 <div key={n.id} className="p-2.5 rounded-lg bg-white/5 border border-white/5 space-y-0.5">
                   <div className="flex justify-between text-[11px] font-bold">
                     <span className="text-slate-200">{n.title}</span>
-                    <span className="text-zinc-400">{n.time}</span>
+                    <span className="text-slate-500">{n.time}</span>
                   </div>
-                  <p className="text-[10px] text-zinc-300 leading-normal">{n.body}</p>
+                  <p className="text-[10px] text-slate-400 leading-normal">{n.body}</p>
                 </div>
               ))}
             </div>
@@ -1970,7 +1970,7 @@ function KidPortal({
                                           {getBossLabel(task.difficulty)}
                                         </span>
                                       )}
-                                      <span className="text-md font-extrabold text-zinc-100">{renderTextWithZhuyin(task.name)}</span>
+                                      <span className="text-md font-extrabold text-slate-200">{renderTextWithZhuyin(task.name)}</span>
                                       {task.isRepeated && (
                                         <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider">
                                           {language === 'zh' ? '⚠️ 30天內重複完成任務' : '⚠️ 30-Day Repeated Quest'}
@@ -2001,7 +2001,7 @@ function KidPortal({
                                         </span>
                                       )}
                                     </div>
-                                    <p className="text-xs text-zinc-300 mt-1">{renderTextWithZhuyin(task.description)}</p>
+                                    <p className="text-xs text-slate-400 mt-1">{renderTextWithZhuyin(task.description)}</p>
                                   </div>
                                   <span className={`text-xs font-bold border px-2 py-0.5 rounded-full whitespace-nowrap ${getTypeBadgeColor(task.type)}`}>
                                     {translateType(task.type)} | {t('taskDifficultyLabel')} {translateDifficulty(task.difficulty)}
@@ -2013,8 +2013,8 @@ function KidPortal({
                                       title={language === 'zh' ? '換一個任務' : 'Swap this quest'}
                                       className={`flex items-center gap-1 px-2 py-1 text-[10px] font-bold rounded-lg transition-all shrink-0 ${
                                         swappingTaskId !== null 
-                                          ? 'opacity-50 cursor-not-allowed text-zinc-500 bg-white/5 border border-white/5' 
-                                          : 'text-zinc-300 hover:text-violet-300 bg-white/5 hover:bg-violet-500/15 border border-white/10 hover:border-violet-500/30'
+                                          ? 'opacity-50 cursor-not-allowed text-slate-500 bg-white/5 border border-white/5' 
+                                          : 'text-slate-400 hover:text-violet-300 bg-white/5 hover:bg-violet-500/15 border border-white/10 hover:border-violet-500/30'
                                       }`}
                                     >
                                       {swappingTaskId === task.id ? (
@@ -2233,9 +2233,9 @@ function KidPortal({
                   <span className="text-xs bg-slate-950/60 text-[#f43f5e] border border-[#f43f5e]/30 px-2 py-0.5 rounded font-mono">V.3</span>
                   <span>冒險扭蛋機</span>
                 </h3>
-                <p className="text-[10px] text-slate-200 mt-1 font-bold uppercase tracking-wider">
+                <div className="text-[10px] text-slate-200 mt-1 font-bold uppercase tracking-wider">
                   {language === 'zh' ? '用幸運與累積的努力 召喚稀有寶藏卡牌' : 'Summon rare treasure cards with your hard-earned points'}
-                </p>
+                </div>
               </div>
 
               {/* Glass Tube window showing mystery cards/eggs */}
@@ -2262,9 +2262,9 @@ function KidPortal({
                   <div className="text-sm font-black text-emerald-400 uppercase tracking-wider mb-1.5 flex items-center justify-center gap-1.5">
                     <span>🎫 {t('summonTitle') || '召喚獎勵'}</span>
                   </div>
-                  <p className="text-[10px] text-zinc-200 leading-relaxed max-w-[200px] text-center mb-3">
+                  <div className="text-[10px] text-zinc-200 leading-relaxed max-w-[200px] text-center mb-3">
                     {language === 'zh' ? '轉動旋鈕即可隨機召喚一張獎勵卡片' : 'Twist the dial to summon a random reward card'}
-                  </p>
+                  </div>
                   
                   <button
                     disabled={stats.tickets < 1 || isDrawingGacha || isReadOnly}
@@ -2296,9 +2296,9 @@ function KidPortal({
                   <div className="text-sm font-black text-amber-400 uppercase tracking-wider flex items-center justify-center gap-1.5">
                     <span>🏪 {t('vendingMachineTitle')}</span>
                   </div>
-                  <p className="text-[10px] text-zinc-200 leading-relaxed max-w-[160px] mx-auto">
+                  <div className="text-[10px] text-zinc-200 leading-relaxed max-w-[160px] mx-auto">
                     {t('vendingMachineDesc')}
-                  </p>
+                  </div>
                   <div className="p-2 bg-slate-950/80 border border-white/5 rounded-xl font-bold text-xs flex justify-between items-center text-zinc-200">
                     <span className="text-amber-400 font-extrabold">🪙 {stats.gold}</span>
                     <span className="text-[9px] text-zinc-300 uppercase">300 🪙 = 1 🎫</span>
@@ -2372,7 +2372,7 @@ function KidPortal({
                       )}
                     </button>
                   </h4>
-                  <div className="text-[10px] text-zinc-300 font-bold uppercase tracking-wider">{drawnCard.type}</div>
+                  <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{drawnCard.type}</div>
                 </div>
 
                 <p className="text-xs text-slate-300 border-t border-white/5 pt-3 leading-relaxed">
@@ -2380,7 +2380,7 @@ function KidPortal({
                 </p>
               </div>
 
-              <div className="text-xs text-zinc-200">
+              <div className="text-xs text-slate-600">
                 {drawnCard.type === '資源卡' 
                   ? t('resourceAdded') 
                   : t('cardAddedToBackpack')}
@@ -2627,14 +2627,14 @@ function KidPortal({
                           </div>
 
                           {/* Card Lore / Desc */}
-                          <p className="text-xs text-zinc-200 leading-relaxed bg-black/30 p-3 rounded-xl border border-white/5">
+                          <div className="text-xs text-zinc-200 leading-relaxed bg-black/30 p-3 rounded-xl border border-white/5">
                             {renderTextWithZhuyin(activeSelection.desc)}
-                          </p>
+                          </div>
 
                           {activeSelection.expireAt && (
-                            <p className={`text-[10px] font-bold ${activeSelection.status === '已過期' ? 'text-rose-500' : 'text-zinc-400'}`}>
+                            <div className={`text-[10px] font-bold ${activeSelection.status === '已過期' ? 'text-rose-500' : 'text-zinc-400'}`}>
                               📅 {t('expiryDate')}: {activeSelection.expireAt} {activeSelection.status === '已過期' && `(${t('cardExpired')})`}
-                            </p>
+                            </div>
                           )}
 
                           {/* Status and Action Buttons */}

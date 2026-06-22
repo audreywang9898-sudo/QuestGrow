@@ -4332,14 +4332,14 @@ export function ParentOnboardingWizard({
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center gap-2 mb-0.5">
-                      <span className="text-[11px] font-black text-zinc-100 truncate">
+                      <span className="text-[11px] font-black text-slate-200 truncate">
                         {quest.name}
                       </span>
                       <span className={`text-[8.5px] px-1.5 py-0.5 rounded-full border shrink-0 font-bold ${getQuestColor(quest.type)}`}>
                         {quest.type}
                       </span>
                     </div>
-                    <p className="text-[9px] text-zinc-400 leading-normal">
+                    <p className="text-[9px] text-slate-400 leading-normal">
                       {quest.description}
                     </p>
                   </div>
