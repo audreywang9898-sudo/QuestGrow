@@ -1862,36 +1862,41 @@ function KidPortal({
             { 
               type: '德', 
               key: 'dungeonVirtue', 
-              color: 'border-emerald-500/35 bg-emerald-500/10 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.15)]', 
-              bgStyle: 'bg-gradient-to-r from-slate-900 via-emerald-950/20 to-slate-900 border border-emerald-500/10 shadow-lg',
+              color: 'border-emerald-500/50 bg-emerald-50 shadow-[0_0_12px_rgba(16,185,129,0.15)]', 
+              headerTextColor: '#047857',
+              bgStyle: 'quest-category-section quest-category-virtue',
               icon: '🛡️' 
             },
             { 
               type: '智', 
               key: 'dungeonWisdom', 
-              color: 'border-cyan-500/35 bg-cyan-500/10 text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.15)]', 
-              bgStyle: 'bg-gradient-to-r from-slate-900 via-cyan-950/20 to-slate-900 border border-cyan-500/10 shadow-lg',
+              color: 'border-cyan-500/50 bg-cyan-50 shadow-[0_0_12px_rgba(6,182,212,0.15)]', 
+              headerTextColor: '#0369a1',
+              bgStyle: 'quest-category-section quest-category-wisdom',
               icon: '🔮' 
             },
             { 
               type: '體', 
               key: 'dungeonCourage', 
-              color: 'border-orange-500/35 bg-orange-500/10 text-orange-400 shadow-[0_0_12px_rgba(249,115,22,0.15)]', 
-              bgStyle: 'bg-gradient-to-r from-slate-900 via-orange-950/20 to-slate-900 border border-orange-500/10 shadow-lg',
+              color: 'border-orange-500/50 bg-orange-50 shadow-[0_0_12px_rgba(249,115,22,0.15)]', 
+              headerTextColor: '#c2410c',
+              bgStyle: 'quest-category-section quest-category-courage',
               icon: '⚡' 
             },
             { 
               type: '群', 
               key: 'dungeonEmpathy', 
-              color: 'border-pink-500/35 bg-pink-500/10 text-pink-400 shadow-[0_0_12px_rgba(236,72,153,0.15)]', 
-              bgStyle: 'bg-gradient-to-r from-slate-900 via-pink-950/20 to-slate-900 border border-pink-500/10 shadow-lg',
+              color: 'border-pink-500/50 bg-pink-50 shadow-[0_0_12px_rgba(236,72,153,0.15)]', 
+              headerTextColor: '#be185d',
+              bgStyle: 'quest-category-section quest-category-empathy',
               icon: '🤝' 
             },
             { 
               type: '美', 
               key: 'dungeonCreativity', 
-              color: 'border-purple-500/35 bg-purple-500/10 text-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.15)]', 
-              bgStyle: 'bg-gradient-to-r from-slate-900 via-purple-950/20 to-slate-900 border border-purple-500/10 shadow-lg',
+              color: 'border-purple-500/50 bg-purple-50 shadow-[0_0_12px_rgba(168,85,247,0.15)]', 
+              headerTextColor: '#7e22ce',
+              bgStyle: 'quest-category-section quest-category-creativity',
               icon: '🎨' 
             },
           ];
@@ -1910,15 +1915,15 @@ function KidPortal({
                   return (
                     <div key={cat.type} className={`space-y-3 p-5 rounded-2xl ${cat.bgStyle}`}>
                       <div className={`flex items-center justify-between px-4 py-2 rounded-xl border ${cat.color}`}>
-                        <span className="text-sm font-black flex items-center gap-1.5">
+                        <span className="text-sm font-black flex items-center gap-1.5" style={{ color: cat.headerTextColor }}>
                           {cat.icon} {renderTextWithZhuyin(t(cat.key))}
                         </span>
                         <span 
                           className="text-xs font-bold px-2 py-0.5 rounded-full border shadow-sm"
                           style={{ 
                             color: '#ffffff', 
-                            backgroundColor: '#1e293b', 
-                            borderColor: 'rgba(255,255,255,0.2)' 
+                            backgroundColor: cat.headerTextColor, 
+                            borderColor: 'rgba(0,0,0,0.1)' 
                           }}
                         >
                           {catTasks.length} {language === 'zh' ? '個任務' : 'Quests'}
@@ -1970,7 +1975,7 @@ function KidPortal({
                                           {getBossLabel(task.difficulty)}
                                         </span>
                                       )}
-                                      <span className="text-md font-extrabold text-slate-200">{renderTextWithZhuyin(task.name)}</span>
+                                      <span className="text-md font-extrabold" style={{ color: '#1e293b' }}>{renderTextWithZhuyin(task.name)}</span>
                                       {task.isRepeated && (
                                         <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider">
                                           {language === 'zh' ? '⚠️ 30天內重複完成任務' : '⚠️ 30-Day Repeated Quest'}
@@ -2001,7 +2006,7 @@ function KidPortal({
                                         </span>
                                       )}
                                     </div>
-                                    <p className="text-xs text-slate-400 mt-1">{renderTextWithZhuyin(task.description)}</p>
+                                    <p className="text-xs mt-1" style={{ color: '#475569' }}>{renderTextWithZhuyin(task.description)}</p>
                                   </div>
                                   <span className={`text-xs font-bold border px-2 py-0.5 rounded-full whitespace-nowrap ${getTypeBadgeColor(task.type)}`}>
                                     {translateType(task.type)} | {t('taskDifficultyLabel')} {translateDifficulty(task.difficulty)}
@@ -2013,8 +2018,8 @@ function KidPortal({
                                       title={language === 'zh' ? '換一個任務' : 'Swap this quest'}
                                       className={`flex items-center gap-1 px-2 py-1 text-[10px] font-bold rounded-lg transition-all shrink-0 ${
                                         swappingTaskId !== null 
-                                          ? 'opacity-50 cursor-not-allowed text-slate-500 bg-white/5 border border-white/5' 
-                                          : 'text-slate-400 hover:text-violet-300 bg-white/5 hover:bg-violet-500/15 border border-white/10 hover:border-violet-500/30'
+                                          ? 'opacity-50 cursor-not-allowed text-slate-400 bg-slate-100 border border-slate-200' 
+                                          : 'text-slate-500 hover:text-violet-600 bg-slate-100 hover:bg-violet-50 border border-slate-200 hover:border-violet-300'
                                       }`}
                                     >
                                       {swappingTaskId === task.id ? (
@@ -2033,7 +2038,7 @@ function KidPortal({
                                 </div>
 
                                 {hasCorrection && (
-                                  <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs mt-1">
+                                  <div className="p-2.5 rounded-lg bg-rose-50 border border-rose-300/50 text-rose-700 text-xs mt-1">
                                     <span className="font-bold">❌ {t('parentRejectionReason')}：</span> {task.rejectionReason}
                                   </div>
                                 )}
@@ -2047,9 +2052,9 @@ function KidPortal({
                               </div>
 
                               {task.status !== '待覆核' && (
-                                <div className="mt-2 pt-2 border-t border-white/5">
+                                <div className="mt-2 pt-2 border-t border-slate-200/80">
                                   {isReadOnly ? (
-                                    <div className="text-center text-slate-500 font-bold text-xs py-2 bg-slate-900/40 rounded border border-white/5">
+                                    <div className="text-center text-slate-500 font-bold text-xs py-2 bg-slate-100 rounded border border-slate-200">
                                       👀 {t('readOnlyTaskBlock')}
                                     </div>
                                   ) : !isSubmitting ? (
@@ -2071,7 +2076,7 @@ function KidPortal({
                                           value={submissionNotes}
                                           onChange={(e) => setSubmissionNotes(e.target.value)}
                                           placeholder={language === 'zh' ? "e.g. 我已經整理好了喔，乾乾淨淨！" : "e.g. I have cleaned it up!"}
-                                          className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-violet-500"
+                                          className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-700 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-400/30"
                                         />
                                       </div>
 
@@ -2084,10 +2089,10 @@ function KidPortal({
                                           type="file"
                                           accept="image/png, image/jpeg"
                                           onChange={handlePhotoUpload}
-                                          className="w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-white/10 file:text-slate-200 hover:file:bg-white/15 file:cursor-pointer"
+                                          className="w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 file:cursor-pointer"
                                         />
                                         {photoError && (
-                                          <p className="text-[10px] text-rose-400 font-bold mt-1.5 flex items-center gap-1">
+                                          <p className="text-[10px] text-rose-600 font-bold mt-1.5 flex items-center gap-1">
                                             <AlertTriangle className="h-3 w-3 shrink-0" />
                                             {photoError}
                                           </p>
@@ -2536,9 +2541,9 @@ function KidPortal({
                             return (
                               <div 
                                 key={`empty-${slotIdx}`}
-                                className="rpg-grid-slot aspect-square flex items-center justify-center border border-white/5 bg-slate-950/40 text-slate-800"
+                                className="rpg-grid-slot aspect-square flex items-center justify-center border border-dashed border-blue-200/50 bg-blue-50/10 text-slate-400 opacity-60"
                               >
-                                <span className="text-lg opacity-20">⚙️</span>
+                                <span className="text-lg opacity-30">⚙️</span>
                               </div>
                             );
                           }
@@ -2557,7 +2562,7 @@ function KidPortal({
                                 getRaritySlotBorderClass(item.rarity)
                               } ${
                                 isSelected 
-                                  ? 'ring-2 ring-indigo-500 bg-indigo-500/10 border-indigo-400' 
+                                  ? 'ring-2 ring-blue-500 bg-blue-50/50 border-blue-400 shadow-[0_0_12px_rgba(54,97,255,0.4)] scale-[1.02]' 
                                   : ''
                               } ${
                                 isExpired ? 'opacity-55' : ''
