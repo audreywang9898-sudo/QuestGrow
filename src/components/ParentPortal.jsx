@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { TASK_TEMPLATES, GACHA_POOL } from '../utils/mockData';
 import Avatar from './Avatar';
 import { useLanguage } from './LanguageContext';
-import FamilyLeaderboardView from './FamilyLeaderboardView';
 import { 
   Plus, Check, X, ShieldAlert, Sparkles, BookOpen, 
   HelpCircle, Trash2, Award, ClipboardCheck, LayoutGrid, 
@@ -123,8 +122,6 @@ function ParentPortal({
     } else if (tourStep === 6) {
       setActiveTab('reports');
     } else if (tourStep === 7) {
-      setActiveTab('leaderboard');
-    } else if (tourStep === 8) {
       setActiveTab('settings');
       setSettingsSubTab('parent');
     }
@@ -807,19 +804,10 @@ function ParentPortal({
           {t('tabReports')}
         </button>
         <button
-          onClick={() => setActiveTab('leaderboard')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap rounded-xl ${
-            activeTab === 'leaderboard' ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-[0_0_12px_rgba(244,63,94,0.4)] hover:scale-105' : 'text-[#b5b7bc] hover:text-white hover:bg-white/5'
-          } ${showTour && tourStep === 7 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse' : ''}`}
-        >
-          <Trophy className={`h-4 w-4 ${activeTab === 'leaderboard' ? 'text-white' : 'text-violet-400'}`} />
-          {t('tabLeaderboard')}
-        </button>
-        <button
           onClick={() => setActiveTab('settings')}
           className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap rounded-xl ${
             activeTab === 'settings' ? 'bg-gradient-to-r from-slate-700 to-slate-800 text-white shadow-[0_0_12px_rgba(71,85,105,0.4)] hover:scale-105' : 'text-[#b5b7bc] hover:text-white hover:bg-white/5'
-          } ${showTour && tourStep === 8 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse' : ''}`}
+          } ${showTour && tourStep === 7 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse' : ''}`}
         >
           <Settings className={`h-4 w-4 ${activeTab === 'settings' ? 'text-white' : 'text-[#00E676]'}`} />
           {t('tabSettings')}
@@ -1822,17 +1810,7 @@ function ParentPortal({
         </div>
       )}
 
-      {/* --- Tab 1.5: Family Leaderboard --- */}
-      {activeTab === 'leaderboard' && (
-        <div className="animate-success">
-          <FamilyLeaderboardView 
-            leaderboardData={leaderboardData}
-            familyNickname={familyNickname}
-            t={t}
-            language={language}
-          />
-        </div>
-      )}
+
 
 
 
@@ -3712,7 +3690,7 @@ function ParentPortal({
             {/* Step Header */}
             <div className="flex justify-between items-center">
               <span className="text-xs bg-[#3661FF] text-white px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider">
-                {language === 'zh' ? `步驟 ${tourStep} / 8` : `Step ${tourStep} / 8`}
+                {language === 'zh' ? `步驟 ${tourStep} / 7` : `Step ${tourStep} / 7`}
               </span>
               <button 
                 onClick={() => {
@@ -3747,7 +3725,7 @@ function ParentPortal({
               
               <button
                 onClick={() => {
-                  if (tourStep === 8) {
+                  if (tourStep === 7) {
                     setShowTour(false);
                     localStorage.setItem('questgrow_parent_tour_seen', 'true');
                   } else {
@@ -3756,7 +3734,7 @@ function ParentPortal({
                 }}
                 className="px-4 py-1.5 rounded-[4px] text-xs font-black bg-[#3661FF] hover:bg-[#254edb] text-white transition-colors shadow-md"
               >
-                {tourStep === 8 ? t('tourFinish') : t('tourNext')}
+                {tourStep === 7 ? t('tourFinish') : t('tourNext')}
               </button>
             </div>
 
