@@ -533,7 +533,7 @@ div[class*="text-slate-400"] span[class*="text-amber-400"] {
   color: #D97706 !important; /* Reset amber for light background */
 }
 
-/* Backpack container */
+/* Backpack container (legacy) */
 .backpack-container {
   background: rgba(54, 97, 255, 0.04) !important;
   border: 1px solid rgba(54, 97, 255, 0.1) !important;
@@ -550,6 +550,30 @@ div[class*="text-slate-400"] span[class*="text-amber-400"] {
 
 .backpack-container p {
   color: #475569 !important;
+}
+
+/* Compact Backpack Hero Banner */
+.backpack-hero-banner {
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 40%, #e0e7ff 100%) !important;
+  border: 1.5px solid rgba(99, 102, 241, 0.2) !important;
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.1), 0 1px 4px rgba(0,0,0,0.04) !important;
+}
+
+/* RPG Card Inspector Panel */
+.rpg-card-inspector {
+  background: #ffffff !important;
+  border-radius: 20px !important;
+  border: 2px solid rgba(99, 102, 241, 0.15) !important;
+  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.1), 0 2px 8px rgba(0,0,0,0.04) !important;
+  overflow: hidden;
+}
+
+/* Empty inspector placeholder */
+.rpg-card-inspector-empty {
+  background: linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%) !important;
+  border: 2px dashed rgba(99, 102, 241, 0.2) !important;
+  border-radius: 20px !important;
+  box-shadow: none !important;
 }
 
 /* Item card rarity overrides */
