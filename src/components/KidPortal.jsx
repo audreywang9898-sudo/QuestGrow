@@ -2031,11 +2031,11 @@ function KidPortal({
                                   </div>
                                 )}
 
-                                <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-400 bg-white/5 p-2 rounded-lg border border-white/5">
-                                  <span>{t('expLabel')}：<span className="text-violet-400 font-bold">+{task.expReward} EXP</span></span>
-                                  <span>{t('goldLabel')}：<span className="text-amber-400 font-bold">🪙 {task.goldReward || 50}</span></span>
+                                <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-600 bg-slate-100/80 p-2 rounded-lg border border-slate-200/60">
+                                  <span>{t('expLabel')}：<span className="text-violet-600 font-bold">+{task.expReward} EXP</span></span>
+                                  <span>{t('goldLabel')}：<span className="text-amber-700 font-bold">🪙 {task.goldReward || 50}</span></span>
                                   <span>{t('taskTypeLabel')}：<span className={getAttributeColor(task.attributeReward)}>{translateType(task.attributeReward)}</span></span>
-                                  <span>{t('ticketsLabel')}：<span className="text-cyan-400 font-bold">+{task.ticketReward || 1} 🎫</span></span>
+                                  <span>{t('ticketsLabel')}：<span className="text-cyan-600 font-bold">+{task.ticketReward || 1} 🎫</span></span>
                                 </div>
                               </div>
 

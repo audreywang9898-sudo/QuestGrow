@@ -2127,11 +2127,11 @@ function ParentPortal({
                                         {translateType(task.type)} | {language === 'zh' ? '難度' : 'Difficulty'} {translateDifficulty(task.difficulty)}
                                       </span>
                                     </div>
-                                    <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-400 bg-white/5 p-2 rounded-lg border border-white/5">
-                                      <span>{language === 'zh' ? '週期：' : 'Frequency: '}<span className="text-slate-200 font-bold">{translatePeriod(task.period)}</span></span>
-                                      <span>{t('expLabel')}：<span className="text-violet-400 font-bold">+{task.expReward} EXP</span></span>
-                                      <span>{t('goldLabel')}：<span className="text-amber-400 font-bold">🪙 {task.goldReward || 0}</span></span>
-                                      <span>{t('ticketsLabel')}：<span className="text-cyan-400 font-bold">🎫 {task.ticketReward || 1}</span></span>
+                                    <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-600 bg-slate-100/80 p-2 rounded-lg border border-slate-200/60">
+                                      <span>{language === 'zh' ? '週期：' : 'Frequency: '}<span className="text-slate-800 font-bold">{translatePeriod(task.period)}</span></span>
+                                      <span>{t('expLabel')}：<span className="text-violet-600 font-bold">+{task.expReward} EXP</span></span>
+                                      <span>{t('goldLabel')}：<span className="text-amber-700 font-bold">🪙 {task.goldReward || 0}</span></span>
+                                      <span>{t('ticketsLabel')}：<span className="text-cyan-600 font-bold">🎫 {task.ticketReward || 1}</span></span>
                                     </div>
                                   </div>
                                   <div className="flex items-center justify-between border-t border-white/5 pt-3 mt-1">
@@ -2226,12 +2226,12 @@ function ParentPortal({
                   </div>
                 </div>
                 {/* Auto Rewards Display */}
-                <div className="p-3 bg-white/5 border border-white/5 rounded-xl text-xs font-semibold text-slate-400">
-                  <span className="block text-[10px] text-slate-500 font-bold uppercase mb-1">{t('rewardsPreview')}</span>
+                <div className="p-3 bg-slate-100/80 border border-slate-200/60 rounded-xl text-xs font-semibold text-slate-600">
+                  <span className="block text-[10px] text-slate-700 font-bold uppercase mb-1">{t('rewardsPreview')}</span>
                   <div className="flex flex-wrap gap-4 mt-1">
-                    <span>{t('expLabel')}: <span className="text-violet-400 font-bold">+{difficultyRewardsMap[taskDifficulty]?.exp} EXP</span></span>
-                    <span>{t('goldLabel')}: <span className="text-amber-400 font-bold">🪙 {difficultyRewardsMap[taskDifficulty]?.gold}</span></span>
-                    <span>{t('ticketsLabel')}: <span className="text-cyan-400 font-bold">🎫 {difficultyRewardsMap[taskDifficulty]?.ticket} {language === 'zh' ? '張' : ''}</span></span>
+                    <span>{t('expLabel')}: <span className="text-violet-600 font-bold">+{difficultyRewardsMap[taskDifficulty]?.exp} EXP</span></span>
+                    <span>{t('goldLabel')}: <span className="text-amber-700 font-bold">🪙 {difficultyRewardsMap[taskDifficulty]?.gold}</span></span>
+                    <span>{t('ticketsLabel')}: <span className="text-cyan-600 font-bold">🎫 {difficultyRewardsMap[taskDifficulty]?.ticket} {language === 'zh' ? '張' : ''}</span></span>
                   </div>
                 </div>
                 <div>
