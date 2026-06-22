@@ -576,7 +576,20 @@ div[class*="text-slate-400"] span[class*="text-amber-400"] {
   box-shadow: none !important;
 }
 
-/* Item card rarity overrides */
+/* ── Leaderboard Hero Banner ── */
+.leaderboard-hero-banner {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 40%, #fef9c3 100%) !important;
+  border: 1.5px solid rgba(245, 158, 11, 0.25) !important;
+  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.1), 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Leaderboard empty state */
+.leaderboard-empty {
+  background: linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%) !important;
+  border: 2px dashed rgba(99, 102, 241, 0.2) !important;
+}
+
+
 .card-common { border-color: #E2E8F0 !important; background: #FFFFFF !important; }
 .card-rare { border-color: rgba(54, 97, 255, 0.3) !important; background: linear-gradient(to bottom, #FFFFFF, #F0F4FF) !important; }
 .card-epic { border-color: rgba(181, 89, 255, 0.35) !important; background: linear-gradient(to bottom, #FFFFFF, #FAF5FF) !important; }
