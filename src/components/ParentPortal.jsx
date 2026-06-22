@@ -755,73 +755,73 @@ function ParentPortal({
         </button>
       </div>
 
-      <div className="flex border-b border-[#35363A] gap-1 pb-px overflow-x-auto">
+      <div className="flex gap-2 p-1.5 bg-slate-950/60 border border-white/5 rounded-2xl overflow-x-auto mb-6 shadow-inner">
         <button
           onClick={() => setActiveTab('audit')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
-            activeTab === 'audit' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
-          } ${showTour && tourStep === 2 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse rounded' : ''}`}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap rounded-xl ${
+            activeTab === 'audit' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_0_12px_rgba(54,97,255,0.4)] hover:scale-105' : 'text-[#b5b7bc] hover:text-white hover:bg-white/5'
+          } ${showTour && tourStep === 2 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse' : ''}`}
         >
-          <ClipboardCheck className="h-4 w-4 text-[#3661FF]" />
+          <ClipboardCheck className={`h-4 w-4 ${activeTab === 'audit' ? 'text-white' : 'text-[#3661FF]'}`} />
           {t('tabAudit')}
           {(pendingTasks.length + pendingRedemptions.length) > 0 && (
-            <span className="bg-[#FF4747] text-white px-1.5 py-0.5 rounded text-[10px] font-black">
+            <span className="bg-[#FF4747] text-white px-1.5 py-0.5 rounded-full text-[10px] font-black shadow-sm">
               {pendingTasks.length + pendingRedemptions.length}
             </span>
           )}
         </button>
         <button
           onClick={() => setActiveTab('workshop')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
-            activeTab === 'workshop' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
-          } ${showTour && tourStep === 3 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse rounded' : ''}`}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap rounded-xl ${
+            activeTab === 'workshop' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_0_12px_rgba(54,97,255,0.4)] hover:scale-105' : 'text-[#b5b7bc] hover:text-white hover:bg-white/5'
+          } ${showTour && tourStep === 3 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse' : ''}`}
         >
-          <LayoutGrid className="h-4 w-4 text-[#3661FF]" />
+          <LayoutGrid className={`h-4 w-4 ${activeTab === 'workshop' ? 'text-white' : 'text-[#3661FF]'}`} />
           {t('tabWorkshop')}
         </button>
         <button
           onClick={() => setActiveTab('gacha')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
-            activeTab === 'gacha' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
-          } ${showTour && tourStep === 4 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse rounded' : ''}`}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap rounded-xl ${
+            activeTab === 'gacha' ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-[0_0_12px_rgba(124,58,237,0.4)] hover:scale-105' : 'text-[#b5b7bc] hover:text-white hover:bg-white/5'
+          } ${showTour && tourStep === 4 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse' : ''}`}
         >
-          <Sparkles className="h-4 w-4 text-violet-400" />
+          <Sparkles className={`h-4 w-4 ${activeTab === 'gacha' ? 'text-white' : 'text-violet-400'}`} />
           {t('tabGachaPool')}
         </button>
         <button
           onClick={() => setActiveTab('wishlist')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
-            activeTab === 'wishlist' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
-          } ${showTour && tourStep === 5 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse rounded' : ''}`}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap rounded-xl ${
+            activeTab === 'wishlist' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-[#111216] shadow-[0_0_12px_rgba(245,158,11,0.4)] hover:scale-105' : 'text-[#b5b7bc] hover:text-white hover:bg-white/5'
+          } ${showTour && tourStep === 5 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse' : ''}`}
         >
-          <Trophy className="h-4 w-4 text-[#FF9F1C]" />
+          <Trophy className={`h-4 w-4 ${activeTab === 'wishlist' ? 'text-[#111216]' : 'text-[#FF9F1C]'}`} />
           {t('tabWishlist')}
         </button>
         <button
           onClick={() => setActiveTab('reports')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
-            activeTab === 'reports' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
-          } ${showTour && tourStep === 6 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse rounded' : ''}`}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap rounded-xl ${
+            activeTab === 'reports' ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-900 shadow-[0_0_12px_rgba(16,185,129,0.4)] hover:scale-105' : 'text-[#b5b7bc] hover:text-white hover:bg-white/5'
+          } ${showTour && tourStep === 6 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse' : ''}`}
         >
-          <BarChart3 className="h-4 w-4 text-[#FF9F1C]" />
+          <BarChart3 className={`h-4 w-4 ${activeTab === 'reports' ? 'text-slate-900' : 'text-[#FF9F1C]'}`} />
           {t('tabReports')}
         </button>
         <button
           onClick={() => setActiveTab('leaderboard')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
-            activeTab === 'leaderboard' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
-          } ${showTour && tourStep === 7 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse rounded' : ''}`}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap rounded-xl ${
+            activeTab === 'leaderboard' ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-[0_0_12px_rgba(244,63,94,0.4)] hover:scale-105' : 'text-[#b5b7bc] hover:text-white hover:bg-white/5'
+          } ${showTour && tourStep === 7 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse' : ''}`}
         >
-          <Trophy className="h-4 w-4 text-violet-400" />
+          <Trophy className={`h-4 w-4 ${activeTab === 'leaderboard' ? 'text-white' : 'text-violet-400'}`} />
           {t('tabLeaderboard')}
         </button>
         <button
           onClick={() => setActiveTab('settings')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
-            activeTab === 'settings' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
-          } ${showTour && tourStep === 8 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse rounded' : ''}`}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap rounded-xl ${
+            activeTab === 'settings' ? 'bg-gradient-to-r from-slate-700 to-slate-800 text-white shadow-[0_0_12px_rgba(71,85,105,0.4)] hover:scale-105' : 'text-[#b5b7bc] hover:text-white hover:bg-white/5'
+          } ${showTour && tourStep === 8 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse' : ''}`}
         >
-          <Settings className="h-4 w-4 text-[#00E676]" />
+          <Settings className={`h-4 w-4 ${activeTab === 'settings' ? 'text-white' : 'text-[#00E676]'}`} />
           {t('tabSettings')}
         </button>
       </div>
@@ -1073,7 +1073,7 @@ function ParentPortal({
                                 }`}
                               />
                               <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-bold tabular-nums pointer-events-none ${
-                                newChildName.length >= 10 ? 'text-rose-455' : 'text-slate-505'
+                                newChildName.length >= 10 ? 'text-rose-500' : 'text-slate-400'
                               }`}>
                                 {newChildName.length}/12
                               </span>
@@ -1135,7 +1135,7 @@ function ParentPortal({
                           <div className="flex items-start gap-2 p-2 bg-rose-500/10 border border-rose-500/30 rounded-xl animate-success">
                             <span className="text-rose-400 text-sm shrink-0">🚫</span>
                             <div>
-                              <p className="text-[10px] font-black text-rose-455">{language === 'zh' ? '輸入有誤，無法進行下一步' : 'Input error — please fix before continuing'}</p>
+                              <p className="text-[10px] font-black text-rose-500">{language === 'zh' ? '輸入有誤，無法進行下一步' : 'Input error — please fix before continuing'}</p>
                               <p className="text-[9px] font-semibold text-rose-300 mt-0.5 leading-relaxed">{wizardStep2Error}</p>
                             </div>
                           </div>
@@ -1199,7 +1199,7 @@ function ParentPortal({
                               <h5 className="font-bold mb-0.5">
                                 {language === 'zh' ? '🛡️ 個資與隱私保護說明' : '🛡️ Child Data Protection & Privacy Consent'}
                               </h5>
-                              <p className="text-[9px] text-slate-355">
+                              <p className="text-[9px] text-slate-300">
                                 {language === 'zh' 
                                   ? `QuestGrow 依據年齡適配冒險任務。符合台灣個資法第8條規範：` 
                                   : `QuestGrow adapts adventure tasks based on age. In compliance with Taiwan PDPA:`}
@@ -1422,7 +1422,7 @@ function ParentPortal({
                         <button
                           type="button"
                           onClick={submitAddChild}
-                          className="px-4 py-1.5 rounded bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-955 text-[10px] font-black hover:from-emerald-400 hover:to-cyan-400 transition-all active:scale-95"
+                          className="px-4 py-1.5 rounded bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-900 text-[10px] font-black hover:from-emerald-400 hover:to-cyan-400 transition-all active:scale-95"
                         >
                           {language === 'zh' ? '完成建立 🚀' : 'Complete 🚀'}
                         </button>
@@ -1693,7 +1693,7 @@ function ParentPortal({
                           key={item.inventoryId} 
                           className={`p-5 border flex flex-col justify-between gap-4 rounded-2xl ${
                             isExpired 
-                              ? 'border-rose-500/30 bg-rose-955/10 text-slate-350 shadow-sm' 
+                              ? 'border-rose-500/30 bg-rose-955/10 text-slate-300 shadow-sm' 
                               : 'guild-scroll border-[#bfa470]/50 text-slate-800 shadow-sm'
                           }`}
                         >
@@ -1713,7 +1713,7 @@ function ParentPortal({
                               {item.desc}
                             </p>
                             {item.expireAt && (
-                              <p className={`text-[10px] font-extrabold ${isExpired ? 'text-rose-450' : 'text-slate-500'}`}>
+                              <p className={`text-[10px] font-extrabold ${isExpired ? 'text-rose-500' : 'text-slate-400'}`}>
                                 {t('expiredLabel')} {item.expireAt} {isExpired && t('expiredAlert')}
                               </p>
                             )}
@@ -1725,7 +1725,7 @@ function ParentPortal({
                               onClick={() => onApproveRedeem(item.inventoryId)}
                               className={`flex-1 py-2 rounded-[4px] text-xs font-black transition-all ${
                                 isExpired 
-                                  ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-750' 
+                                  ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700' 
                                   : 'bg-[#00E676] text-[#111216] hover:bg-[#00c867] shadow-sm'
                               }`}
                             >
@@ -1767,11 +1767,11 @@ function ParentPortal({
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-success">
                   {/* Completed Tasks History */}
                   <div className="glass-panel p-5 space-y-4 bg-slate-950/20">
-                    <h4 className="text-sm font-extrabold text-slate-350 flex items-center gap-2 border-b border-white/5 pb-2">
+                    <h4 className="text-sm font-extrabold text-slate-200 flex items-center gap-2 border-b border-white/5 pb-2">
                       ✅ {language === 'zh' ? '已完成任務歷史' : 'Completed Quests'}
                     </h4>
                     {tasks.filter(t => t.status === '已完成').length === 0 ? (
-                      <p className="text-xs text-slate-500 text-center py-6">{language === 'zh' ? '無已完成的任務紀錄。' : 'No completed quest records.'}</p>
+                      <p className="text-xs text-slate-300 text-center py-6">{language === 'zh' ? '無已完成的任務紀錄。' : 'No completed quest records.'}</p>
                     ) : (
                       <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
                         {tasks.filter(t => t.status === '已完成').map(task => (
@@ -1792,12 +1792,12 @@ function ParentPortal({
                   </div>
 
                   {/* Redeemed Cards History */}
-                  <div className="glass-panel p-5 space-y-4 bg-slate-955/20">
-                    <h4 className="text-sm font-extrabold text-slate-350 flex items-center gap-2 border-b border-white/5 pb-2">
+                  <div className="glass-panel p-5 space-y-4 bg-slate-950/20">
+                    <h4 className="text-sm font-extrabold text-slate-200 flex items-center gap-2 border-b border-white/5 pb-2">
                       🎫 {language === 'zh' ? '已核銷獎勵歷史' : 'Redeemed Cards'}
                     </h4>
                     {redeemLogs.length === 0 ? (
-                      <p className="text-xs text-slate-500 text-center py-6">{language === 'zh' ? '無已核銷的獎勵紀錄。' : 'No redeemed card records.'}</p>
+                      <p className="text-xs text-slate-300 text-center py-6">{language === 'zh' ? '無已核銷的獎勵紀錄。' : 'No redeemed card records.'}</p>
                     ) : (
                       <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
                         {redeemLogs.map(log => (
@@ -1808,7 +1808,7 @@ function ParentPortal({
                             </div>
                             <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium pt-1">
                               <span>{language === 'zh' ? '使用者：' : 'User: '}<strong className="text-cyan-400">{log.kidName}</strong></span>
-                              <span>{language === 'zh' ? '審核者：' : 'Reviewer: '}<strong className="text-slate-350">{log.reviewer || '系統'}</strong></span>
+                              <span>{language === 'zh' ? '審核者：' : 'Reviewer: '}<strong className="text-slate-300">{log.reviewer || '系統'}</strong></span>
                             </div>
                           </div>
                         ))}
@@ -1840,43 +1840,43 @@ function ParentPortal({
       {activeTab === 'workshop' && (
         <div className="space-y-6 animate-success">
           {/* Sub Navigation Bar for Workshop */}
-          <div className="flex border-b border-white/10 gap-1 pb-px mb-4 overflow-x-auto">
+          <div className="flex gap-2 p-1.5 bg-slate-950/60 border border-white/5 rounded-2xl overflow-x-auto mb-6 shadow-inner">
             <button
               onClick={() => setWorkshopSubTab('import')}
-              className={`flex items-center gap-1.5 px-4 py-2 text-xs font-black border-b-2 transition-all whitespace-nowrap ${
+              className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-black transition-all whitespace-nowrap rounded-xl ${
                 workshopSubTab === 'import' 
-                  ? 'border-[#3661FF] text-white bg-[#252529]' 
-                  : 'border-transparent text-[#b5b7bc] hover:text-white'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_0_12px_rgba(54,97,255,0.4)]' 
+                  : 'text-[#b5b7bc] hover:text-white hover:bg-white/5'
               }`}
             >
-              <LayoutGrid className="h-3.5 w-3.5" />
+              <LayoutGrid className={`h-3.5 w-3.5 ${workshopSubTab === 'import' ? 'text-white' : 'text-[#3661FF]'}`} />
               {t('workshopTabImport')}
             </button>
             <button
               onClick={() => setWorkshopSubTab('manage')}
-              className={`flex items-center gap-1.5 px-4 py-2 text-xs font-black border-b-2 transition-all whitespace-nowrap ${
+              className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-black transition-all whitespace-nowrap rounded-xl ${
                 workshopSubTab === 'manage' 
-                  ? 'border-[#3661FF] text-white bg-[#252529]' 
-                  : 'border-transparent text-[#b5b7bc] hover:text-white'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_0_12px_rgba(54,97,255,0.4)]' 
+                  : 'text-[#b5b7bc] hover:text-white hover:bg-white/5'
               }`}
             >
-              <ListTodo className="h-3.5 w-3.5 text-[#3661FF]" />
+              <ListTodo className={`h-3.5 w-3.5 ${workshopSubTab === 'manage' ? 'text-white' : 'text-[#3661FF]'}`} />
               {t('workshopTabManage')}
               {tasks.length > 0 && (
-                <span className="bg-[#FF4747] text-white px-1.5 py-0.5 rounded text-[10px] font-black ml-1 animate-pulse">
+                <span className="bg-[#FF4747] text-white px-1.5 py-0.5 rounded-full text-[10px] font-black ml-1 shadow-sm">
                   {tasks.length}
                 </span>
               )}
             </button>
             <button
               onClick={() => setWorkshopSubTab('add')}
-              className={`flex items-center gap-1.5 px-4 py-2 text-xs font-black border-b-2 transition-all whitespace-nowrap ${
+              className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-black transition-all whitespace-nowrap rounded-xl ${
                 workshopSubTab === 'add' 
-                  ? 'border-[#3661FF] text-white bg-[#252529]' 
-                  : 'border-transparent text-[#b5b7bc] hover:text-white'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_0_12px_rgba(54,97,255,0.4)]' 
+                  : 'text-[#b5b7bc] hover:text-white hover:bg-white/5'
               }`}
             >
-              <Plus className="h-3.5 w-3.5 text-[#00E676]" />
+              <Plus className={`h-3.5 w-3.5 ${workshopSubTab === 'add' ? 'text-white' : 'text-[#00E676]'}`} />
               {t('workshopTabAdd')}
             </button>
           </div>
@@ -1887,7 +1887,7 @@ function ParentPortal({
               {/* Target Kid Selection */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/5 border border-white/5 p-4 rounded-xl">
                 <div className="space-y-1">
-                  <h4 className="text-xs font-black text-slate-350 uppercase tracking-wider">{t('importAssignLabel')}</h4>
+                  <h4 className="text-xs font-black text-slate-300 uppercase tracking-wider">{t('importAssignLabel')}</h4>
                   <p className="text-[11px] text-slate-500">{t('importAssignDesc')}</p>
                 </div>
                 <select
@@ -2059,7 +2059,7 @@ function ParentPortal({
 
                 {/* Task list */}
                 {tasks.length === 0 ? (
-                  <div className="glass-panel p-8 text-center text-slate-500 text-sm">
+                  <div className="glass-panel p-8 text-center text-slate-400 text-sm">
                     {language === 'zh' ? '目前沒有任何現有任務，請前往「快速匯入」或「新增任務」！' : 'No existing quests found, go to "Quick Import" or "Add Quest"!'}
                   </div>
                 ) : filteredTasksCount === 0 ? (
@@ -2255,41 +2255,41 @@ function ParentPortal({
 
       {/* --- Consolidated Settings Sub-tabs --- */}
       {activeTab === 'settings' && (
-        <div className="flex border-b border-white/5 gap-2 pb-px overflow-x-auto">
+        <div className="flex gap-2 p-1.5 bg-slate-950/60 border border-white/5 rounded-2xl overflow-x-auto mb-6 shadow-inner">
           <button
             type="button"
             onClick={() => setSettingsSubTab('parent')}
-            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap active:scale-95 duration-100 ${
+            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap rounded-xl active:scale-95 duration-100 ${
               settingsSubTab === 'parent' 
-                ? 'border-[#3661FF] text-[#3661FF] bg-[#3661FF]/10 shadow-md shadow-[#3661FF]/5' 
-                : 'border-transparent text-slate-400 hover:text-white hover:bg-white/5'
+                ? 'bg-[#3661FF] text-white shadow-[0_0_12px_rgba(54,97,255,0.4)]' 
+                : 'text-slate-300 hover:text-white hover:bg-white/5'
             }`}
           >
-            <Award className={`h-4 w-4 transition-colors ${settingsSubTab === 'parent' ? 'text-[#3661FF]' : 'text-slate-500'}`} />
+            <Award className={`h-4 w-4 transition-colors ${settingsSubTab === 'parent' ? 'text-white' : 'text-[#3661FF]'}`} />
             {t('tabParent')}
           </button>
           <button
             type="button"
             onClick={() => setSettingsSubTab('child')}
-            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap active:scale-95 duration-100 ${
+            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap rounded-xl active:scale-95 duration-100 ${
               settingsSubTab === 'child' 
-                ? 'border-[#00E676] text-[#00E676] bg-[#00E676]/10 shadow-md shadow-[#00E676]/5' 
-                : 'border-transparent text-slate-400 hover:text-white hover:bg-white/5'
+                ? 'bg-[#00E676] text-[#111216] shadow-[0_0_12px_rgba(0,230,118,0.4)]' 
+                : 'text-slate-300 hover:text-white hover:bg-white/5'
             }`}
           >
-            <Users className={`h-4 w-4 transition-colors ${settingsSubTab === 'child' ? 'text-[#00E676]' : 'text-slate-500'}`} />
+            <Users className={`h-4 w-4 transition-colors ${settingsSubTab === 'child' ? 'text-[#111216]' : 'text-[#00E676]'}`} />
             {t('tabChild')}
           </button>
           <button
             type="button"
             onClick={() => setSettingsSubTab('common')}
-            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap active:scale-95 duration-100 ${
+            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap rounded-xl active:scale-95 duration-100 ${
               settingsSubTab === 'common' 
-                ? 'border-[#FF9F1C] text-[#FF9F1C] bg-[#FF9F1C]/10 shadow-md shadow-[#FF9F1C]/5' 
-                : 'border-transparent text-slate-400 hover:text-white hover:bg-white/5'
+                ? 'bg-[#FF9F1C] text-[#111216] shadow-[0_0_12px_rgba(255,159,28,0.4)]' 
+                : 'text-slate-300 hover:text-white hover:bg-white/5'
             }`}
           >
-            <Settings className={`h-4 w-4 transition-colors ${settingsSubTab === 'common' ? 'text-[#FF9F1C]' : 'text-slate-500'}`} />
+            <Settings className={`h-4 w-4 transition-colors ${settingsSubTab === 'common' ? 'text-[#111216]' : 'text-[#FF9F1C]'}`} />
             {t('tabCommon')}
           </button>
         </div>
@@ -2333,7 +2333,7 @@ function ParentPortal({
             <h3 className="text-lg font-bold text-slate-200">{t('currentWishlistTitle')} ({wishlist.length})</h3>
             <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
               {wishlist.length === 0 ? (
-                <p className="text-xs text-slate-500 text-center py-8">{t('noWishlistItems')}</p>
+                <p className="text-xs text-slate-300 text-center py-8">{t('noWishlistItems')}</p>
               ) : (
                 wishlist.map((wish) => {
                   const isEditing = editingWishlistId === wish.id;
@@ -2595,7 +2595,7 @@ function ParentPortal({
                   </h4>
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-[10px] text-slate-505 font-bold uppercase mb-1">{t('parentNameLabel')}</label>
+                      <label className="block text-[10px] text-slate-300 font-bold uppercase mb-1">{t('parentNameLabel')}</label>
                       <input 
                         type="text" required value={newParentName} 
                         onChange={(e) => {
@@ -2613,7 +2613,7 @@ function ParentPortal({
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-slate-550 font-bold uppercase mb-1">{t('emailLabel')}</label>
+                      <label className="block text-[10px] text-slate-300 font-bold uppercase mb-1">{t('emailLabel')}</label>
                       <input 
                         type="email" required value={newParentEmail} onChange={(e) => setNewParentEmail(e.target.value)}
                         placeholder="e.g. richard@questgrow.com"
@@ -2621,7 +2621,7 @@ function ParentPortal({
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-slate-550 font-bold uppercase mb-1">{t('passwordLabel')}</label>
+                      <label className="block text-[10px] text-slate-300 font-bold uppercase mb-1">{t('passwordLabel')}</label>
                       <input 
                         type="text" required value={newParentPassword} onChange={(e) => setNewParentPassword(e.target.value)}
                         placeholder="密碼"
@@ -2629,7 +2629,7 @@ function ParentPortal({
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-slate-550 font-bold uppercase mb-2">{t('avatarSelectLabel')}</label>
+                      <label className="block text-[10px] text-slate-300 font-bold uppercase mb-2">{t('avatarSelectLabel')}</label>
                       <div className="flex gap-4">
                         <button
                           type="button"
@@ -3032,7 +3032,7 @@ function ParentPortal({
                 </h4>
                 
                 {gachaPoolEdit[activeGachaRarity].cards.length === 0 ? (
-                  <div className="p-8 text-center text-xs text-slate-500 border border-dashed border-white/10 rounded-xl">
+                  <div className="p-8 text-center text-xs text-slate-300 border border-dashed border-white/10 rounded-xl">
                     {t('gachaNoCardsText')}
                   </div>
                 ) : (
@@ -4020,7 +4020,7 @@ export function ParentOnboardingWizard({
                 className="w-full bg-slate-900 border border-white/10 rounded-xl px-3.5 py-2.5 pr-14 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#3661FF] focus:border-[#3661FF] transition-all"
               />
               <span className={`absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold tabular-nums pointer-events-none ${
-                nickname.length >= 18 ? 'text-rose-455' : 'text-slate-505'
+                nickname.length >= 18 ? 'text-rose-500' : 'text-slate-400'
               }`}>
                 {nickname.length}/20
               </span>
@@ -4104,7 +4104,7 @@ export function ParentOnboardingWizard({
                     className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 pr-12 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#3661FF] focus:border-[#3661FF] transition-all"
                   />
                   <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-bold tabular-nums ${
-                    childName.length >= 10 ? 'text-rose-400' : 'text-slate-505'
+                    childName.length >= 10 ? 'text-rose-400' : 'text-slate-400'
                   }`}>
                     {childName.length}/12
                   </span>
@@ -4284,7 +4284,7 @@ export function ParentOnboardingWizard({
             </button>
           </div>
           {children.length === 0 && (
-            <p className="text-[9px] text-slate-550 font-bold text-center">
+            <p className="text-[9px] text-slate-300 font-bold text-center">
               * {language === 'zh' ? '請至少建立一位孩子角色以繼續引導。' : 'Please create at least one child profile to continue.'}
             </p>
           )}
@@ -4351,7 +4351,7 @@ export function ParentOnboardingWizard({
           <div className="flex flex-col gap-2">
             <button
               onClick={handleFinishOnboarding}
-              className="w-full py-3 rounded-xl text-xs font-black bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-955 hover:from-emerald-400 hover:to-cyan-400 transition-all active:scale-95 shadow-lg shadow-emerald-950/20"
+              className="w-full py-3 rounded-xl text-xs font-black bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-900 hover:from-emerald-400 hover:to-cyan-400 transition-all active:scale-95 shadow-lg shadow-emerald-950/20"
             >
               {t('parentWizardFinishBtn')}
             </button>

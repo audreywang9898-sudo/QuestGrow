@@ -1492,17 +1492,17 @@ function KidPortal({
               <Bell className="h-4 w-4" />
               {t('pushNotificationLogsTitle')}
             </h4>
-            <button onClick={() => setShowNotifications(false)} className="text-slate-500 hover:text-slate-300 text-xs font-bold">{t('close')}</button>
+            <button onClick={() => setShowNotifications(false)} className="text-slate-300 hover:text-slate-100 text-xs font-bold">{t('close')}</button>
           </div>
           {fcmNotifications.length === 0 ? (
-            <p className="text-xs text-slate-500 text-center py-4">{t('noNotifications')}</p>
+            <p className="text-xs text-slate-300 text-center py-4">{t('noNotifications')}</p>
           ) : (
             <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
               {fcmNotifications.map(n => (
                 <div key={n.id} className="p-2.5 rounded-lg bg-white/5 border border-white/5 space-y-0.5">
                   <div className="flex justify-between text-[11px] font-bold">
                     <span className="text-slate-200">{n.title}</span>
-                    <span className="text-slate-500">{n.time}</span>
+                    <span className="text-slate-400">{n.time}</span>
                   </div>
                   <p className="text-[10px] text-slate-400 leading-normal">{n.body}</p>
                 </div>
@@ -1513,74 +1513,74 @@ function KidPortal({
       )}
 
       {/* Tab Navigation */}
-      <div className="flex border-b border-[#35363A] gap-1 pb-px overflow-x-auto">
+      <div className="flex gap-2 p-1.5 bg-slate-950/60 border border-white/5 rounded-2xl overflow-x-auto mb-6 shadow-inner">
         <button
           onClick={() => setActiveSubTab('character')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
-            activeSubTab === 'character' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
-          } ${showTour && tourStep === 1 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse rounded' : ''}`}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap rounded-xl ${
+            activeSubTab === 'character' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_0_12px_rgba(54,97,255,0.4)] hover:scale-105' : 'text-[#b5b7bc] hover:text-white hover:bg-white/5'
+          } ${showTour && tourStep === 1 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse' : ''}`}
         >
-          <User className="h-4 w-4 text-[#3661FF]" />
+          <User className={`h-4 w-4 ${activeSubTab === 'character' ? 'text-white' : 'text-[#3661FF]'}`} />
           {t('tabChar')}
         </button>
         <button
           onClick={() => setActiveSubTab('tasks')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
-            activeSubTab === 'tasks' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
-          } ${showTour && tourStep === 2 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse rounded' : ''}`}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap rounded-xl ${
+            activeSubTab === 'tasks' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_0_12px_rgba(54,97,255,0.4)] hover:scale-105' : 'text-[#b5b7bc] hover:text-white hover:bg-white/5'
+          } ${showTour && tourStep === 2 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse' : ''}`}
         >
-          <Award className="h-4 w-4 text-[#3661FF]" />
+          <Award className={`h-4 w-4 ${activeSubTab === 'tasks' ? 'text-white' : 'text-[#3661FF]'}`} />
           {t('tabQuests')}
           {activeTasksList.length > 0 && (
-            <span className="bg-[#FF4747] text-white px-1.5 py-0.5 rounded text-[10px] font-black">
+            <span className="bg-[#FF4747] text-white px-1.5 py-0.5 rounded-full text-[10px] font-black shadow-sm">
               {activeTasksList.length}
             </span>
           )}
         </button>
         <button
           onClick={() => setActiveSubTab('gacha')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
-            activeSubTab === 'gacha' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
-          } ${showTour && tourStep === 3 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse rounded' : ''}`}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap rounded-xl ${
+            activeSubTab === 'gacha' ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-[0_0_12px_rgba(124,58,237,0.4)] hover:scale-105' : 'text-[#b5b7bc] hover:text-white hover:bg-white/5'
+          } ${showTour && tourStep === 3 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse' : ''}`}
         >
-          <Sparkles className="h-4 w-4 text-[#FF9F1C]" />
+          <Sparkles className={`h-4 w-4 ${activeSubTab === 'gacha' ? 'text-white' : 'text-[#FF9F1C]'}`} />
           {t('tabSummon')}
           {stats.tickets > 0 && (
-            <span className="bg-[#FF9F1C] text-[#111216] px-1.5 py-0.5 rounded text-[10px] font-black animate-pulse">
+            <span className="bg-[#FF9F1C] text-[#111216] px-1.5 py-0.5 rounded-full text-[10px] font-black animate-pulse shadow-sm">
               {stats.tickets}
             </span>
           )}
         </button>
         <button
           onClick={() => setActiveSubTab('backpack')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
-            activeSubTab === 'backpack' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
-          } ${showTour && tourStep === 4 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse rounded' : ''}`}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap rounded-xl ${
+            activeSubTab === 'backpack' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_0_12px_rgba(54,97,255,0.4)] hover:scale-105' : 'text-[#b5b7bc] hover:text-white hover:bg-white/5'
+          } ${showTour && tourStep === 4 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse' : ''}`}
         >
-          <Package className="h-4 w-4 text-[#3661FF]" />
+          <Package className={`h-4 w-4 ${activeSubTab === 'backpack' ? 'text-white' : 'text-[#3661FF]'}`} />
           {t('tabBackpack')}
           {inventory.filter(i => i.status === '未使用').length > 0 && (
-            <span className="bg-[#35363A] text-white px-1.5 py-0.5 rounded text-[10px]">
+            <span className="bg-[#35363A] text-white px-1.5 py-0.5 rounded-full text-[10px] shadow-sm">
               {inventory.filter(i => i.status === '未使用').length}
             </span>
           )}
         </button>
         <button
           onClick={() => setActiveSubTab('wishlist')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
-            activeSubTab === 'wishlist' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
-          } ${showTour && tourStep === 5 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse rounded' : ''}`}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap rounded-xl ${
+            activeSubTab === 'wishlist' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-[#111216] shadow-[0_0_12px_rgba(245,158,11,0.4)] hover:scale-105' : 'text-[#b5b7bc] hover:text-white hover:bg-white/5'
+          } ${showTour && tourStep === 5 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse' : ''}`}
         >
-          <Trophy className="h-4 w-4 text-[#FF9F1C]" />
+          <Trophy className={`h-4 w-4 ${activeSubTab === 'wishlist' ? 'text-[#111216]' : 'text-[#FF9F1C]'}`} />
           {t('tabKidWishlist')}
         </button>
         <button
           onClick={() => setActiveSubTab('leaderboard')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-black border-b-2 transition-all uppercase tracking-wider whitespace-nowrap ${
-            activeSubTab === 'leaderboard' ? 'border-[#3661FF] text-white bg-[#252529]' : 'border-transparent text-[#b5b7bc] hover:text-white'
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap rounded-xl ${
+            activeSubTab === 'leaderboard' ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-[0_0_12px_rgba(244,63,94,0.4)] hover:scale-105' : 'text-[#b5b7bc] hover:text-white'
           }`}
         >
-          <Trophy className="h-4 w-4 text-violet-400" />
+          <Trophy className={`h-4 w-4 ${activeSubTab === 'leaderboard' ? 'text-white' : 'text-violet-400'}`} />
           {t('tabLeaderboard')}
         </button>
       </div>
@@ -1667,7 +1667,7 @@ function KidPortal({
                 🛡️ {t('accountSecurityAndGoogle')}
               </h4>
               <div className="text-[10px] text-slate-500 leading-relaxed">
-                {t('currentLogin')}：<span className="text-slate-350 font-bold">{currentUser?.email}</span> ({currentUser?.googleId ? t('googleLinkedType') : t('passwordAccountType')})
+                {t('currentLogin')}：<span className="text-slate-200 font-bold">{currentUser?.email}</span> ({currentUser?.googleId ? t('googleLinkedType') : t('passwordAccountType')})
               </div>
               {currentUser?.googleId ? (
                 <div className="text-[10px] text-emerald-400 font-bold">
@@ -2184,7 +2184,7 @@ function KidPortal({
               {showCompletedHistory && (
                 <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 animate-success">
                   {completedTasks.length === 0 ? (
-                    <p className="text-xs text-slate-500 text-center py-6">{language === 'zh' ? '無已完成的任務紀錄。' : 'No completed quest records.'}</p>
+                    <p className="text-xs text-slate-300 text-center py-6">{language === 'zh' ? '無已完成的任務紀錄。' : 'No completed quest records.'}</p>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {completedTasks.map(task => (
@@ -2592,7 +2592,7 @@ function KidPortal({
                             }`}>
                               {activeSelection.rarity}
                             </span>
-                            <span className="text-[10px] text-slate-350 font-mono">{activeSelection.dateAcquired}</span>
+                            <span className="text-[10px] text-slate-300 font-mono">{activeSelection.dateAcquired}</span>
                           </div>
 
                           {/* Card Title & Speech Chaining */}
@@ -2614,18 +2614,18 @@ function KidPortal({
                                 )}
                               </button>
                             </h4>
-                            <div className="text-[10px] text-slate-500 font-bold">
+                            <div className="text-[10px] text-slate-300 font-bold">
                               {language === 'zh' ? '卡片類型：' : 'Card Type: '}{activeSelection.type}
                             </div>
                           </div>
 
                           {/* Card Lore / Desc */}
-                          <p className="text-xs text-slate-350 leading-relaxed bg-black/30 p-3 rounded-xl border border-white/5">
+                          <p className="text-xs text-slate-200 leading-relaxed bg-black/30 p-3 rounded-xl border border-white/5">
                             {renderTextWithZhuyin(activeSelection.desc)}
                           </p>
 
                           {activeSelection.expireAt && (
-                            <p className={`text-[10px] font-bold ${activeSelection.status === '已過期' ? 'text-rose-500' : 'text-slate-500'}`}>
+                            <p className={`text-[10px] font-bold ${activeSelection.status === '已過期' ? 'text-rose-500' : 'text-slate-400'}`}>
                               📅 {t('expiryDate')}: {activeSelection.expireAt} {activeSelection.status === '已過期' && `(${t('cardExpired')})`}
                             </p>
                           )}
@@ -2651,7 +2651,7 @@ function KidPortal({
 
                             {activeSelection.status === '未使用' && (
                               isReadOnly ? (
-                                <span className="text-xs text-slate-500 italic text-center py-2 bg-white/5 rounded-lg border border-white/5">
+                                <span className="text-xs text-slate-300 italic text-center py-2 bg-white/5 rounded-lg border border-white/5">
                                   ⚠️ {t('readOnlyTag')}
                                 </span>
                               ) : activeSelection.type === '收藏卡' ? (
@@ -2734,7 +2734,7 @@ function KidPortal({
               {showBackpackHistory && (
                 <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 animate-success">
                   {historyInventory.length === 0 ? (
-                    <p className="text-xs text-slate-500 text-center py-6">
+                    <p className="text-xs text-slate-300 text-center py-6">
                       {language === 'zh' ? '無歷史紀錄。' : 'No history records.'}
                     </p>
                   ) : (
