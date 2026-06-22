@@ -933,37 +933,60 @@ function App() {
         ))}
       </div>
 
-      {/* Top Header - Roblox Navigation Bar Style */}
-      <header className="bg-[#1B1B1D] border-b border-[#35363A] sticky top-0 z-40 px-4 py-2.5 w-full">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            {/* Shield Logo matching favicon */}
-            <div className="w-8 h-8 bg-[#252529] border border-[#35363A] rounded-lg flex items-center justify-center shadow-md cursor-pointer hover:scale-115 hover:rotate-6 transition-all duration-200 shrink-0" title="QuestGrow">
-              <span className="text-lg select-none">🛡️</span>
+      {/* ── Top Header: Premium QuestGrow Navigation ── */}
+      <header className="questgrow-header sticky top-0 z-40 px-4 py-0 w-full">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 h-14">
+
+          {/* ── Left: Logo + Wordmark ── */}
+          <div className="flex items-center gap-3 flex-shrink-0">
+            {/* Logo Icon - Shield with sprout */}
+            <div className="questgrow-logo-icon w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer flex-shrink-0" title="QuestGrow">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                {/* Shield body */}
+                <path d="M11 2L3 5.5V11C3 15.4 6.4 19.5 11 21C15.6 19.5 19 15.4 19 11V5.5L11 2Z" fill="white" fillOpacity="0.25"/>
+                <path d="M11 2L3 5.5V11C3 15.4 6.4 19.5 11 21C15.6 19.5 19 15.4 19 11V5.5L11 2Z" stroke="white" strokeWidth="1.2" strokeLinejoin="round"/>
+                {/* Sprout stem */}
+                <line x1="11" y1="15" x2="11" y2="10" stroke="#fbbf24" strokeWidth="1.4" strokeLinecap="round"/>
+                {/* Left leaf */}
+                <path d="M11 12.5C11 12.5 9 11.5 8.5 10C9.5 10 11 11 11 12.5Z" fill="#6ee7b7"/>
+                {/* Right leaf */}
+                <path d="M11 12.5C11 12.5 13 11.5 13.5 10C12.5 10 11 11 11 12.5Z" fill="#34d399"/>
+                {/* Top bud */}
+                <circle cx="11" cy="9.5" r="1.2" fill="#fbbf24"/>
+                {/* Star sparkle top-right */}
+                <path d="M16.5 5L16.8 6L17.8 6L17 6.6L17.3 7.6L16.5 7L15.7 7.6L16 6.6L15.2 6L16.2 6L16.5 5Z" fill="#fde68a" fillOpacity="0.9"/>
+              </svg>
             </div>
+
+            {/* Wordmark */}
             <div>
-              <h1 className="text-lg font-black tracking-wider text-white flex items-center gap-2 font-sans flex-wrap">
-                <span className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
+                <h1 className="text-[17px] font-black leading-none questgrow-wordmark">
                   QuestGrow
-                  <span className="text-[9px] bg-[#3661FF] text-white px-1.5 py-0.5 rounded font-black tracking-normal normal-case">BETA</span>
+                </h1>
+                <span className="text-[9px] font-black px-1.5 py-0.5 rounded-md" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', letterSpacing: '0.05em' }}>
+                  BETA
                 </span>
-                <span className="text-xs text-slate-400 font-bold normal-case border-l border-slate-700 pl-2 ml-0.5">
+              </div>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="hidden sm:block text-[11px] font-semibold" style={{ color: '#94a3b8' }}>
                   {t('tagline')}
                 </span>
-              </h1>
-              <div className="flex items-center gap-2 mt-0.5">
-                {/* R$ Robux Coin Icon */}
-                <span className="text-[#FF9F1C] bg-[#FF9F1C]/10 px-2 py-0.5 rounded border border-[#FF9F1C]/30 font-bold flex items-center gap-1 text-[11px]">
-                  <span className="inline-block w-3.5 h-3.5 bg-[#FF9F1C] transform rotate-12 rounded-sm flex items-center justify-center text-[8px] text-[#111216] font-black">R$</span>
+                {/* Family score chip */}
+                <span className="flex items-center gap-1 text-[11px] font-black px-2 py-0.5 rounded-full" style={{ background: 'linear-gradient(135deg, #fffbeb, #fef3c7)', color: '#d97706', border: '1px solid rgba(245,158,11,0.3)' }}>
+                  <span className="w-3 h-3 rounded-sm flex items-center justify-center text-[7px] font-black" style={{ background: '#f59e0b', color: '#fff' }}>★</span>
                   {familyScore.toLocaleString()} Pts
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center flex-wrap gap-2">
+          {/* ── Right: Nav Controls ── */}
+          <div className="flex items-center gap-1.5 flex-wrap justify-end">
+
+            {/* Child switcher (parent viewing kid mode with multiple kids) */}
             {role === 'kid' && currentUser && currentUser.role === 'parent' && children.length > 1 && (
-              <div className="flex items-center gap-1 bg-[#252529] p-1 rounded border border-[#35363A] mx-1">
+              <div className="flex items-center gap-1 p-1 rounded-xl border" style={{ background: '#f8fafc', borderColor: '#e2e8f0' }}>
                 {children.map(child => {
                   const isSelf = currentUser && currentUser.role === 'kid' && currentUser.childId === child.id;
                   const isActive = activeChildId === child.id;
@@ -973,24 +996,20 @@ function App() {
                       onClick={() => setActiveChildId(child.id)}
                       className={`flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-lg border transition-all ${
                         isActive
-                          ? isSelf
-                            ? 'border-[#00E676] bg-[#00E676]/10 scale-105 font-black text-[#00E676]'
-                            : 'border-[#3661FF] bg-[#3661FF]/10 scale-105 font-black text-[#3661FF]'
-                          : isSelf
-                            ? 'border-[#00E676]/40 bg-[#00E676]/5 opacity-90 text-[#00E676]'
-                            : 'border-transparent hover:bg-white/5 opacity-60 hover:opacity-100 text-slate-400'
+                          ? 'border-indigo-300 bg-indigo-50 scale-105 shadow-sm'
+                          : 'border-transparent hover:bg-slate-100 opacity-60 hover:opacity-100'
                       }`}
                       title={language === 'zh' ? `切換至 ${child.name}` : `Switch to ${child.name}`}
                     >
-                      <Avatar 
-                        avatar={child.avatar} 
-                        role="kid" 
+                      <Avatar
+                        avatar={child.avatar}
+                        role="kid"
                         badge={getActiveBadge(child.id)}
-                        className={`w-7 h-7 flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-violet-600 to-cyan-400 ${
-                          isSelf ? 'ring-2 ring-[#00E676] ring-offset-1 ring-offset-[#252529] shadow-[0_0_8px_rgba(0,230,118,0.4)]' : ''
-                        }`} 
+                        className={`w-7 h-7 flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-violet-400 to-cyan-400 ${
+                          isActive ? 'ring-2 ring-indigo-400 ring-offset-1 ring-offset-white' : ''
+                        }`}
                       />
-                      <span className="text-[9px] font-bold leading-none truncate max-w-[55px]">
+                      <span className="text-[9px] font-bold leading-none truncate max-w-[55px]" style={{ color: isActive ? '#6366f1' : '#64748b' }}>
                         {child.name}{isSelf ? (language === 'zh' ? ' (我)' : ' (Me)') : ''}
                       </span>
                     </button>
@@ -999,56 +1018,59 @@ function App() {
               </div>
             )}
 
-
-
+            {/* Switch mode button (parent only) */}
             {currentUser.role === 'parent' && (
-              <>
-                <div className="w-[1px] h-5 bg-[#35363A] mx-1 hidden sm:block"></div>
-                <button
-                  onClick={() => {
-                    setRole(prev => prev === 'kid' ? 'parent' : 'kid');
-                  }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-xs font-black bg-[#00E676] text-[#111216] hover:bg-[#00c867] transition-colors shadow-sm mr-1"
-                >
-                  {role === 'kid' ? t('viewParentMode') : t('viewKidMode')}
-                </button>
-              </>
+              <button
+                onClick={() => { setRole(prev => prev === 'kid' ? 'parent' : 'kid'); }}
+                className="header-btn-primary flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all"
+              >
+                <span className="text-sm">{role === 'kid' ? '👨‍👩‍👧' : '🎮'}</span>
+                {role === 'kid' ? t('viewParentMode') : t('viewKidMode')}
+              </button>
             )}
 
-            <div className="w-[1px] h-5 bg-[#35363A] mx-1 hidden sm:block"></div>
+            {/* Divider */}
+            <div className="w-px h-5 rounded-full mx-0.5 hidden sm:block" style={{ background: '#e2e8f0' }} />
 
+            {/* Language toggle */}
             <button
               onClick={toggleLanguage}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-xs font-black bg-[#252529] border border-[#35363A] text-slate-300 hover:text-white transition-colors shadow-sm mr-1"
+              className="header-btn-secondary flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all"
               title={language === 'zh' ? '切換至英文' : 'Switch to English'}
             >
-              🌐 {language === 'zh' ? 'English' : '中文'}
+              🌐 {language === 'zh' ? 'EN' : '中'}
             </button>
 
-            <div className="w-[1px] h-5 bg-[#35363A] mx-1 hidden sm:block"></div>
+            {/* Divider */}
+            <div className="w-px h-5 rounded-full mx-0.5 hidden sm:block" style={{ background: '#e2e8f0' }} />
 
-            {/* User Profile & Logout pill */}
-            <div className="flex items-center gap-2 bg-[#252529] border border-[#35363A] px-3 py-1.5 rounded-[4px] text-xs font-bold text-slate-350 shrink-0">
-              <Avatar 
-                avatar={currentUser.avatar} 
-                role={currentUser.role} 
+            {/* User avatar + logout */}
+            <div className="header-user-pill flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold">
+              <Avatar
+                avatar={currentUser.avatar}
+                role={currentUser.role}
                 badge={currentUser.role === 'kid' ? getActiveBadge(currentUser.childId) : null}
-                className="w-5 h-5 rounded-full flex items-center justify-center overflow-hidden" 
+                className="w-5 h-5 rounded-full flex items-center justify-center overflow-hidden"
               />
-              <span className="truncate max-w-[85px] text-slate-300" title={currentUser.name}>
+              <span className="truncate max-w-[80px] hidden sm:block font-black" style={{ color: '#334155' }} title={currentUser.name}>
                 {currentUser.name}
               </span>
               <button
                 onClick={handleLogout}
-                className="p-1 text-slate-500 hover:text-[#FF4747] rounded transition-colors"
+                className="p-0.5 rounded-lg transition-colors hover:bg-rose-50"
+                style={{ color: '#94a3b8' }}
                 title={t('logout')}
+                onMouseEnter={e => e.currentTarget.style.color = '#f43f5e'}
+                onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}
               >
                 <LogOut className="h-3.5 w-3.5" />
               </button>
             </div>
+
           </div>
         </div>
       </header>
+
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">

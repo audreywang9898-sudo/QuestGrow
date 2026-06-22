@@ -429,7 +429,95 @@ div[class*="bg-[#111216]"] {
   color: #1E293B !important;
 }
 
-/* Header overrides */
+/* ── QuestGrow Header ── */
+.questgrow-header {
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-bottom: 1.5px solid rgba(99, 102, 241, 0.1) !important;
+  box-shadow: 0 2px 12px rgba(99, 102, 241, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Animated shimmer stripe at very top of header */
+.questgrow-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #6366f1, #8b5cf6, #06b6d4, #10b981, #f59e0b, #6366f1);
+  background-size: 300% 100%;
+  animation: header-rainbow 6s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes header-rainbow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+
+/* Logo icon gradient background */
+.questgrow-logo-icon {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 60%, #a78bfa 100%) !important;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35), 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.questgrow-logo-icon:hover {
+  transform: scale(1.08) rotate(4deg) !important;
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5) !important;
+}
+
+/* Wordmark gradient text */
+.questgrow-wordmark {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #2563eb 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+/* Primary nav button (switch mode) */
+.header-btn-primary {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  color: #fff !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35) !important;
+}
+
+.header-btn-primary:hover {
+  background: linear-gradient(135deg, #34d399, #10b981) !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.45) !important;
+  transform: scale(1.02) !important;
+}
+
+.header-btn-primary:active {
+  transform: scale(0.97) !important;
+}
+
+/* Secondary nav button (language) */
+.header-btn-secondary {
+  background: #f8fafc !important;
+  color: #475569 !important;
+  border: 1.5px solid #e2e8f0 !important;
+}
+
+.header-btn-secondary:hover {
+  background: #f1f5f9 !important;
+  border-color: rgba(99, 102, 241, 0.3) !important;
+  color: #6366f1 !important;
+}
+
+/* User info pill */
+.header-user-pill {
+  background: #f8fafc !important;
+  border: 1.5px solid #e2e8f0 !important;
+}
+
+.header-user-pill:hover {
+  border-color: rgba(99, 102, 241, 0.25) !important;
+}
+
+/* Item card rarity overrides */
 header[class*="bg-[#1B1B1D]"] {
   background-color: rgba(255, 255, 255, 0.85) !important;
   backdrop-filter: blur(8px) !important;
