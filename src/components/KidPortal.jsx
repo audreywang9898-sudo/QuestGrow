@@ -1587,134 +1587,141 @@ function KidPortal({
 
       {/* --- Tab 1: Character Sheet --- */}
       {activeSubTab === 'character' && (
-        <div className="dashboard-grid animate-success">
-          <div className="glass-panel p-6 flex flex-col items-center justify-between text-center gap-6">
-            <div className="space-y-2 w-full">
-              <div className="relative w-20 h-20 mx-auto group">
-                <Avatar 
-                  avatar={stats.avatar} 
-                  role="kid" 
-                  badge={activeBadge}
-                  badgePosition="bottom-left"
-                  className="w-20 h-20 rounded-full bg-gradient-to-tr from-violet-600 to-cyan-400 flex items-center justify-center shadow-xl shadow-violet-500/20 border border-white/20 overflow-hidden" 
-                />
+        <div className="animate-success space-y-5">
+
+          {/* ── TOP HERO BANNER ── */}
+          <div className="relative rounded-3xl overflow-hidden" style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 40%, #f093fb 70%, #f5576c 100%)',
+            boxShadow: '0 20px 60px rgba(102,126,234,0.35), 0 8px 24px rgba(118,75,162,0.25)'
+          }}>
+            {/* Decorative shimmer */}
+            <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(ellipse at 20% 50%, rgba(255,255,255,0.3) 0%, transparent 60%)' }} />
+            
+            <div className="relative z-10 p-6 flex items-center gap-6">
+              {/* Avatar with glow ring */}
+              <div className="relative shrink-0">
+                <div className="absolute inset-0 rounded-full animate-pulse" style={{ background: 'rgba(255,255,255,0.3)', transform: 'scale(1.15)', filter: 'blur(8px)' }} />
+                <div className="relative w-24 h-24 rounded-full border-4 border-white/60 shadow-2xl overflow-hidden bg-white/10">
+                  <Avatar
+                    avatar={stats.avatar}
+                    role="kid"
+                    badge={activeBadge}
+                    badgePosition="bottom-left"
+                    className="w-full h-full"
+                  />
+                </div>
                 {!isReadOnly && (
-                  <button 
-                    onClick={() => {
-                      setSelectedAvatar(stats.avatar || 'boy');
-                      setShowAvatarModal(true);
-                    }}
-                    className="absolute -bottom-1 -right-1 p-1.5 bg-[#3661FF] hover:bg-[#4e75ff] text-white rounded-full shadow-md transition-all border border-white/10"
+                  <button
+                    onClick={() => { setSelectedAvatar(stats.avatar || 'boy'); setShowAvatarModal(true); }}
+                    className="absolute -bottom-1 -right-1 p-1.5 bg-white text-indigo-600 rounded-full shadow-lg border-2 border-indigo-100 hover:scale-110 transition-all"
                     title={t('editAvatar')}
                   >
-                    <Camera className="h-3 w-3" />
+                    <Camera className="h-3.5 w-3.5" />
                   </button>
                 )}
               </div>
-              <h3 className="text-xl font-black">{stats.name}</h3>
-              <div className="text-sm font-bold text-violet-400">{stats.jobClass}</div>
-              <div className="flex justify-center gap-2 text-xs font-semibold text-slate-400 mt-1">
-                <span>{t('ageLabel', { age: stats.age || '--' })}</span>
-                <span>•</span>
-                <span>{t('birthdayLabel', { birthday: stats.birthday || '--' })}</span>
+
+              {/* Name + Class + Info */}
+              <div className="flex-1 text-white">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h2 className="text-2xl font-black tracking-tight" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>{stats.name}</h2>
+                  <span className="bg-white/25 backdrop-blur-sm text-white text-[10px] font-black px-3 py-1 rounded-full border border-white/30 uppercase tracking-widest">
+                    Lv.{stats.level}
+                  </span>
+                </div>
+                <div className="text-white/90 font-bold text-sm mt-0.5 flex items-center gap-1.5">
+                  <span>⚔️</span>
+                  <span>{stats.jobClass}</span>
+                </div>
+                <div className="flex gap-3 text-white/70 text-xs font-semibold mt-1">
+                  <span>🎂 {t('ageLabel', { age: stats.age || '--' })}</span>
+                  <span>•</span>
+                  <span>📅 {t('birthdayLabel', { birthday: stats.birthday || '--' })}</span>
+                </div>
+              </div>
+
+              {/* Currency chips */}
+              <div className="shrink-0 flex flex-col gap-2">
+                <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-white/30">
+                  <span className="text-lg">🪙</span>
+                  <span className="text-white font-black text-sm">{stats.gold}</span>
+                </div>
+                <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-white/30">
+                  <span className="text-lg">🎫</span>
+                  <span className="text-white font-black text-sm">{stats.tickets}</span>
+                </div>
               </div>
             </div>
 
-            <div className="w-full space-y-3">
+            {/* HP & EXP bars inside banner */}
+            <div className="relative z-10 px-6 pb-5 space-y-2.5">
               {/* HP Bar */}
-              <div className="w-full space-y-1">
-                <div className="flex justify-between items-end text-[10px] font-black uppercase tracking-wider px-1">
-                  <span className="text-slate-400">❤️ HP / Stamina</span>
-                  <span className="text-rose-400">100 / 100 HP</span>
+              <div>
+                <div className="flex justify-between text-[10px] font-black text-white/90 uppercase tracking-wider mb-1">
+                  <span>❤️ HP / Stamina</span>
+                  <span>100 / 100 HP</span>
                 </div>
-                <div className="hp-metallic-bar w-full">
-                  <div 
-                    className="hp-metallic-fill"
-                    style={{ width: `100%` }}
-                  ></div>
+                <div className="h-3 bg-white/20 rounded-full overflow-hidden border border-white/20">
+                  <div className="h-full rounded-full transition-all duration-700 relative overflow-hidden" style={{
+                    width: '100%',
+                    background: 'linear-gradient(90deg, #ff6b6b, #ff4b4b, #ff6b6b)',
+                    backgroundSize: '200% 100%',
+                    animation: 'shine-flow 2s infinite linear',
+                    boxShadow: '0 0 10px rgba(255,75,75,0.6)'
+                  }}></div>
                 </div>
               </div>
-
               {/* EXP Bar */}
-              <div className="w-full space-y-1">
-                <div className="flex justify-between items-end text-[10px] font-black uppercase tracking-wider px-1">
-                  <span className="text-slate-400">⚡ EXP / Progress</span>
-                  <span className="text-amber-300">Level {stats.level} ({stats.exp} / {stats.expNeeded} EXP)</span>
+              <div>
+                <div className="flex justify-between text-[10px] font-black text-white/90 uppercase tracking-wider mb-1">
+                  <span>⚡ EXP / Progress</span>
+                  <span>Level {stats.level} ({stats.exp} / {stats.expNeeded} EXP)</span>
                 </div>
-                <div className="exp-metallic-bar w-full">
-                  <div 
-                    className="exp-metallic-fill transition-all duration-500"
-                    style={{ width: `${Math.min(100, (stats.exp / stats.expNeeded) * 100)}%` }}
-                  ></div>
+                <div className="h-3 bg-white/20 rounded-full overflow-hidden border border-white/20">
+                  <div className="h-full rounded-full transition-all duration-700 relative overflow-hidden" style={{
+                    width: `${Math.min(100, (stats.exp / stats.expNeeded) * 100)}%`,
+                    background: 'linear-gradient(90deg, #a855f7, #8b5cf6, #c084fc)',
+                    backgroundSize: '200% 100%',
+                    animation: 'shine-flow 2.5s infinite linear',
+                    boxShadow: '0 0 10px rgba(168,85,247,0.6)'
+                  }}></div>
                 </div>
               </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 w-full">
-              <div className="glass-panel p-4 border border-amber-500/20 bg-gradient-to-br from-slate-900 to-amber-500/5 hover:border-amber-500/40 hover:shadow-[0_0_15px_rgba(245,158,11,0.15)] transition-all duration-300 rounded-2xl">
-                <div className="text-[10px] text-amber-400 font-black uppercase tracking-widest">{t('goldLabel')}</div>
-                <div className="text-lg font-black text-amber-400 mt-1 drop-shadow-[0_0_6px_rgba(245,158,11,0.4)]">🪙 {stats.gold}</div>
-              </div>
-              <div className="glass-panel p-4 border border-cyan-500/20 bg-gradient-to-br from-slate-900 to-cyan-500/5 hover:border-cyan-500/40 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-300 rounded-2xl">
-                <div className="text-[10px] text-cyan-400 font-black uppercase tracking-widest">{t('ticketsLabel')}</div>
-                <div className="text-lg font-black text-cyan-400 mt-1 drop-shadow-[0_0_6px_rgba(6,182,212,0.4)]">🎫 {stats.tickets}</div>
-              </div>
-            </div>
-
-            {/* Account Security & Google Linking */}
-            <div className="w-full p-4 border border-indigo-500/20 bg-white/5 rounded-2xl space-y-3 text-left">
-              <h4 className="text-xs font-bold text-indigo-400 flex items-center gap-1.5 uppercase tracking-wider">
-                🛡️ {t('accountSecurityAndGoogle')}
-              </h4>
-              <div className="text-[10px] text-slate-500 leading-relaxed">
-                {t('currentLogin')}：<span className="text-slate-200 font-bold">{currentUser?.email}</span> ({currentUser?.googleId ? t('googleLinkedType') : t('passwordAccountType')})
-              </div>
-              {currentUser?.googleId ? (
-                <div className="text-[10px] text-emerald-400 font-bold">
-                  ✓ {t('googleLinkedSuccessText')}
-                </div>
-              ) : isReadOnly ? (
-                <div className="text-[10px] text-slate-500 italic">
-                  {t('readOnlyGoogleBlock')}
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <div id="google-link-btn-container" className="flex justify-center w-full min-h-[36px] my-1"></div>
-                  {(!window.google || !window.google.accounts) && (
-                    <button
-                      onClick={() => {
-                        const email = prompt(t('enterGoogleEmailPrompt'), "kid@gmail.com");
-                        if (email) {
-                          const mockToken = "google-mock-" + email.replace(/[^a-zA-Z0-9]/g, "");
-                          onLinkGoogleAccount(mockToken);
-                        }
-                      }}
-                      type="button"
-                      className="w-full py-1.5 bg-indigo-600/10 hover:bg-indigo-650/20 text-indigo-400 text-[10px] font-black rounded-lg border border-indigo-500/20 border-dashed transition-all text-center"
-                    >
-                      🤖 {t('enterGoogleSandbox')} (Sandbox Fallback)
-                    </button>
-                  )}
-                </div>
-              )}
             </div>
           </div>
 
-          <div className="glass-panel p-6 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-            <div className="flex justify-center">
-              <svg width="300" height="300" viewBox="-20 -20 240 240" className="w-[288px] h-[288px] md:w-[336px] md:h-[336px]">
+          {/* ── MAIN CONTENT: Radar + Attributes ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+
+            {/* Radar Chart Panel */}
+            <div className="lg:col-span-2 rounded-3xl p-5 flex flex-col items-center gap-3" style={{
+              background: 'linear-gradient(135deg, #f8faff 0%, #eef2ff 100%)',
+              border: '1.5px solid rgba(99,102,241,0.15)',
+              boxShadow: '0 8px 32px rgba(99,102,241,0.1)'
+            }}>
+              <div className="text-xs font-black text-indigo-500 uppercase tracking-widest">⬡ 五大能力雷達圖</div>
+              <svg width="240" height="240" viewBox="-20 -20 240 240" className="w-full max-w-[240px]">
+                {/* Background polygons */}
                 {getGridPentagons().map((pts, i) => (
-                  <polygon key={i} points={pts} className="radar-grid" />
+                  <polygon key={i} points={pts} fill="none" stroke="rgba(99,102,241,0.15)" strokeWidth="1.5" />
                 ))}
+                {/* Axis lines */}
                 {[0, 1, 2, 3, 4].map(i => {
                   const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
                   const x = 100 + 65 * Math.cos(angle);
                   const y = 100 + 65 * Math.sin(angle);
-                  return (
-                    <line key={i} x1="100" y1="100" x2={x} y2={y} className="radar-grid" />
-                  );
+                  return <line key={i} x1="100" y1="100" x2={x} y2={y} stroke="rgba(99,102,241,0.12)" strokeWidth="1.5" />;
                 })}
-                <polygon points={getRadarPoints()} className="radar-polygon" />
+                {/* Data polygon */}
+                <polygon
+                  points={getRadarPoints()}
+                  fill="rgba(99,102,241,0.15)"
+                  stroke="#6366f1"
+                  strokeWidth="2.5"
+                  strokeLinejoin="round"
+                  style={{ filter: 'drop-shadow(0 0 6px rgba(99,102,241,0.4))' }}
+                />
+                {/* Labels */}
                 {(() => {
                   const scores = [
                     stats.attributes.Wisdom,
@@ -1723,66 +1730,107 @@ function KidPortal({
                     stats.attributes.Creativity,
                     stats.attributes.Courage
                   ];
-                  const colors = [
-                    "#0284c7", // 智 (Wisdom - Cyan)
-                    "#16a34a", // 德 (Responsibility - Green)
-                    "#db2777", // 群 (Empathy - Pink)
-                    "#7c3aed", // 美 (Creativity - Purple)
-                    "#ea580c"  // 體 (Courage - Orange)
-                  ];
+                  const colors = ["#0284c7", "#16a34a", "#db2777", "#7c3aed", "#ea580c"];
+                  const bgColors = ["#dbeafe", "#dcfce7", "#fce7f3", "#ede9fe", "#ffedd5"];
                   return ['智', '德', '群', '美', '體'].map((label, i) => {
                     const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
-                    const x = 100 + 85 * Math.cos(angle);
-                    const y = 100 + 85 * Math.sin(angle);
+                    const x = 100 + 88 * Math.cos(angle);
+                    const y = 100 + 88 * Math.sin(angle);
                     return (
-                      <text 
-                        key={i} 
-                        x={x} 
-                        y={y} 
-                        fill={colors[i]} 
-                        fontSize="16" 
-                        fontWeight="900" 
-                        textAnchor="middle" 
-                        dominantBaseline="middle"
-                      >
-                        {translateType(label)}({scores[i]})
-                      </text>
+                      <g key={i}>
+                        <circle cx={x} cy={y} r="16" fill={bgColors[i]} stroke={colors[i]} strokeWidth="1.5" opacity="0.9" />
+                        <text x={x} y={y - 4} fill={colors[i]} fontSize="11" fontWeight="900" textAnchor="middle">{translateType(label)}</text>
+                        <text x={x} y={y + 8} fill={colors[i]} fontSize="10" fontWeight="700" textAnchor="middle">{scores[i]}</text>
+                      </g>
                     );
                   });
                 })()}
               </svg>
             </div>
 
-            <div className="space-y-4">
-              <h4 className="text-sm font-extrabold uppercase tracking-widest text-slate-400 border-b border-white/5 pb-2">
-                {t('rpgAttributes')}
-              </h4>
-              <div className="space-y-3">
-                {[
-                  { name: "Wisdom", nameFull: t('attrWisdomFull'), val: stats.attributes.Wisdom, desc: t('attrWisdomDesc') },
-                  { name: "Responsibility", nameFull: t('attrResponsibilityFull'), val: stats.attributes.Responsibility, desc: t('attrResponsibilityDesc') },
-                  { name: "Courage", nameFull: t('attrCourageFull'), val: stats.attributes.Courage, desc: t('attrCourageDesc') },
-                  { name: "Empathy", nameFull: t('attrEmpathyFull'), val: stats.attributes.Empathy, desc: t('attrEmpathyDesc') },
-                  { name: "Creativity", nameFull: t('attrCreativityFull'), val: stats.attributes.Creativity, desc: t('attrCreativityDesc') }
-                ].map((attr) => (
-                  <div key={attr.name} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      {getAttributeIcon(attr.name)}
-                      <div>
-                        <div className="text-sm font-bold text-slate-200">{attr.nameFull}</div>
-                        <div className="text-[10px] text-slate-500">{attr.desc}</div>
+            {/* Attributes Panel */}
+            <div className="lg:col-span-3 space-y-3">
+              <div className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">🏆 {t('rpgAttributes')}</div>
+              {[
+                { name: "Wisdom",         nameFull: t('attrWisdomFull'),         val: stats.attributes.Wisdom,         desc: t('attrWisdomDesc'),         color: '#0284c7', bg: 'from-sky-50 to-blue-50',     border: 'border-sky-200',   icon: '🔮', barColor: '#0284c7' },
+                { name: "Responsibility", nameFull: t('attrResponsibilityFull'), val: stats.attributes.Responsibility, desc: t('attrResponsibilityDesc'), color: '#16a34a', bg: 'from-emerald-50 to-green-50', border: 'border-emerald-200', icon: '🛡️', barColor: '#16a34a' },
+                { name: "Courage",        nameFull: t('attrCourageFull'),        val: stats.attributes.Courage,        desc: t('attrCourageDesc'),        color: '#ea580c', bg: 'from-orange-50 to-amber-50',  border: 'border-orange-200', icon: '⚡', barColor: '#ea580c' },
+                { name: "Empathy",        nameFull: t('attrEmpathyFull'),        val: stats.attributes.Empathy,        desc: t('attrEmpathyDesc'),        color: '#db2777', bg: 'from-pink-50 to-rose-50',    border: 'border-pink-200',   icon: '💖', barColor: '#db2777' },
+                { name: "Creativity",     nameFull: t('attrCreativityFull'),     val: stats.attributes.Creativity,    desc: t('attrCreativityDesc'),     color: '#7c3aed', bg: 'from-violet-50 to-purple-50', border: 'border-violet-200', icon: '🎨', barColor: '#7c3aed' }
+              ].map((attr) => {
+                const maxVal = 50;
+                const pct = Math.min(100, (attr.val / maxVal) * 100);
+                return (
+                  <div key={attr.name} className={`flex items-center gap-3 p-3.5 rounded-2xl bg-gradient-to-r ${attr.bg} border ${attr.border} shadow-sm hover:shadow-md transition-all hover:scale-[1.01]`}>
+                    {/* Icon */}
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-xl shadow-sm" style={{ background: `${attr.color}18`, border: `1.5px solid ${attr.color}30` }}>
+                      {attr.icon}
+                    </div>
+                    {/* Label + Bar */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-baseline mb-1">
+                        <span className="text-sm font-black" style={{ color: attr.color }}>{attr.nameFull}</span>
+                        <span className="text-lg font-black" style={{ color: attr.color }}>{attr.val}</span>
+                      </div>
+                      <div className="text-[10px] text-slate-400 mb-1.5">{attr.desc}</div>
+                      {/* Mini progress bar */}
+                      <div className="h-2 rounded-full bg-white border overflow-hidden" style={{ borderColor: `${attr.color}25` }}>
+                        <div
+                          className="h-full rounded-full transition-all duration-700"
+                          style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${attr.barColor}, ${attr.barColor}cc)`, boxShadow: `0 0 6px ${attr.barColor}50` }}
+                        />
                       </div>
                     </div>
-                    <div className={`text-md font-black ${getAttributeColor(attr.name)}`}>
-                      {attr.val}
-                    </div>
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
           </div>
+
+          {/* ── Account Security ── */}
+          <div className="rounded-2xl p-4 border" style={{
+            background: 'linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%)',
+            borderColor: 'rgba(99,102,241,0.15)',
+            boxShadow: '0 4px 16px rgba(99,102,241,0.06)'
+          }}>
+            <h4 className="text-xs font-black text-indigo-600 flex items-center gap-1.5 uppercase tracking-wider mb-2">
+              🛡️ {t('accountSecurityAndGoogle')}
+            </h4>
+            <div className="text-[10px] text-slate-500 leading-relaxed">
+              {t('currentLogin')}：<span className="text-slate-700 font-bold">{currentUser?.email}</span> ({currentUser?.googleId ? t('googleLinkedType') : t('passwordAccountType')})
+            </div>
+            {currentUser?.googleId ? (
+              <div className="text-[10px] text-emerald-600 font-bold mt-1.5">✓ {t('googleLinkedSuccessText')}</div>
+            ) : isReadOnly ? (
+              <div className="text-[10px] text-slate-400 italic mt-1">{t('readOnlyGoogleBlock')}</div>
+            ) : (
+              <div className="space-y-2 mt-2">
+                <div id="google-link-btn-container" className="flex justify-center w-full min-h-[36px] my-1"></div>
+                {(!window.google || !window.google.accounts) && (
+                  <button
+                    onClick={() => {
+                      const email = prompt(t('enterGoogleEmailPrompt'), "kid@gmail.com");
+                      if (email) {
+                        const mockToken = "google-mock-" + email.replace(/[^a-zA-Z0-9]/g, "");
+                        onLinkGoogleAccount(mockToken);
+                      }
+                    }}
+                    type="button"
+                    className="w-full py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-500 text-[10px] font-black rounded-xl border border-indigo-200 border-dashed transition-all text-center"
+                  >
+                    🤖 {t('enterGoogleSandbox')} (Sandbox Fallback)
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
         </div>
       )}
+
+
+
+
 
       {/* --- Tab 2: Adventure Tasks Board (Empty states & validation added) --- */}
       {activeSubTab === 'tasks' && (() => {
