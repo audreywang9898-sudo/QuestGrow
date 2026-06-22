@@ -1377,7 +1377,25 @@ function KidPortal({
           </div>
         </div>
 
-        <span className="text-xs text-slate-400 font-medium">{t('simulatedDateLabel')} {simulatedDate}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-400 font-medium hidden sm:block">{t('simulatedDateLabel')} {simulatedDate}</span>
+          {!isReadOnly && (
+            <button
+              type="button"
+              onClick={() => {
+                setTourStep(1);
+                setShowTour(true);
+                localStorage.removeItem('questgrow_kid_tour_seen');
+              }}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all active:scale-95 hover:scale-105"
+              style={{ background: 'rgba(99,102,241,0.08)', color: '#6366f1', border: '1px solid rgba(99,102,241,0.2)' }}
+              title={t('reopenTourBtn')}
+            >
+              <HelpCircle className="h-3.5 w-3.5 flex-shrink-0" />
+              <span className="hidden sm:inline">{t('reopenTourBtn')}</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ── Merged: Daily Encouragement + Family Goal Banner ── */}
@@ -1479,22 +1497,7 @@ function KidPortal({
       )}
 
 
-      {/* Restart Tour button */}
-      {!isReadOnly && (
-        <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={() => {
-              setTourStep(1);
-              setShowTour(true);
-              localStorage.removeItem('questgrow_kid_tour_seen');
-            }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold transition-all active:scale-95 whitespace-nowrap"
-          >
-            {t('reopenTourBtn')}
-          </button>
-        </div>
-      )}
+
 
       {/* FCM Notifications Panel */}
       {showNotifications && (
