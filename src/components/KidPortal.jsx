@@ -2252,10 +2252,10 @@ function KidPortal({
                 
                 {/* Left: Mystery Chest Summon (Tickets 🎫) with Rotary Dial */}
                 <div className="flex flex-col items-center justify-center p-4 bg-slate-950/50 border border-white/5 rounded-2xl">
-                  <div className="text-sm font-black text-emerald-450 uppercase tracking-wider mb-1.5 flex items-center justify-center gap-1.5">
+                  <div className="text-sm font-black text-emerald-400 uppercase tracking-wider mb-1.5 flex items-center justify-center gap-1.5">
                     <span>🎫 {t('summonTitle') || '召喚獎勵'}</span>
                   </div>
-                  <p className="text-[10px] text-slate-400 leading-relaxed max-w-[200px] text-center mb-3">
+                  <p className="text-[10px] text-slate-200 leading-relaxed max-w-[200px] text-center mb-3">
                     {language === 'zh' ? '轉動旋鈕即可隨機召喚一張獎勵卡片' : 'Twist the dial to summon a random reward card'}
                   </p>
                   
@@ -2279,22 +2279,22 @@ function KidPortal({
                     {isDrawingGacha ? (language === 'zh' ? '正在轉動中...' : 'Drawing...') : (language === 'zh' ? '⭐ 旋轉扭蛋鈕 ⭐' : '⭐ Twist Dial ⭐')}
                   </div>
 
-                  <div className="w-full mt-3 p-2 bg-slate-950/80 border border-white/5 rounded-xl font-bold text-xs text-center">
+                  <div className="w-full mt-3 p-2 bg-slate-950/80 border border-white/5 rounded-xl font-bold text-xs text-center text-slate-200">
                     {isReadOnly ? t('readOnlyGachaBlock') : `${t('availableTickets')}：`}<span className="text-cyan-400 text-sm font-extrabold">🎫 {stats.tickets}</span>
                   </div>
                 </div>
 
                 {/* Right: Gold ticket vending machine (Gold 🪙) */}
                 <div className="space-y-3 text-center p-4 bg-gradient-to-b from-amber-950/20 to-slate-950/50 border border-amber-500/10 rounded-2xl h-full flex flex-col justify-between">
-                  <div className="text-sm font-black text-amber-350 uppercase tracking-wider flex items-center justify-center gap-1.5">
+                  <div className="text-sm font-black text-amber-400 uppercase tracking-wider flex items-center justify-center gap-1.5">
                     <span>🏪 {t('vendingMachineTitle')}</span>
                   </div>
-                  <p className="text-[10px] text-slate-400 leading-relaxed max-w-[160px] mx-auto">
+                  <p className="text-[10px] text-slate-200 leading-relaxed max-w-[160px] mx-auto">
                     {t('vendingMachineDesc')}
                   </p>
-                  <div className="p-2 bg-slate-950/80 border border-white/5 rounded-xl font-bold text-xs flex justify-between items-center">
-                    <span>🪙 {stats.gold}</span>
-                    <span className="text-[9px] text-slate-550 uppercase">300 🪙 = 1 🎫</span>
+                  <div className="p-2 bg-slate-950/80 border border-white/5 rounded-xl font-bold text-xs flex justify-between items-center text-slate-200">
+                    <span className="text-amber-400 font-extrabold">🪙 {stats.gold}</span>
+                    <span className="text-[9px] text-slate-300 uppercase">300 🪙 = 1 🎫</span>
                   </div>
                   <button
                     onClick={handleBuyTicket}
@@ -2313,7 +2313,7 @@ function KidPortal({
               </div>
               
               {/* Outbox coin slot / capsule roll container */}
-              <div className="p-2 bg-slate-950 border-t-2 border-slate-900 text-center flex items-center justify-center gap-4 text-[10px] text-slate-600 font-mono">
+              <div className="p-2 bg-slate-950 border-t-2 border-slate-900 text-center flex items-center justify-center gap-4 text-[10px] text-slate-400 font-mono">
                 <span>INSERT COIN</span>
                 <span className="w-1.5 h-3 bg-rose-500 rounded-sm animate-pulse"></span>
                 <span>TICKET DISPENSER</span>
@@ -2365,7 +2365,7 @@ function KidPortal({
                       )}
                     </button>
                   </h4>
-                  <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{drawnCard.type}</div>
+                  <div className="text-[10px] text-slate-300 font-bold uppercase tracking-wider">{drawnCard.type}</div>
                 </div>
 
                 <p className="text-xs text-slate-300 border-t border-white/5 pt-3 leading-relaxed">
@@ -2373,7 +2373,7 @@ function KidPortal({
                 </p>
               </div>
 
-              <div className="text-xs text-slate-400">
+              <div className="text-xs text-slate-200">
                 {drawnCard.type === '資源卡' 
                   ? t('resourceAdded') 
                   : t('cardAddedToBackpack')}
