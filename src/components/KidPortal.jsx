@@ -1380,88 +1380,100 @@ function KidPortal({
         <span className="text-xs text-slate-400 font-medium">{t('simulatedDateLabel')} {simulatedDate}</span>
       </div>
 
-      {/* Daily Proverb Card */}
-      {dailyProverb && (
-        <div className="glass-panel p-5 bg-gradient-to-r from-[#1b1c2b] via-[#21173a]/80 to-[#1b1c2b] border border-violet-500/20 shadow-[0_0_15px_rgba(139,92,246,0.15)] rounded-2xl flex flex-col sm:flex-row items-center gap-4 hover:border-violet-500/35 hover:shadow-[0_0_20px_rgba(139,92,246,0.25)] transition-all duration-300">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-violet-600/20 border border-violet-500/30 text-violet-400 shadow-[0_0_10px_rgba(139,92,246,0.1)]">
-            <Sparkles className="h-6 w-6 animate-pulse" />
-          </div>
-          <div className="space-y-1 text-center sm:text-left flex-1">
-            <div className="text-[10px] text-violet-400 font-black uppercase tracking-widest">
-              {t('dailyProverbLabel')}
-            </div>
-            <div className="text-sm font-extrabold text-slate-200 leading-relaxed">
-              {renderTextWithZhuyin(dailyProverb.contentZh)}
-            </div>
-            <div className="text-xs font-semibold text-slate-300 italic font-mono">
-              {dailyProverb.contentEn}
-            </div>
-          </div>
-          <button
-            onClick={speakProverb}
-            className={`p-3 rounded-xl border transition-all duration-200 flex items-center justify-center active:scale-95 ${
-              proverbSpeaking
-                ? 'bg-rose-500/20 border-rose-500/40 text-rose-400 shadow-[0_0_10px_rgba(244,63,94,0.15)] animate-pulse'
-                : 'bg-violet-600/10 border-violet-500/20 text-violet-400 hover:bg-violet-600/20 hover:border-violet-500/40 shadow-[0_0_10px_rgba(139,92,246,0.05)]'
-            }`}
-            title={proverbSpeaking ? t('stopSpeaking') : t('startSpeaking')}
-          >
-            {proverbSpeaking ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
-          </button>
-        </div>
-      )}
+      {/* ── Merged: Daily Encouragement + Family Goal Banner ── */}
+      {(dailyProverb || maxPointsWish) && (
+        <div className="daily-goal-banner rounded-2xl overflow-hidden flex flex-col sm:flex-row">
 
-      {/* Highest Points Active Family Wish Card */}
-      {maxPointsWish && (
-        <div className="glass-panel p-5 bg-gradient-to-r from-slate-900 to-amber-500/5 border border-amber-500/25 shadow-[0_0_15px_rgba(245,158,11,0.1)] rounded-2xl flex flex-col md:flex-row items-center gap-4 hover:border-amber-500/40 hover:shadow-[0_0_20px_rgba(245,158,11,0.2)] transition-all duration-300">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-600/20 border border-amber-500/30 text-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.1)]">
-            <Trophy className="h-6 w-6 animate-bounce" />
-          </div>
-          
-          <div className="space-y-2 text-center md:text-left flex-1 w-full">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-              <div>
-                <div className="text-[10px] text-amber-400 font-black uppercase tracking-widest flex items-center justify-center md:justify-start gap-1">
-                  <span>{t('tabKidWishlist')}</span>
-                  {maxPointsWish.isUltimate && (
-                    <span className="bg-amber-500/20 text-amber-300 text-[9px] px-1 py-0.5 rounded border border-amber-500/30">
-                      {t('ultimatePrize')}
-                    </span>
-                  )}
+          {/* Left: Daily Proverb */}
+          {dailyProverb && (
+            <div className="flex items-center gap-3 px-4 py-3 flex-1 min-w-0" style={{ borderRight: maxPointsWish ? '1px solid rgba(99,102,241,0.12)' : 'none' }}>
+              {/* Icon */}
+              <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #ede9fe, #ddd6fe)', border: '1px solid rgba(139,92,246,0.25)' }}>
+                <Sparkles className="h-4 w-4" style={{ color: '#7c3aed' }} />
+              </div>
+              {/* Text */}
+              <div className="flex-1 min-w-0">
+                <div className="text-[9px] font-black uppercase tracking-widest mb-0.5" style={{ color: '#8b5cf6' }}>
+                  {t('dailyProverbLabel')}
                 </div>
-                <h4 className="text-base font-extrabold text-slate-200 leading-relaxed">
-                  {renderTextWithZhuyin(maxPointsWish.title)}
-                </h4>
+                <div className="text-sm font-extrabold leading-snug truncate" style={{ color: '#1e293b' }}>
+                  {renderTextWithZhuyin(dailyProverb.contentZh)}
+                </div>
+                <div className="text-[11px] italic truncate mt-0.5" style={{ color: '#64748b', fontFamily: 'monospace' }}>
+                  {dailyProverb.contentEn}
+                </div>
               </div>
-              
-              <div className="text-xs text-slate-300 font-bold sm:text-right">
-                {t('familyTotalPoints')}：<span className="text-amber-400 font-black">{familyScore}</span> / {maxPointsWish.pointsNeeded} Pts
-              </div>
+              {/* Speak button */}
+              <button
+                onClick={speakProverb}
+                className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all active:scale-90 ${
+                  proverbSpeaking
+                    ? 'animate-pulse'
+                    : ''
+                }`}
+                style={{
+                  background: proverbSpeaking ? 'rgba(244,63,94,0.12)' : 'rgba(139,92,246,0.1)',
+                  border: proverbSpeaking ? '1px solid rgba(244,63,94,0.3)' : '1px solid rgba(139,92,246,0.2)',
+                  color: proverbSpeaking ? '#f43f5e' : '#8b5cf6',
+                }}
+                title={proverbSpeaking ? t('stopSpeaking') : t('startSpeaking')}
+              >
+                {proverbSpeaking ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+              </button>
             </div>
-            
-            {/* Progress bar */}
-            <div className="space-y-1">
-              <div className="h-3 w-full bg-slate-950 border border-white/10 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-400 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(100, (familyScore / maxPointsWish.pointsNeeded) * 100)}%` }}
-                ></div>
+          )}
+
+          {/* Right: Family Wish Goal */}
+          {maxPointsWish && (
+            <div className="flex items-center gap-3 px-4 py-3 sm:w-[42%] flex-shrink-0">
+              {/* Trophy icon */}
+              <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #fffbeb, #fef3c7)', border: '1px solid rgba(245,158,11,0.3)' }}>
+                <Trophy className="h-4 w-4" style={{ color: '#d97706' }} />
               </div>
-              <div className="flex justify-between text-[11px] text-slate-400 font-bold">
-                <span>{t('progress')}: {Math.min(100, Math.round((familyScore / maxPointsWish.pointsNeeded) * 100))}%</span>
-                <span>{t('pointsShortOfUnlock', { count: Math.max(0, maxPointsWish.pointsNeeded - familyScore) })}</span>
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <span className="text-[11px] font-black truncate" style={{ color: '#1e293b' }}>
+                    {maxPointsWish.title}
+                  </span>
+                  <span className="flex-shrink-0 text-[10px] font-black tabular-nums" style={{ color: '#d97706' }}>
+                    {familyScore.toLocaleString()}<span style={{ color: '#94a3b8' }}>/{maxPointsWish.pointsNeeded.toLocaleString()}</span>
+                  </span>
+                </div>
+                {/* Progress bar */}
+                <div className="h-2 w-full rounded-full overflow-hidden" style={{ background: '#f1f5f9', border: '1px solid #e2e8f0' }}>
+                  <div
+                    className="h-full rounded-full transition-all duration-700"
+                    style={{
+                      width: `${Math.min(100, (familyScore / maxPointsWish.pointsNeeded) * 100)}%`,
+                      background: familyScore >= maxPointsWish.pointsNeeded
+                        ? 'linear-gradient(90deg, #10b981, #34d399)'
+                        : 'linear-gradient(90deg, #f59e0b, #fbbf24)',
+                    }}
+                  />
+                </div>
+                <div className="flex justify-between mt-0.5">
+                  <span className="text-[10px] font-bold" style={{ color: '#94a3b8' }}>
+                    {Math.min(100, Math.round((familyScore / maxPointsWish.pointsNeeded) * 100))}%
+                  </span>
+                  <span className="text-[10px] font-bold" style={{ color: '#94a3b8' }}>
+                    {familyScore >= maxPointsWish.pointsNeeded
+                      ? '🎉 ' + (language === 'zh' ? '可兌換！' : 'Ready!')
+                      : `還差 ${Math.max(0, maxPointsWish.pointsNeeded - familyScore).toLocaleString()} Pts`}
+                  </span>
+                </div>
               </div>
+              {/* Claim button if unlocked */}
+              {familyScore >= maxPointsWish.pointsNeeded && !isReadOnly && (
+                <button
+                  onClick={() => onClaimWishlistItem(maxPointsWish.id)}
+                  className="flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-black transition-all active:scale-95 hover:scale-105"
+                  style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', boxShadow: '0 2px 8px rgba(16,185,129,0.3)' }}
+                >
+                  {t('claimWishlistBtn')}
+                </button>
+              )}
             </div>
-          </div>
-          
-          {/* Claim Wishlist button right on the card */}
-          {familyScore >= maxPointsWish.pointsNeeded && !isReadOnly && (
-            <button
-              onClick={() => onClaimWishlistItem(maxPointsWish.id)}
-              className="w-full md:w-auto px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-900 rounded-xl text-xs font-black shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:from-emerald-400 hover:to-teal-300 transition-all hover:scale-105 active:scale-95 whitespace-nowrap"
-            >
-              {t('claimWishlistBtn')}
-            </button>
           )}
         </div>
       )}
