@@ -2232,89 +2232,108 @@ function KidPortal({
             <div className="gacha-cabinet w-full max-w-2xl flex flex-col items-stretch overflow-hidden">
               
               {/* Header neon board */}
-              <div className="gacha-neon-header py-4 text-center border-b-2 border-indigo-500/30">
-                <h3 className="text-xl font-black text-white tracking-widest uppercase flex items-center justify-center gap-2">
-                  <span>🎰 QUEST SUMMONER</span>
-                  <span className="text-xs bg-slate-950/60 text-[#f43f5e] border border-[#f43f5e]/30 px-2 py-0.5 rounded font-mono">V.3</span>
+              <div className="gacha-neon-header py-5 text-center border-b-2 border-indigo-300/30 relative z-10">
+                <h3 className="text-2xl font-black text-white tracking-widest uppercase flex items-center justify-center gap-3" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>
+                  <span>🎰</span>
+                  <span>QUEST SUMMONER</span>
+                  <span className="text-xs bg-white/20 text-white border border-white/30 px-2.5 py-0.5 rounded-full font-mono backdrop-blur-sm">V.3</span>
                   <span>冒險扭蛋機</span>
                 </h3>
-                <div className="text-[10px] text-slate-200 mt-1 font-bold uppercase tracking-wider">
-                  {language === 'zh' ? '用幸運與累積的努力 召喚稀有寶藏卡牌' : 'Summon rare treasure cards with your hard-earned points'}
+                <div className="text-[11px] text-white/90 mt-1.5 font-bold tracking-wider">
+                  {language === 'zh' ? '✨ 用幸運與累積的努力 召喚稀有寶藏卡牌 ✨' : '✨ Summon rare treasure cards with your hard-earned points ✨'}
                 </div>
               </div>
 
-              {/* Glass Tube window showing mystery cards/eggs */}
-              <div className="gacha-glass-area h-36 flex items-center justify-around relative overflow-hidden px-6">
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none z-10"></div>
-                
-                {/* Visual mystery capsules floating */}
-                <div className="text-4xl animate-bounce" style={{ animationDelay: '0.1s' }}>🔴</div>
-                <div className="text-4xl animate-bounce" style={{ animationDelay: '0.4s' }}>🔵</div>
-                <div className="text-4xl animate-bounce" style={{ animationDelay: '0.2s' }}>🟡</div>
-                <div className="text-4xl animate-bounce" style={{ animationDelay: '0.5s' }}>🟢</div>
-                <div className="text-4xl animate-bounce" style={{ animationDelay: '0.3s' }}>🟣</div>
-                
-                {/* Neon tubes */}
-                <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-[#f43f5e] opacity-40 shadow-[0_0_8px_#f43f5e]"></div>
-                <div className="absolute right-4 top-0 bottom-0 w-0.5 bg-[#a855f7] opacity-40 shadow-[0_0_8px_#a855f7]"></div>
+              {/* Glass Tube window showing mystery capsules */}
+              <div className="gacha-glass-area h-40 flex items-center justify-around px-10 relative overflow-hidden">
+                {/* Floating mystery capsules - 3D styled colored orbs */}
+                {[
+                  { color: 'from-red-400 to-rose-600', glow: 'rgba(239,68,68,0.5)', delay: '0s', emoji: '🔴' },
+                  { color: 'from-blue-400 to-indigo-600', glow: 'rgba(59,130,246,0.5)', delay: '0.4s', emoji: '🔵' },
+                  { color: 'from-amber-400 to-orange-500', glow: 'rgba(245,158,11,0.5)', delay: '0.2s', emoji: '🟡' },
+                  { color: 'from-emerald-400 to-teal-500', glow: 'rgba(52,211,153,0.5)', delay: '0.5s', emoji: '🟢' },
+                  { color: 'from-purple-400 to-violet-600', glow: 'rgba(167,139,250,0.5)', delay: '0.3s', emoji: '🟣' },
+                ].map((orb, i) => (
+                  <div
+                    key={i}
+                    className={`w-14 h-14 rounded-full bg-gradient-to-br ${orb.color} animate-bounce flex items-center justify-center`}
+                    style={{
+                      animationDelay: orb.delay,
+                      animationDuration: '1.8s',
+                      boxShadow: `0 8px 24px ${orb.glow}, 0 4px 8px rgba(0,0,0,0.15), inset 0 -3px 6px rgba(0,0,0,0.2), inset 0 3px 6px rgba(255,255,255,0.4)`,
+                    }}
+                  >
+                    <span className="text-white text-lg font-black opacity-60">?</span>
+                  </div>
+                ))}
+                {/* Decorative glow lines */}
+                <div className="absolute left-5 top-0 bottom-0 w-0.5 rounded-full" style={{ background: 'linear-gradient(to bottom, transparent, rgba(99,102,241,0.4), transparent)' }}></div>
+                <div className="absolute right-5 top-0 bottom-0 w-0.5 rounded-full" style={{ background: 'linear-gradient(to bottom, transparent, rgba(167,139,250,0.4), transparent)' }}></div>
               </div>
 
               {/* Control Panel Area */}
-              <div className="gacha-control-panel p-5 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+              <div className="gacha-control-panel p-6 grid grid-cols-1 md:grid-cols-2 gap-5 items-stretch">
                 
-                {/* Left: Mystery Chest Summon (Tickets 🎫) with Rotary Dial */}
-                <div className="flex flex-col items-center justify-center p-4 bg-slate-950/50 border border-white/5 rounded-2xl">
-                  <div className="text-sm font-black text-emerald-400 uppercase tracking-wider mb-1.5 flex items-center justify-center gap-1.5">
-                    <span>🎫 {t('summonTitle') || '召喚獎勵'}</span>
-                  </div>
-                  <div className="text-[10px] text-zinc-200 leading-relaxed max-w-[200px] text-center mb-3">
-                    {language === 'zh' ? '轉動旋鈕即可隨機召喚一張獎勵卡片' : 'Twist the dial to summon a random reward card'}
+                {/* Left: Summon with Tickets 🎫 */}
+                <div className="flex flex-col items-center justify-between p-5 bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-2xl gap-3 shadow-sm">
+                  <div>
+                    <div className="text-sm font-black text-indigo-700 uppercase tracking-wider mb-1 flex items-center justify-center gap-1.5">
+                      <span>🎫</span>
+                      <span>{t('summonTitle') || '召喚殿堂'}</span>
+                    </div>
+                    <div className="text-[10px] text-slate-500 leading-relaxed max-w-[180px] text-center">
+                      {language === 'zh' ? '轉動旋鈕即可隨機召喚一張獎勵卡片！' : 'Twist the dial to summon a random reward card!'}
+                    </div>
                   </div>
                   
+                  {/* Premium Rotary Dial Button */}
                   <button
                     disabled={stats.tickets < 1 || isDrawingGacha || isReadOnly}
                     onClick={startDrawCard}
-                    className={`gacha-rotary-knob w-20 h-20 rounded-full flex items-center justify-center relative active:scale-95 transition-all ${
+                    className={`gacha-rotary-knob w-24 h-24 rounded-full flex items-center justify-center relative ${
                       stats.tickets < 1 || isDrawingGacha || isReadOnly ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'
                     }`}
                     style={{ transform: isDrawingGacha ? 'rotate(360deg)' : 'rotate(0deg)' }}
                   >
-                    {/* Metallic core indicator */}
-                    <div className="w-12 h-3 bg-slate-400 rounded-full absolute"></div>
-                    <div className="w-3 h-12 bg-slate-400 rounded-full absolute"></div>
-                    <div className="w-8 h-8 bg-slate-700 border-2 border-slate-500 rounded-full z-10 flex items-center justify-center">
-                      <div className="w-3 h-3 bg-amber-450 rounded-full animate-pulse"></div>
+                    {/* Inner cross indicator */}
+                    <div className="w-14 h-3 bg-white/40 rounded-full absolute shadow-sm"></div>
+                    <div className="w-3 h-14 bg-white/40 rounded-full absolute shadow-sm"></div>
+                    <div className="w-10 h-10 bg-white/20 border-2 border-white/50 rounded-full z-10 flex items-center justify-center backdrop-blur-sm">
+                      <div className="w-4 h-4 bg-white rounded-full shadow-lg animate-pulse"></div>
                     </div>
                   </button>
-                  
-                  <div className="text-[11px] text-amber-400 font-bold mt-3 animate-pulse">
-                    {isDrawingGacha ? (language === 'zh' ? '正在轉動中...' : 'Drawing...') : (language === 'zh' ? '⭐ 旋轉扭蛋鈕 ⭐' : '⭐ Twist Dial ⭐')}
+
+                  <div className="text-[12px] text-indigo-600 font-extrabold animate-pulse">
+                    {isDrawingGacha ? (language === 'zh' ? '✨ 正在轉動中...' : '✨ Drawing...') : (language === 'zh' ? '⭐ 旋轉扭蛋鈕 ⭐' : '⭐ Twist Dial ⭐')}
                   </div>
 
-                  <div className="w-full mt-3 p-2 bg-slate-950/80 border border-white/5 rounded-xl font-bold text-xs text-center text-zinc-200">
-                    {isReadOnly ? t('readOnlyGachaBlock') : `${t('availableTickets')}：`}<span className="text-cyan-400 text-sm font-extrabold">🎫 {stats.tickets}</span>
+                  <div className="w-full p-2.5 bg-white border border-indigo-200 rounded-xl font-bold text-xs text-center text-slate-600 shadow-sm">
+                    {isReadOnly ? t('readOnlyGachaBlock') : (
+                      <span>{t('availableTickets')}：<span className="text-indigo-600 text-sm font-extrabold ml-1">🎫 {stats.tickets}</span></span>
+                    )}
                   </div>
                 </div>
 
-                {/* Right: Gold ticket vending machine (Gold 🪙) */}
-                <div className="space-y-3 text-center p-4 bg-gradient-to-b from-amber-950/20 to-slate-950/50 border border-amber-500/10 rounded-2xl h-full flex flex-col justify-between">
-                  <div className="text-sm font-black text-amber-400 uppercase tracking-wider flex items-center justify-center gap-1.5">
-                    <span>🏪 {t('vendingMachineTitle')}</span>
+                {/* Right: Gold → Ticket exchange */}
+                <div className="flex flex-col justify-between p-5 bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200 rounded-2xl gap-3 shadow-sm">
+                  <div className="text-sm font-black text-amber-700 uppercase tracking-wider flex items-center justify-center gap-1.5">
+                    <span>🏪</span>
+                    <span>{t('vendingMachineTitle')}</span>
                   </div>
-                  <div className="text-[10px] text-zinc-200 leading-relaxed max-w-[160px] mx-auto">
+                  <div className="text-[10px] text-slate-500 leading-relaxed max-w-[160px] mx-auto text-center">
                     {t('vendingMachineDesc')}
                   </div>
-                  <div className="p-2 bg-slate-950/80 border border-white/5 rounded-xl font-bold text-xs flex justify-between items-center text-zinc-200">
-                    <span className="text-amber-400 font-extrabold">🪙 {stats.gold}</span>
-                    <span className="text-[9px] text-zinc-300 uppercase">300 🪙 = 1 🎫</span>
+                  <div className="p-3 bg-white border border-amber-200 rounded-xl font-bold text-xs flex justify-between items-center shadow-sm">
+                    <span className="text-amber-600 font-extrabold text-sm">🪙 {stats.gold}</span>
+                    <span className="text-[9px] text-slate-500 font-bold uppercase bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">300 🪙 = 1 🎫</span>
                   </div>
                   <button
                     onClick={handleBuyTicket}
                     disabled={stats.gold < 300 || isBuyingTicket || isReadOnly}
-                    className={`w-full py-2 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                    className={`w-full py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
                       stats.gold >= 300 && !isBuyingTicket && !isReadOnly
-                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-[#111216] hover:from-amber-400 hover:to-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.2)] hover:scale-[1.02] active:scale-95' 
-                        : 'opacity-40 cursor-not-allowed bg-slate-800 text-slate-500'
+                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-400 hover:to-orange-400 shadow-[0_4px_16px_rgba(245,158,11,0.35)] hover:scale-[1.02] active:scale-95' 
+                        : 'opacity-50 cursor-not-allowed bg-slate-100 text-slate-400 border border-slate-200'
                     }`}
                   >
                     {isBuyingTicket && <span className="spinner-inline"></span>}
@@ -2324,10 +2343,10 @@ function KidPortal({
 
               </div>
               
-              {/* Outbox coin slot / capsule roll container */}
-              <div className="p-2 bg-slate-950 border-t-2 border-slate-900 text-center flex items-center justify-center gap-4 text-[10px] text-zinc-400 font-mono">
+              {/* Footer coin slot */}
+              <div className="px-6 py-3 bg-gradient-to-r from-indigo-50 via-purple-50 to-indigo-50 border-t border-indigo-100 text-center flex items-center justify-center gap-4 text-[10px] text-indigo-400 font-mono font-bold uppercase tracking-widest rounded-b-[26px]">
                 <span>INSERT COIN</span>
-                <span className="w-1.5 h-3 bg-rose-500 rounded-sm animate-pulse"></span>
+                <span className="w-2 h-4 bg-gradient-to-b from-rose-400 to-pink-600 rounded-sm animate-pulse shadow-[0_0_6px_rgba(244,63,94,0.5)]"></span>
                 <span>TICKET DISPENSER</span>
               </div>
 
@@ -2350,7 +2369,7 @@ function KidPortal({
 
           {gachaState === 'shown' && drawnCard && (
             <div className="space-y-6 max-w-sm w-full animate-card-draw">
-              <div className={`glass-panel p-6 border-2 rounded-2xl mx-auto space-y-4 max-w-[280px] text-center bg-gradient-to-b from-slate-950 to-slate-900 ${getRarityClass(drawnCard.rarity)}`}>
+              <div className={`glass-panel p-6 border-2 rounded-2xl mx-auto space-y-4 max-w-[300px] text-center bg-gradient-to-b from-white to-slate-50 ${getRarityClass(drawnCard.rarity)}`}>
                 <span className={`inline-block px-2.5 py-0.5 text-[10px] font-black rounded-md uppercase tracking-widest ${getRarityBadge(drawnCard.rarity)}`}>
                   {drawnCard.rarity}
                 </span>
@@ -2360,7 +2379,7 @@ function KidPortal({
                 </div>
 
                 <div className="space-y-1">
-                  <h4 className="text-md font-black text-slate-100 flex items-center justify-center gap-1.5">
+                  <h4 className="text-md font-black text-slate-800 flex items-center justify-center gap-1.5">
                     {renderTextWithZhuyin(drawnCard.name)}
                     <button
                       type="button"
@@ -2380,7 +2399,7 @@ function KidPortal({
                   <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{drawnCard.type}</div>
                 </div>
 
-                <p className="text-xs text-slate-300 border-t border-white/5 pt-3 leading-relaxed">
+                <p className="text-xs text-slate-600 border-t border-slate-200 pt-3 leading-relaxed">
                   {renderTextWithZhuyin(drawnCard.desc)}
                 </p>
               </div>
@@ -2396,7 +2415,7 @@ function KidPortal({
                   setGachaState('idle');
                   setDrawnCard(null);
                 }}
-                className="px-6 py-2 rounded-[4px] text-xs font-bold bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white transition-colors"
+                className="px-8 py-2.5 rounded-xl text-sm font-black bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-400 hover:to-purple-400 transition-all shadow-[0_4px_16px_rgba(99,102,241,0.4)] hover:scale-[1.02] active:scale-95"
               >
                 {t('claimTreasure')}
               </button>
