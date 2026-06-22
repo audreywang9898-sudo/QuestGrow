@@ -993,11 +993,11 @@ function ParentPortal({
                   </button>
                 )}
                 <div>
-                  <h3 className="text-md font-black text-slate-200 flex items-center gap-2">
+                  <h3 className="text-md font-black text-zinc-100 flex items-center gap-2">
                     <span className="text-xl">🧙‍♂️</span>
                     {language === 'zh' ? '兒童角色設定嚮導' : 'Adventurer Setup Wizard'}
                   </h3>
-                  <p className="text-[11px] text-slate-400 mt-1">
+                  <p className="text-[11px] text-zinc-400 mt-1">
                     {language === 'zh' ? '跟著五步驟，輕鬆又任務化地為孩子建立專屬角色與起步任務！' : '5 steps to set up your child\'s RPG profile & starter quests!'}
                   </p>
                 </div>
@@ -1011,14 +1011,14 @@ function ParentPortal({
                           <div className="flex flex-col items-center relative">
                             <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] transition-all duration-300 ${
                               wizardStep === step 
-                                ? 'bg-[#3661FF] text-white ring-2 ring-[#3661FF]/20 shadow-[0_0_8px_rgba(54,97,255,0.4)]' 
+                                ? 'bg-[#3661FF] text-white ring-2 ring-[#3661FF]/20 shadow-[0_0_8px_rgba(54,97,255,0.4)] font-black' 
                                 : wizardStep > step 
                                   ? 'bg-emerald-500 text-white' 
-                                  : 'bg-slate-800 text-slate-450 border border-white/10'
+                                  : 'bg-zinc-800 text-zinc-400 border border-white/10'
                             }`}>
                               {wizardStep > step ? <Check className="h-3 w-3" /> : step}
                             </div>
-                            <span className="text-[8px] font-bold text-slate-450 mt-1 whitespace-nowrap">
+                            <span className="text-[8px] font-bold text-zinc-400 mt-1 whitespace-nowrap">
                               {step === 1 ? (language === 'zh' ? '暱稱' : 'Profile') :
                                step === 2 ? (language === 'zh' ? '個資' : 'Consent') :
                                step === 3 ? (language === 'zh' ? '職業' : 'Job') :
@@ -1046,7 +1046,7 @@ function ParentPortal({
                         </h4>
                         <div className="space-y-3">
                           <div>
-                            <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1">
+                            <label className="block text-[10px] text-zinc-400 font-bold uppercase mb-1">
                               {language === 'zh' ? '冒險者暱稱' : 'Child Nickname'} <span className="text-rose-500">*</span>
                             </label>
                             <div className="relative">
@@ -1073,7 +1073,7 @@ function ParentPortal({
                                 }`}
                               />
                               <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-bold tabular-nums pointer-events-none ${
-                                newChildName.length >= 10 ? 'text-rose-500' : 'text-slate-400'
+                                newChildName.length >= 10 ? 'text-rose-500' : 'text-zinc-400'
                               }`}>
                                 {newChildName.length}/12
                               </span>
@@ -1086,7 +1086,7 @@ function ParentPortal({
                           </div>
 
                           <div>
-                            <label className="block text-[10px] text-slate-455 font-bold uppercase mb-2">
+                            <label className="block text-[10px] text-zinc-400 font-bold uppercase mb-2">
                               {language === 'zh' ? '選擇外觀頭像' : 'Select Avatar'}
                             </label>
                             <div className="grid grid-cols-2 gap-3">
@@ -1100,7 +1100,7 @@ function ParentPortal({
                                 }`}
                               >
                                 <span className="text-2xl mb-1">👦</span>
-                                <span className="text-[9px] font-bold text-slate-300">
+                                <span className="text-[9px] font-bold text-zinc-300">
                                   {language === 'zh' ? '小男孩 (Boy)' : 'Boy'}
                                 </span>
                               </button>
@@ -1114,7 +1114,7 @@ function ParentPortal({
                                 }`}
                               >
                                 <span className="text-2xl mb-1">👧</span>
-                                <span className="text-[9px] font-bold text-slate-300">
+                                <span className="text-[9px] font-bold text-zinc-300">
                                   {language === 'zh' ? '小女孩 (Girl)' : 'Girl'}
                                 </span>
                               </button>
@@ -1143,7 +1143,7 @@ function ParentPortal({
 
                         <div className="grid grid-cols-2 gap-2.5">
                           <div>
-                            <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1">
+                            <label className="block text-[10px] text-zinc-400 font-bold uppercase mb-1">
                               {language === 'zh' ? '年齡' : 'Age'} <span className="text-rose-500">*</span>
                             </label>
                             <input 
@@ -1161,7 +1161,7 @@ function ParentPortal({
                             />
                           </div>
                           <div>
-                            <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1">
+                            <label className="block text-[10px] text-zinc-400 font-bold uppercase mb-1">
                               {language === 'zh' ? '生日 (MM/DD)' : 'Birthday (MM/DD)'} <span className="text-rose-500">*</span>
                             </label>
                             <input 
@@ -1199,12 +1199,12 @@ function ParentPortal({
                               <h5 className="font-bold mb-0.5">
                                 {language === 'zh' ? '🛡️ 個資與隱私保護說明' : '🛡️ Child Data Protection & Privacy Consent'}
                               </h5>
-                              <p className="text-[9px] text-slate-300">
+                              <p className="text-[9px] text-zinc-300">
                                 {language === 'zh' 
                                   ? `QuestGrow 依據年齡適配冒險任務。符合台灣個資法第8條規範：` 
                                   : `QuestGrow adapts adventure tasks based on age. In compliance with Taiwan PDPA:`}
                               </p>
-                              <ul className="list-disc list-inside mt-0.5 space-y-0.5 text-[8.5px] text-slate-400">
+                              <ul className="list-disc list-inside mt-0.5 space-y-0.5 text-[8.5px] text-zinc-400">
                                 <li>
                                   {language === 'zh'
                                     ? '僅收集暱稱、生日、年齡以計算全人成長指數。'
@@ -1245,7 +1245,7 @@ function ParentPortal({
                                 }`}
                               >
                                 <div className="flex justify-between items-center mb-0.5">
-                                  <span className="text-[11px] font-black text-slate-200">
+                                  <span className="text-[11px] font-black text-zinc-200">
                                     {language === 'zh' ? config.nameZh : config.nameEn}
                                   </span>
                                   {isSelected && (
@@ -1254,7 +1254,7 @@ function ParentPortal({
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-[9px] text-slate-400 mb-1 leading-relaxed">
+                                <p className="text-[9px] text-zinc-400 mb-1 leading-relaxed">
                                   {language === 'zh' ? config.descZh : config.descEn}
                                 </p>
                               </button>
@@ -1272,7 +1272,7 @@ function ParentPortal({
                         </h4>
                         <div className="space-y-3">
                           <div>
-                            <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1">
+                            <label className="block text-[10px] text-zinc-400 font-bold uppercase mb-1">
                               {language === 'zh' ? '登入信箱 (Email)' : 'Login Email'} <span className="text-rose-500">*</span>
                             </label>
                             <input 
@@ -1285,7 +1285,7 @@ function ParentPortal({
                             />
                           </div>
                           <div>
-                            <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1">
+                            <label className="block text-[10px] text-zinc-400 font-bold uppercase mb-1">
                               {language === 'zh' ? '密碼' : 'Password'} <span className="text-rose-500">*</span>
                             </label>
                             <input 
@@ -1307,7 +1307,7 @@ function ParentPortal({
                         <h4 className="text-[11px] font-black text-violet-300 uppercase tracking-wider flex items-center gap-1.5">
                           🚀 {language === 'zh' ? '步驟 5：第一份冒險合約' : 'Step 5: Starter Quests'}
                         </h4>
-                        <p className="text-[9px] text-slate-400">
+                        <p className="text-[9px] text-zinc-400">
                           {language === 'zh' ? '可直接勾選下方任務，建立成功時會立即指派給孩子！' : 'Select starting quests to assign immediately.'}
                         </p>
                         <div className="space-y-1.5 max-h-[180px] overflow-y-auto pr-1">
@@ -1337,7 +1337,7 @@ function ParentPortal({
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="flex justify-between items-center gap-1 mb-0.5">
-                                    <span className="text-[10px] font-black text-slate-200 truncate">
+                                    <span className="text-[10px] font-black text-zinc-200 truncate">
                                       {quest.name}
                                     </span>
                                   </div>
@@ -3936,12 +3936,12 @@ export function ParentOnboardingWizard({
                   ? 'bg-[#3661FF] text-white ring-4 ring-[#3661FF]/20 shadow-[0_0_10px_rgba(54,97,255,0.4)] font-black' 
                   : step > s 
                     ? 'bg-emerald-500 text-white' 
-                    : 'bg-slate-800 text-slate-450 border border-white/10'
+                    : 'bg-zinc-800 text-zinc-400 border border-white/10'
               }`}>
                 {step > s ? <Check className="h-4 w-4" /> : s}
               </div>
               <span className={`text-[10px] font-black tracking-wider hidden sm:inline ${
-                step === s ? 'text-slate-200' : 'text-slate-500'
+                step === s ? 'text-zinc-200' : 'text-zinc-500'
               }`}>
                 {s === 1 ? (language === 'zh' ? '歡迎' : 'Welcome') :
                  s === 2 ? (language === 'zh' ? '家庭暱稱' : 'Family Nickname') :
@@ -4112,7 +4112,7 @@ export function ParentOnboardingWizard({
               </div>
 
               <div>
-                <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1.5">
+                <label className="block text-[10px] text-zinc-400 font-bold uppercase mb-1.5">
                   {t('childBirthdayLabel')} <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -4128,7 +4128,7 @@ export function ParentOnboardingWizard({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1.5">
+                <label className="block text-[10px] text-zinc-400 font-bold uppercase mb-1.5">
                   {t('childAgeLabel')} <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -4143,7 +4143,7 @@ export function ParentOnboardingWizard({
               </div>
 
               <div>
-                <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1.5">
+                <label className="block text-[10px] text-zinc-400 font-bold uppercase mb-1.5">
                   {t('avatarSelectLabel')}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -4155,7 +4155,7 @@ export function ParentOnboardingWizard({
                     }`}
                   >
                     <span className="text-sm">👦</span>
-                    <span className="text-[9px] font-bold text-slate-300">Boy</span>
+                    <span className="text-[9px] font-bold text-zinc-300">Boy</span>
                   </button>
                   <button
                     type="button"
@@ -4165,7 +4165,7 @@ export function ParentOnboardingWizard({
                     }`}
                   >
                     <span className="text-sm">👧</span>
-                    <span className="text-[9px] font-bold text-slate-300">Girl</span>
+                    <span className="text-[9px] font-bold text-zinc-300">Girl</span>
                   </button>
                 </div>
               </div>
@@ -4174,7 +4174,7 @@ export function ParentOnboardingWizard({
             {childAge < 8 && (
               <div className="p-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-[10px] leading-relaxed animate-success">
                 <strong>⚠️ {language === 'zh' ? '已自動啟用注音輔助模式' : 'Bopomofo Assistive Mode Enabled'}</strong>
-                <p className="text-[9px] text-slate-400 mt-0.5">
+                <p className="text-[9px] text-zinc-400 mt-0.5">
                   {language === 'zh' ? '針對年齡小於 8 歲的小孩，系統會在登入時自動以注音標注所有中文文字，協助獨立識字閱讀。' : 'Since child is under 8, standard Bopomofo annotations will render on their UI.'}
                 </p>
               </div>
@@ -4182,7 +4182,7 @@ export function ParentOnboardingWizard({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-white/5 pt-3 mt-1">
               <div>
-                <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1.5">
+                <label className="block text-[10px] text-zinc-400 font-bold uppercase mb-1.5">
                   {t('emailLabelChild')} <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -4196,7 +4196,7 @@ export function ParentOnboardingWizard({
               </div>
 
               <div>
-                <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1.5">
+                <label className="block text-[10px] text-zinc-400 font-bold uppercase mb-1.5">
                   {t('passwordLabelChild')} <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -4211,7 +4211,7 @@ export function ParentOnboardingWizard({
             </div>
 
             <div>
-              <label className="block text-[10px] text-slate-450 font-bold uppercase mb-1.5">
+              <label className="block text-[10px] text-zinc-400 font-bold uppercase mb-1.5">
                 {language === 'zh' ? '選擇初始職業角色' : 'Starting Job Class'}
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -4224,10 +4224,10 @@ export function ParentOnboardingWizard({
                       selectedJob === job ? 'border-violet-500 bg-violet-600/10' : 'border-white/5 bg-white/5 hover:border-white/10'
                     }`}
                   >
-                    <div className="text-[10px] font-black text-slate-205 mb-0.5">
+                    <div className="text-[10px] font-black text-zinc-200 mb-0.5">
                       {language === 'zh' ? JOB_CLASSES[job].nameZh : JOB_CLASSES[job].nameEn}
                     </div>
-                    <p className="text-[8px] text-slate-505 leading-tight">
+                    <p className="text-[8px] text-zinc-400 leading-tight">
                       {language === 'zh' ? JOB_CLASSES[job].descZh.split('。')[0] : JOB_CLASSES[job].descEn.split('.')[0]}
                     </p>
                   </button>
@@ -4245,7 +4245,7 @@ export function ParentOnboardingWizard({
 
           {children.length > 0 && (
             <div className="space-y-2 text-left">
-              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
                 {language === 'zh' ? '目前已建立的冒險者：' : 'Adventurers Created:'}
               </h4>
               <div className="grid grid-cols-2 gap-2">
@@ -4253,8 +4253,8 @@ export function ParentOnboardingWizard({
                   <div key={c.id} className="p-2 bg-white/5 border border-white/5 rounded-xl flex items-center gap-2">
                     <span className="text-xl">{c.avatar === 'boy' ? '👦' : '👧'}</span>
                     <div className="min-w-0">
-                      <span className="text-xs font-black text-slate-200 block truncate">{c.name}</span>
-                      <span className="text-[8.5px] text-slate-500 font-bold block">Lv.{c.level} • {c.age} Y/O</span>
+                      <span className="text-xs font-black text-zinc-200 block truncate">{c.name}</span>
+                      <span className="text-[8.5px] text-zinc-400 font-bold block">Lv.{c.level} • {c.age} Y/O</span>
                     </div>
                   </div>
                 ))}
@@ -4276,7 +4276,7 @@ export function ParentOnboardingWizard({
               onClick={() => setStep(4)}
               className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all active:scale-95 shadow-md ${
                 children.length === 0
-                  ? 'bg-slate-800 text-slate-655 cursor-not-allowed border border-white/5'
+                  ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-white/5'
                   : 'bg-[#3661FF] text-white hover:bg-[#254edb] shadow-indigo-950/20'
               }`}
             >
@@ -4284,7 +4284,7 @@ export function ParentOnboardingWizard({
             </button>
           </div>
           {children.length === 0 && (
-            <p className="text-[9px] text-slate-300 font-bold text-center">
+            <p className="text-[9px] text-zinc-300 font-bold text-center">
               * {language === 'zh' ? '請至少建立一位孩子角色以繼續引導。' : 'Please create at least one child profile to continue.'}
             </p>
           )}
@@ -4294,11 +4294,11 @@ export function ParentOnboardingWizard({
       {step === 4 && (
         <div className="space-y-6 animate-success">
           <div className="space-y-1">
-            <h3 className="text-md font-black text-slate-205 flex items-center gap-2">
+            <h3 className="text-md font-black text-zinc-200 flex items-center gap-2">
               <span className="text-xl">📜</span>
               {t('parentWizardStep4Title')}
             </h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <p className="text-xs text-zinc-450 leading-relaxed">
               {t('parentWizardStep4Desc')}
             </p>
           </div>
@@ -4332,14 +4332,14 @@ export function ParentOnboardingWizard({
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center gap-2 mb-0.5">
-                      <span className="text-[11px] font-black text-slate-202 truncate">
+                      <span className="text-[11px] font-black text-zinc-100 truncate">
                         {quest.name}
                       </span>
                       <span className={`text-[8.5px] px-1.5 py-0.5 rounded-full border shrink-0 font-bold ${getQuestColor(quest.type)}`}>
                         {quest.type}
                       </span>
                     </div>
-                    <p className="text-[9px] text-slate-400 leading-normal">
+                    <p className="text-[9px] text-zinc-400 leading-normal">
                       {quest.description}
                     </p>
                   </div>
