@@ -2599,17 +2599,17 @@ function KidPortal({
                           <div className="flex items-center justify-between">
                             <span className={`px-2 py-0.5 text-[9px] font-black rounded-md uppercase tracking-wider ${
                               activeSelection.status === '已過期' 
-                                ? 'bg-slate-800 text-slate-500 border border-slate-700' 
+                                ? 'bg-slate-200 text-slate-500 border border-slate-300' 
                                 : getRarityBadge(activeSelection.rarity)
                             }`}>
                               {activeSelection.rarity}
                             </span>
-                            <span className="text-[10px] text-zinc-300 font-mono">{activeSelection.dateAcquired}</span>
+                            <span className="text-[10px] text-slate-500 font-mono">{activeSelection.dateAcquired}</span>
                           </div>
 
                           {/* Card Title & Speech Chaining */}
                           <div className="space-y-1">
-                            <h4 className={`text-lg font-black ${activeSelection.status === '已過期' ? 'text-slate-500 line-through' : 'text-slate-100'} flex items-center gap-1`}>
+                            <h4 className={`text-lg font-black ${activeSelection.status === '已過期' ? 'text-slate-400 line-through' : 'text-slate-800'} flex items-center gap-1`}>
                               {getItemIcon(activeSelection.type)} {renderTextWithZhuyin(activeSelection.name)}
                               <button
                                 type="button"
@@ -2626,33 +2626,33 @@ function KidPortal({
                                 )}
                               </button>
                             </h4>
-                            <div className="text-[10px] text-zinc-300 font-bold">
+                            <div className="text-[10px] text-slate-500 font-bold">
                               {language === 'zh' ? '卡片類型：' : 'Card Type: '}{activeSelection.type}
                             </div>
                           </div>
 
                           {/* Card Lore / Desc */}
-                          <div className="text-xs text-zinc-200 leading-relaxed bg-black/30 p-3 rounded-xl border border-white/5">
+                          <div className="text-xs text-slate-700 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-200">
                             {renderTextWithZhuyin(activeSelection.desc)}
                           </div>
 
                           {activeSelection.expireAt && (
-                            <div className={`text-[10px] font-bold ${activeSelection.status === '已過期' ? 'text-rose-500' : 'text-zinc-400'}`}>
+                            <div className={`text-[10px] font-bold ${activeSelection.status === '已過期' ? 'text-rose-600' : 'text-slate-600'}`}>
                               📅 {t('expiryDate')}: {activeSelection.expireAt} {activeSelection.status === '已過期' && `(${t('cardExpired')})`}
                             </div>
                           )}
 
                           {/* Status and Action Buttons */}
-                          <div className="flex flex-col gap-3 border-t border-white/5 pt-3 mt-1">
+                          <div className="flex flex-col gap-3 border-t border-slate-200 pt-3 mt-1">
                             <div className="flex items-center gap-1.5">
-                              {activeSelection.status === '未使用' && <Clock className="h-4 w-4 text-cyan-400" />}
-                              {activeSelection.status === '待核銷' && <Clock className="h-4 w-4 text-amber-400 animate-pulse" />}
-                              {activeSelection.status === '已使用' && <CheckCircle2 className="h-4 w-4 text-emerald-400" />}
-                              {activeSelection.status === '已過期' && <Ban className="h-4 w-4 text-rose-500" />}
+                              {activeSelection.status === '未使用' && <Clock className="h-4 w-4 text-blue-500" />}
+                              {activeSelection.status === '待核銷' && <Clock className="h-4 w-4 text-amber-600 animate-pulse" />}
+                              {activeSelection.status === '已使用' && <CheckCircle2 className="h-4 w-4 text-emerald-600" />}
+                              {activeSelection.status === '已過期' && <Ban className="h-4 w-4 text-rose-600" />}
                               <span className={`text-xs font-black uppercase tracking-wider ${
-                                activeSelection.status === '未使用' ? 'text-cyan-400' :
-                                activeSelection.status === '待核銷' ? 'text-amber-400' :
-                                activeSelection.status === '已使用' ? 'text-emerald-400' : 'text-rose-500'
+                                activeSelection.status === '未使用' ? 'text-blue-600' :
+                                activeSelection.status === '待核銷' ? 'text-amber-700' :
+                                activeSelection.status === '已使用' ? 'text-emerald-700' : 'text-rose-600'
                               }`}>
                                 {activeSelection.status === '未使用' ? t('voucherStatusUnused') :
                                  activeSelection.status === '待核銷' ? t('voucherStatusPending') :
@@ -2663,7 +2663,7 @@ function KidPortal({
 
                             {activeSelection.status === '未使用' && (
                               isReadOnly ? (
-                                <span className="text-xs text-zinc-300 italic text-center py-2 bg-white/5 rounded-lg border border-white/5">
+                                <span className="text-xs text-slate-500 italic text-center py-2 bg-slate-100 rounded-lg border border-slate-200">
                                   ⚠️ {t('readOnlyTag')}
                                 </span>
                               ) : activeSelection.type === '收藏卡' ? (
