@@ -2866,101 +2866,244 @@ function KidPortal({
 
       {/* --- Tab 5: Wishlist --- */}
       {activeSubTab === 'wishlist' && (
-        <div className="space-y-6 animate-success">
+        <div className="space-y-5 animate-success">
+
+          {/* ── Page Header ── */}
+          <div className="relative rounded-3xl overflow-hidden p-6" style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+            boxShadow: '0 16px 48px rgba(102,126,234,0.35)'
+          }}>
+            <div className="absolute inset-0 opacity-20" style={{ background: 'radial-gradient(ellipse at 30% 40%, rgba(255,255,255,0.4) 0%, transparent 60%)' }} />
+            <div className="relative z-10 flex items-center gap-4">
+              <div className="text-5xl animate-bounce" style={{ animationDuration: '2s' }}>🌟</div>
+              <div>
+                <h2 className="text-2xl font-black text-white" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>
+                  {t('familyWishlistTitle')}
+                </h2>
+                <p className="text-white/80 text-sm font-semibold mt-0.5">
+                  {language === 'zh' ? '✨ 累積積分兌換夢想願望！' : '✨ Earn points to redeem your dream wishes!'}
+                </p>
+              </div>
+              <div className="ml-auto text-right">
+                <div className="text-white/70 text-xs font-bold uppercase tracking-wider">{language === 'zh' ? '家庭積分' : 'Family Score'}</div>
+                <div className="text-3xl font-black text-white" style={{ textShadow: '0 0 20px rgba(255,255,255,0.5)' }}>
+                  {familyScore.toLocaleString()}
+                  <span className="text-lg text-white/70 ml-1">Pts</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {wishlist.length === 0 ? (
-            <div className="empty-state-card glass-panel p-12 text-center space-y-4">
-              <div className="text-6xl animate-float">🏆</div>
-              <h4 className="text-lg font-black text-slate-200">{t('familyWishlistTitle')}</h4>
-              <p className="text-xs text-slate-400 max-w-sm mx-auto leading-normal">
+            /* ── Empty State ── */
+            <div className="rounded-3xl p-14 text-center space-y-4" style={{
+              background: 'linear-gradient(135deg, #f8faff 0%, #eef2ff 100%)',
+              border: '1.5px solid rgba(99,102,241,0.15)',
+              boxShadow: '0 8px 32px rgba(99,102,241,0.08)'
+            }}>
+              <div className="text-7xl animate-bounce" style={{ animationDuration: '2s' }}>🏆</div>
+              <h4 className="text-lg font-black text-slate-700">{t('familyWishlistTitle')}</h4>
+              <p className="text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
                 {t('noKidWishlistItems')}
               </p>
             </div>
           ) : (
             <>
-              {wishlist.filter(w => w.isUltimate).map(wish => (
-                <div key={wish.id} className="glass-panel p-6 border border-amber-500/30 bg-gradient-to-r from-slate-900 to-amber-500/5 space-y-4">
-                  <div className="flex items-center justify-between flex-wrap gap-2">
-                    <div className="space-y-1">
-                      <div className="text-xs text-amber-400 font-extrabold uppercase tracking-widest flex items-center gap-1">
-                        <Trophy className="h-4 w-4 animate-bounce" />
-                        {t('ultimatePrize')}
+              {/* ── Ultimate Prize Card ── */}
+              {wishlist.filter(w => w.isUltimate).map(wish => {
+                const pct = Math.min(100, Math.round((familyScore / wish.pointsNeeded) * 100));
+                const remaining = Math.max(0, wish.pointsNeeded - familyScore);
+                const unlocked = familyScore >= wish.pointsNeeded;
+                return (
+                  <div key={wish.id} className="relative rounded-3xl overflow-hidden" style={{
+                    background: unlocked
+                      ? 'linear-gradient(135deg, #fef3c7 0%, #fffbeb 50%, #fef9c3 100%)'
+                      : 'linear-gradient(135deg, #f8faff 0%, #eef2ff 100%)',
+                    border: unlocked ? '2px solid rgba(245,158,11,0.5)' : '1.5px solid rgba(99,102,241,0.2)',
+                    boxShadow: unlocked
+                      ? '0 16px 48px rgba(245,158,11,0.2), 0 0 0 4px rgba(245,158,11,0.05)'
+                      : '0 8px 32px rgba(99,102,241,0.1)'
+                  }}>
+                    {/* Shimmer overlay */}
+                    {unlocked && <div className="absolute inset-0 opacity-40" style={{ background: 'radial-gradient(ellipse at 20% 30%, rgba(255,255,255,0.8) 0%, transparent 50%)' }} />}
+
+                    <div className="relative z-10 p-6 space-y-5">
+                      {/* Header */}
+                      <div className="flex items-start justify-between gap-4 flex-wrap">
+                        <div className="space-y-1.5">
+                          <div className={`text-xs font-black uppercase tracking-widest flex items-center gap-1.5 ${unlocked ? 'text-amber-600' : 'text-indigo-500'}`}>
+                            <Trophy className="h-4 w-4 animate-bounce" style={{ animationDuration: '1.5s' }} />
+                            {t('ultimatePrize')}
+                            {unlocked && <span className="ml-1 bg-amber-500 text-white text-[9px] px-2 py-0.5 rounded-full">🔓 UNLOCKED!</span>}
+                          </div>
+                          <h3 className="text-2xl font-black" style={{ color: unlocked ? '#92400e' : '#1e293b' }}>{wish.title}</h3>
+                        </div>
+                        <div className={`text-right px-4 py-2 rounded-2xl ${unlocked ? 'bg-amber-100 border border-amber-200' : 'bg-indigo-50 border border-indigo-200'}`}>
+                          <div className="text-[10px] font-black uppercase tracking-wider" style={{ color: unlocked ? '#d97706' : '#6366f1' }}>
+                            {language === 'zh' ? '目標積分' : 'Target'}
+                          </div>
+                          <div className="text-xl font-black" style={{ color: unlocked ? '#92400e' : '#4f46e5' }}>
+                            {wish.pointsNeeded.toLocaleString()} Pts
+                          </div>
+                        </div>
                       </div>
-                      <h3 className="text-xl font-black text-slate-100">{wish.title}</h3>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm font-bold text-slate-300">
-                        {t('familyTotalPoints')}：<span className="text-amber-400 font-black">{familyScore}</span> / {wish.pointsNeeded} Pts
-                      </div>
-                    </div>
-                  </div>
 
-                  <div className="space-y-2">
-                    <div className="h-4 w-full bg-slate-950 border border-white/10 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-400 rounded-full transition-all duration-500"
-                        style={{ width: `${Math.min(100, (familyScore / wish.pointsNeeded) * 100)}%` }}
-                      ></div>
-                    </div>
-                    <div className="flex justify-between text-xs text-slate-300 font-bold">
-                      <span>{t('progress')}: {Math.min(100, Math.round((familyScore / wish.pointsNeeded) * 100))}%</span>
-                      <span>{t('pointsShortOfUnlock', { count: Math.max(0, wish.pointsNeeded - familyScore) })}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              <div className="space-y-4">
-                <h3 className="text-md font-bold text-slate-200">{t('familyWishlistTitle')}</h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {wishlist.filter(w => !w.isUltimate).map(wish => {
-                    const canRedeem = familyScore >= wish.pointsNeeded && !wish.isRedeemed;
-
-                    return (
-                      <div 
-                        key={wish.id}
-                        className={`glass-panel p-5 border flex flex-col justify-between gap-4 ${
-                          wish.isRedeemed ? 'border-emerald-500/20 bg-emerald-500/5 opacity-70' : 'border-white/5'
-                        }`}
-                      >
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between">
-                            <h4 className="text-md font-bold text-slate-200">{wish.title}</h4>
-                            {wish.isRedeemed && (
-                              <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px] font-bold">
-                                {t('wishlistRedeemed')}
+                      {/* Big Progress Bar */}
+                      <div className="space-y-2">
+                        <div className="h-6 rounded-full overflow-hidden" style={{
+                          background: unlocked ? 'rgba(251,191,36,0.15)' : 'rgba(99,102,241,0.1)',
+                          border: unlocked ? '1.5px solid rgba(245,158,11,0.3)' : '1.5px solid rgba(99,102,241,0.2)',
+                        }}>
+                          <div
+                            className="h-full rounded-full transition-all duration-1000 relative overflow-hidden"
+                            style={{
+                              width: `${pct}%`,
+                              background: unlocked
+                                ? 'linear-gradient(90deg, #f59e0b, #fbbf24, #f59e0b)'
+                                : 'linear-gradient(90deg, #6366f1, #8b5cf6, #a78bfa)',
+                              backgroundSize: '200% 100%',
+                              animation: 'shine-flow 2s infinite linear',
+                              boxShadow: unlocked ? '0 0 12px rgba(245,158,11,0.5)' : '0 0 12px rgba(99,102,241,0.4)'
+                            }}
+                          >
+                            {pct > 15 && (
+                              <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-black">
+                                {pct}%
                               </span>
                             )}
                           </div>
-                          <div className="text-xs text-slate-400">
-                            {t('pointsRequired')}：<span className="text-slate-200 font-bold">{wish.pointsNeeded} Pts</span>
-                          </div>
                         </div>
-
-                        <div className="border-t border-white/5 pt-3 mt-1 flex items-center justify-between">
-                          <span className="text-xs text-slate-300 font-bold">
-                            {!wish.isRedeemed ? `${t('currentStatus')}: ${familyScore}/${wish.pointsNeeded} Pts` : t('familyWishRealized')}
+                        <div className="flex justify-between text-xs font-bold">
+                          <span style={{ color: unlocked ? '#d97706' : '#6366f1' }}>
+                            {t('progress')}: {familyScore.toLocaleString()} / {wish.pointsNeeded.toLocaleString()} Pts
                           </span>
-
-                          {!wish.isRedeemed && !isReadOnly && (
-                            <button
-                              disabled={!canRedeem}
-                              onClick={() => onClaimWishlistItem(wish.id)}
-                              className={`px-3 py-1.5 rounded-[4px] text-xs font-black transition-all ${
-                                canRedeem 
-                                  ? 'bg-[#00E676] hover:bg-[#00c867] text-[#111216] shadow-md border-t border-white/20' 
-                                  : 'bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white transition-colors'
-                              }`}
-                            >
-                              {t('claimWishlistBtn')}
-                            </button>
+                          {remaining > 0 ? (
+                            <span className="text-slate-500">
+                              {t('pointsShortOfUnlock', { count: remaining.toLocaleString() })}
+                            </span>
+                          ) : (
+                            <span className="text-amber-600 font-black">🎉 {language === 'zh' ? '達成！' : 'Achieved!'}</span>
                           )}
                         </div>
                       </div>
-                    );
-                  })}
+
+                      {/* Star progress indicators */}
+                      <div className="flex gap-1.5 flex-wrap">
+                        {[10, 25, 50, 75, 100].map(milestone => (
+                          <div key={milestone} className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black transition-all ${
+                            pct >= milestone
+                              ? unlocked ? 'bg-amber-100 text-amber-700 border border-amber-300' : 'bg-indigo-100 text-indigo-700 border border-indigo-300'
+                              : 'bg-slate-100 text-slate-400 border border-slate-200'
+                          }`}>
+                            {pct >= milestone ? '⭐' : '○'}
+                            <span>{milestone}%</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* ── Regular Wish Cards ── */}
+              {wishlist.filter(w => !w.isUltimate).length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 px-1">
+                    <span className="text-sm font-black text-slate-600">🎁 {t('familyWishlistTitle')}</span>
+                    <div className="flex-1 h-px bg-gradient-to-r from-slate-200 to-transparent" />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {wishlist.filter(w => !w.isUltimate).map((wish, idx) => {
+                      const canRedeem = familyScore >= wish.pointsNeeded && !wish.isRedeemed;
+                      const pct = Math.min(100, Math.round((familyScore / wish.pointsNeeded) * 100));
+                      const wishEmojis = ['🌴', '🎡', '🎮', '🎪', '🎭', '🏖️', '⛷️', '🎨', '🚀', '🎯'];
+                      const emoji = wishEmojis[idx % wishEmojis.length];
+                      const colors = [
+                        { bg: 'from-sky-50 to-blue-50', border: 'border-sky-200', accent: '#0284c7', bar: 'linear-gradient(90deg, #0284c7, #38bdf8)' },
+                        { bg: 'from-violet-50 to-purple-50', border: 'border-violet-200', accent: '#7c3aed', bar: 'linear-gradient(90deg, #7c3aed, #a78bfa)' },
+                        { bg: 'from-emerald-50 to-green-50', border: 'border-emerald-200', accent: '#16a34a', bar: 'linear-gradient(90deg, #16a34a, #4ade80)' },
+                        { bg: 'from-rose-50 to-pink-50', border: 'border-rose-200', accent: '#e11d48', bar: 'linear-gradient(90deg, #e11d48, #fb7185)' },
+                        { bg: 'from-amber-50 to-orange-50', border: 'border-amber-200', accent: '#d97706', bar: 'linear-gradient(90deg, #d97706, #fbbf24)' },
+                      ];
+                      const c = colors[idx % colors.length];
+
+                      return (
+                        <div
+                          key={wish.id}
+                          className={`rounded-2xl p-5 border-2 bg-gradient-to-br ${c.bg} ${c.border} flex flex-col gap-4 transition-all hover:shadow-lg hover:scale-[1.01] ${wish.isRedeemed ? 'opacity-70' : ''}`}
+                          style={{ boxShadow: `0 4px 20px ${c.accent}12` }}
+                        >
+                          {/* Top: Emoji + Title */}
+                          <div className="flex items-start gap-3">
+                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow-sm" style={{ background: `${c.accent}15`, border: `1.5px solid ${c.accent}30` }}>
+                              {emoji}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h4 className="text-base font-black text-slate-800">{wish.title}</h4>
+                                {wish.isRedeemed && (
+                                  <span className="bg-emerald-100 text-emerald-700 border border-emerald-300 px-2 py-0.5 rounded-full text-[10px] font-black">
+                                    ✅ {t('wishlistRedeemed')}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-xs font-bold mt-0.5" style={{ color: c.accent }}>
+                                {t('pointsRequired')}：{wish.pointsNeeded.toLocaleString()} Pts
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Progress bar */}
+                          <div className="space-y-1.5">
+                            <div className="h-3 bg-white rounded-full overflow-hidden border" style={{ borderColor: `${c.accent}25` }}>
+                              <div
+                                className="h-full rounded-full transition-all duration-700"
+                                style={{ width: `${pct}%`, background: c.bar, boxShadow: `0 0 8px ${c.accent}50` }}
+                              />
+                            </div>
+                            <div className="flex justify-between text-[10px] font-bold" style={{ color: c.accent }}>
+                              <span>{familyScore.toLocaleString()} / {wish.pointsNeeded.toLocaleString()} Pts</span>
+                              <span>{pct}%</span>
+                            </div>
+                          </div>
+
+                          {/* Bottom: Status + Button */}
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-slate-500 font-semibold">
+                              {wish.isRedeemed ? (
+                                <span className="text-emerald-600 font-black">🎊 {t('familyWishRealized')}</span>
+                              ) : canRedeem ? (
+                                <span className="font-black" style={{ color: c.accent }}>✨ {language === 'zh' ? '可以兌換了！' : 'Ready to redeem!'}</span>
+                              ) : (
+                                t('currentStatus') + `: ${familyScore.toLocaleString()}/${wish.pointsNeeded.toLocaleString()} Pts`
+                              )}
+                            </span>
+
+                            {!wish.isRedeemed && !isReadOnly && (
+                              <button
+                                disabled={!canRedeem}
+                                onClick={() => onClaimWishlistItem(wish.id)}
+                                className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${
+                                  canRedeem
+                                    ? 'text-white shadow-md hover:scale-105 active:scale-95'
+                                    : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                                }`}
+                                style={canRedeem ? {
+                                  background: c.bar,
+                                  boxShadow: `0 4px 16px ${c.accent}40`
+                                } : {}}
+                              >
+                                {t('claimWishlistBtn')}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
             </>
           )}
         </div>
