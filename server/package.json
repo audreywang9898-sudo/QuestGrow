@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "setup-db": "node setup_db.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

@@ -81,10 +81,17 @@ export const addChild = async (req, res) => {
     const userId = newUser.rows[0].id;
 
     // Create the Child Character Stats
+    const defaultAttributes = JSON.stringify({
+      Wisdom: 0,
+      Responsibility: 0,
+      Courage: 0,
+      Empathy: 0,
+      Creativity: 0
+    });
     const newChild = await pool.query(
-      `INSERT INTO children (user_id, name, age, birthday, avatar, level, exp, exp_needed, gold, tickets, job_class) 
-       VALUES ($1, $2, $3, $4, $5, 1, 0, 400, 0, 0, 'Explorer (探索者) ⚔️') RETURNING id`,
-      [userId, name, age || 10, birthday || '10/24', avatar || 'boy']
+      `INSERT INTO children (user_id, name, age, birthday, avatar, level, exp, exp_needed, gold, tickets, job_class, attributes) 
+       VALUES ($1, $2, $3, $4, $5, 1, 0, 400, 0, 0, 'Explorer (探索者) ⚔️', $6) RETURNING id`,
+      [userId, name, age || 10, birthday || '10/24', avatar || 'boy', defaultAttributes]
     );
     const childId = newChild.rows[0].id;
 

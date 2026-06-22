@@ -10,7 +10,7 @@ import {
   Sparkles, Award, Compass, Shield, BookOpen, Heart, 
   Wallet, Trophy, Send, User, ChevronRight, Package, 
   CheckCircle2, Clock, Ban, Eye, AlertTriangle, Bell, Trash2,
-  Camera, Upload, Volume2, VolumeX, ChevronDown
+  Camera, Upload, Volume2, VolumeX, ChevronDown, HelpCircle
 } from 'lucide-react';
 
 const compressImage = (base64Str, maxWidth = 400, maxHeight = 400) => {
@@ -104,9 +104,14 @@ function KidPortal({
   };
 
   const renderTextWithZhuyin = (text) => {
-    if (!text) return '';
+    if (text === null || text === undefined) return '';
+    if (typeof text !== 'string' && typeof text !== 'number') {
+      return text;
+    }
+    const textStr = String(text);
+    if (!textStr) return '';
     const zhuyinEnabled = familySettings && familySettings.zhuyinUnder8 !== false;
-    if (language !== 'zh' || !stats.age || stats.age >= 8 || !zhuyinEnabled) {
+    if (language !== 'zh' || !stats || !stats.age || stats.age >= 8 || !zhuyinEnabled) {
       return text;
     }
 
@@ -241,15 +246,15 @@ function KidPortal({
     };
 
     try {
-      const pinyins = pinyin(text, { type: 'array', toneType: 'num' });
+      const pinyins = pinyin(textStr, { type: 'array', toneType: 'num' });
       return (
         <span className="inline-flex flex-wrap items-end leading-relaxed">
-          {[...text].map((char, index) => {
+          {[...textStr].map((char, index) => {
             const py = pinyins[index];
             const isChinese = /[\u4e00-\u9fa5]/.test(char);
             if (isChinese && py && py !== char) {
               const zyRaw = pinyinToZhuyin(py);
-              const zy = getTaiwaneseZhuyin(char, zyRaw, index, text);
+              const zy = getTaiwaneseZhuyin(char, zyRaw, index, textStr);
               const { base, toneChar, toneClass } = splitZhuyin(zy);
               return (
                 <span key={index} className="zhuyin-char-wrap">
@@ -1071,12 +1076,13 @@ function KidPortal({
     const maxVal = 40;
     const radius = 65;
     
+    const safeAttributes = stats.attributes || { Wisdom: 0, Responsibility: 0, Courage: 0, Empathy: 0, Creativity: 0 };
     const attributes = [
-      { val: stats.attributes.Wisdom, name: "Wisdom" },
-      { val: stats.attributes.Responsibility, name: "Responsibility" },
-      { val: stats.attributes.Empathy, name: "Empathy" },
-      { val: stats.attributes.Creativity, name: "Creativity" },
-      { val: stats.attributes.Courage, name: "Courage" }
+      { val: safeAttributes.Wisdom || 0, name: "Wisdom" },
+      { val: safeAttributes.Responsibility || 0, name: "Responsibility" },
+      { val: safeAttributes.Empathy || 0, name: "Empathy" },
+      { val: safeAttributes.Creativity || 0, name: "Creativity" },
+      { val: safeAttributes.Courage || 0, name: "Courage" }
     ];
 
     const points = attributes.map((attr, i) => {
@@ -1441,7 +1447,7 @@ function KidPortal({
             </div>
           )}
 
-          {/* Right: Family Wish Goal */}
+          {/* Highest Points Active Family Wish Card */}
           {maxPointsWish && (
             <div className="flex items-center gap-3 px-4 py-3 sm:w-[42%] flex-shrink-0">
               {/* Trophy icon */}
@@ -1452,10 +1458,10 @@ function KidPortal({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <span className="text-[11px] font-black truncate" style={{ color: '#1e293b' }}>
-                    {maxPointsWish.title}
+                    {renderTextWithZhuyin(maxPointsWish.title)}
                   </span>
                   <span className="flex-shrink-0 text-[10px] font-black tabular-nums" style={{ color: '#d97706' }}>
-                    {familyScore.toLocaleString()}<span style={{ color: '#94a3b8' }}>/{maxPointsWish.pointsNeeded.toLocaleString()}</span>
+                    {(familyScore || 0).toLocaleString()}<span style={{ color: '#94a3b8' }}>/{(maxPointsWish.pointsNeeded || 0).toLocaleString()}</span>
                   </span>
                 </div>
                 {/* Progress bar */}
@@ -1463,8 +1469,8 @@ function KidPortal({
                   <div
                     className="h-full rounded-full transition-all duration-700"
                     style={{
-                      width: `${Math.min(100, (familyScore / maxPointsWish.pointsNeeded) * 100)}%`,
-                      background: familyScore >= maxPointsWish.pointsNeeded
+                      width: `${Math.min(100, ((familyScore || 0) / (maxPointsWish.pointsNeeded || 1)) * 100)}%`,
+                      background: (familyScore || 0) >= (maxPointsWish.pointsNeeded || 0)
                         ? 'linear-gradient(90deg, #10b981, #34d399)'
                         : 'linear-gradient(90deg, #f59e0b, #fbbf24)',
                     }}
@@ -1472,12 +1478,12 @@ function KidPortal({
                 </div>
                 <div className="flex justify-between mt-0.5">
                   <span className="text-[10px] font-bold" style={{ color: '#94a3b8' }}>
-                    {Math.min(100, Math.round((familyScore / maxPointsWish.pointsNeeded) * 100))}%
+                    {Math.min(100, Math.round(((familyScore || 0) / (maxPointsWish.pointsNeeded || 1)) * 100))}%
                   </span>
                   <span className="text-[10px] font-bold" style={{ color: '#94a3b8' }}>
-                    {familyScore >= maxPointsWish.pointsNeeded
+                    {(familyScore || 0) >= (maxPointsWish.pointsNeeded || 0)
                       ? '🎉 ' + (language === 'zh' ? '可兌換！' : 'Ready!')
-                      : `還差 ${Math.max(0, maxPointsWish.pointsNeeded - familyScore).toLocaleString()} Pts`}
+                      : `還差 ${Math.max(0, (maxPointsWish.pointsNeeded || 0) - (familyScore || 0)).toLocaleString()} Pts`}
                   </span>
                 </div>
               </div>
@@ -1592,8 +1598,8 @@ function KidPortal({
         <button
           onClick={() => setActiveSubTab('leaderboard')}
           className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap rounded-xl ${
-            activeSubTab === 'leaderboard' ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-[0_0_12px_rgba(244,63,94,0.4)] hover:scale-105' : 'text-[#b5b7bc] hover:text-white'
-          }`}
+            activeSubTab === 'leaderboard' ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-[0_0_12px_rgba(244,63,94,0.4)] hover:scale-105' : 'text-[#b5b7bc] hover:text-white hover:bg-white/5'
+          } ${showTour && tourStep === 6 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse' : ''}`}
         >
           <Trophy className={`h-4 w-4 ${activeSubTab === 'leaderboard' ? 'text-white' : 'text-violet-400'}`} />
           {t('tabLeaderboard')}
@@ -1738,12 +1744,13 @@ function KidPortal({
                 />
                 {/* Labels */}
                 {(() => {
+                  const safeAttr = stats.attributes || {};
                   const scores = [
-                    stats.attributes.Wisdom,
-                    stats.attributes.Responsibility,
-                    stats.attributes.Empathy,
-                    stats.attributes.Creativity,
-                    stats.attributes.Courage
+                    safeAttr.Wisdom || 0,
+                    safeAttr.Responsibility || 0,
+                    safeAttr.Empathy || 0,
+                    safeAttr.Creativity || 0,
+                    safeAttr.Courage || 0
                   ];
                   const colors = ["#0284c7", "#16a34a", "#db2777", "#7c3aed", "#ea580c"];
                   const bgColors = ["#dbeafe", "#dcfce7", "#fce7f3", "#ede9fe", "#ffedd5"];
@@ -1767,11 +1774,11 @@ function KidPortal({
             <div className="lg:col-span-3 space-y-3">
               <div className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">🏆 {t('rpgAttributes')}</div>
               {[
-                { name: "Wisdom",         nameFull: t('attrWisdomFull'),         val: stats.attributes.Wisdom,         desc: t('attrWisdomDesc'),         color: '#0284c7', bg: 'from-sky-50 to-blue-50',     border: 'border-sky-200',   icon: '🔮', barColor: '#0284c7' },
-                { name: "Responsibility", nameFull: t('attrResponsibilityFull'), val: stats.attributes.Responsibility, desc: t('attrResponsibilityDesc'), color: '#16a34a', bg: 'from-emerald-50 to-green-50', border: 'border-emerald-200', icon: '🛡️', barColor: '#16a34a' },
-                { name: "Courage",        nameFull: t('attrCourageFull'),        val: stats.attributes.Courage,        desc: t('attrCourageDesc'),        color: '#ea580c', bg: 'from-orange-50 to-amber-50',  border: 'border-orange-200', icon: '⚡', barColor: '#ea580c' },
-                { name: "Empathy",        nameFull: t('attrEmpathyFull'),        val: stats.attributes.Empathy,        desc: t('attrEmpathyDesc'),        color: '#db2777', bg: 'from-pink-50 to-rose-50',    border: 'border-pink-200',   icon: '💖', barColor: '#db2777' },
-                { name: "Creativity",     nameFull: t('attrCreativityFull'),     val: stats.attributes.Creativity,    desc: t('attrCreativityDesc'),     color: '#7c3aed', bg: 'from-violet-50 to-purple-50', border: 'border-violet-200', icon: '🎨', barColor: '#7c3aed' }
+                { name: "Wisdom",         nameFull: t('attrWisdomFull'),         val: stats.attributes?.Wisdom || 0,         desc: t('attrWisdomDesc'),         color: '#0284c7', bg: 'from-sky-50 to-blue-50',     border: 'border-sky-200',   icon: '🔮', barColor: '#0284c7' },
+                { name: "Responsibility", nameFull: t('attrResponsibilityFull'), val: stats.attributes?.Responsibility || 0, desc: t('attrResponsibilityDesc'), color: '#16a34a', bg: 'from-emerald-50 to-green-50', border: 'border-emerald-200', icon: '🛡️', barColor: '#16a34a' },
+                { name: "Courage",        nameFull: t('attrCourageFull'),        val: stats.attributes?.Courage || 0,        desc: t('attrCourageDesc'),        color: '#ea580c', bg: 'from-orange-50 to-amber-50',  border: 'border-orange-200', icon: '⚡', barColor: '#ea580c' },
+                { name: "Empathy",        nameFull: t('attrEmpathyFull'),        val: stats.attributes?.Empathy || 0,        desc: t('attrEmpathyDesc'),        color: '#db2777', bg: 'from-pink-50 to-rose-50',    border: 'border-pink-200',   icon: '💖', barColor: '#db2777' },
+                { name: "Creativity",     nameFull: t('attrCreativityFull'),     val: stats.attributes?.Creativity || 0,     desc: t('attrCreativityDesc'),     color: '#7c3aed', bg: 'from-violet-50 to-purple-50', border: 'border-violet-200', icon: '🎨', barColor: '#7c3aed' }
               ].map((attr) => {
                 const maxVal = 50;
                 const pct = Math.min(100, (attr.val / maxVal) * 100);
@@ -2997,7 +3004,7 @@ function KidPortal({
               <div className="ml-auto text-right">
                 <div className="text-white/70 text-xs font-bold uppercase tracking-wider">{language === 'zh' ? '家庭積分' : 'Family Score'}</div>
                 <div className="text-3xl font-black text-white" style={{ textShadow: '0 0 20px rgba(255,255,255,0.5)' }}>
-                  {familyScore.toLocaleString()}
+                  {(familyScore || 0).toLocaleString()}
                   <span className="text-lg text-white/70 ml-1">Pts</span>
                 </div>
               </div>
@@ -3053,7 +3060,7 @@ function KidPortal({
                             {language === 'zh' ? '目標積分' : 'Target'}
                           </div>
                           <div className="text-xl font-black" style={{ color: unlocked ? '#92400e' : '#4f46e5' }}>
-                            {wish.pointsNeeded.toLocaleString()} Pts
+                            {(wish.pointsNeeded || 0).toLocaleString()} Pts
                           </div>
                         </div>
                       </div>
@@ -3085,11 +3092,11 @@ function KidPortal({
                         </div>
                         <div className="flex justify-between text-xs font-bold">
                           <span style={{ color: unlocked ? '#d97706' : '#6366f1' }}>
-                            {t('progress')}: {familyScore.toLocaleString()} / {wish.pointsNeeded.toLocaleString()} Pts
+                            {t('progress')}: {(familyScore || 0).toLocaleString()} / {(wish.pointsNeeded || 0).toLocaleString()} Pts
                           </span>
                           {remaining > 0 ? (
                             <span className="text-slate-500">
-                              {t('pointsShortOfUnlock', { count: remaining.toLocaleString() })}
+                              {t('pointsShortOfUnlock', { count: (remaining || 0).toLocaleString() })}
                             </span>
                           ) : (
                             <span className="text-amber-600 font-black">🎉 {language === 'zh' ? '達成！' : 'Achieved!'}</span>
@@ -3159,7 +3166,7 @@ function KidPortal({
                                 )}
                               </div>
                               <div className="text-xs font-bold mt-0.5" style={{ color: c.accent }}>
-                                {t('pointsRequired')}：{wish.pointsNeeded.toLocaleString()} Pts
+                                {t('pointsRequired')}：{(wish.pointsNeeded || 0).toLocaleString()} Pts
                               </div>
                             </div>
                           </div>
@@ -3173,7 +3180,7 @@ function KidPortal({
                               />
                             </div>
                             <div className="flex justify-between text-[10px] font-bold" style={{ color: c.accent }}>
-                              <span>{familyScore.toLocaleString()} / {wish.pointsNeeded.toLocaleString()} Pts</span>
+                              <span>{(familyScore || 0).toLocaleString()} / {(wish.pointsNeeded || 0).toLocaleString()} Pts</span>
                               <span>{pct}%</span>
                             </div>
                           </div>
@@ -3186,7 +3193,7 @@ function KidPortal({
                               ) : canRedeem ? (
                                 <span className="font-black" style={{ color: c.accent }}>✨ {language === 'zh' ? '可以兌換了！' : 'Ready to redeem!'}</span>
                               ) : (
-                                t('currentStatus') + `: ${familyScore.toLocaleString()}/${wish.pointsNeeded.toLocaleString()} Pts`
+                                t('currentStatus') + `: ${(familyScore || 0).toLocaleString()}/${(wish.pointsNeeded || 0).toLocaleString()} Pts`
                               )}
                             </span>
 
@@ -3414,7 +3421,7 @@ function KidPortal({
               
               <button
                 onClick={() => {
-                  if (tourStep === 5) {
+                  if (tourStep === 6) {
                     setShowTour(false);
                     localStorage.setItem('questgrow_kid_tour_seen', 'true');
                   } else {

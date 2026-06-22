@@ -21,8 +21,11 @@ pool.on('connect', () => {
   console.log('Database connection pool established.');
 });
 
-pool.on('error', (err) => {
-  console.error('Unexpected error on idle database client:', err);
+pool.on('error', (err, client) => {
+  console.error('Unexpected error on idle database client:', err.message);
+  console.error('Error code:', err.code);
+  // Do NOT re-throw — this would crash the process.
+  // pg-pool handles recycling the broken client automatically.
 });
 
 export default pool;

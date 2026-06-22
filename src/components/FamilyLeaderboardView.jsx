@@ -2,7 +2,7 @@ import React from 'react';
 import { Trophy, Users, Crown, Star, Flame } from 'lucide-react';
 
 export function FamilyLeaderboardView({ leaderboardData = [], familyNickname, t, language }) {
-  const sortedData = [...leaderboardData].sort((a, b) => b.growthScore - a.growthScore);
+  const sortedData = [...leaderboardData].sort((a, b) => (b.growthScore || 0) - (a.growthScore || 0));
   const top3 = sortedData.slice(0, 3);
   const remaining = sortedData.slice(3);
 
@@ -159,7 +159,7 @@ export function FamilyLeaderboardView({ leaderboardData = [], familyNickname, t,
                       {/* Score */}
                       <div className="text-center">
                         <div className="text-2xl font-black flex items-center justify-center gap-1.5" style={{ color: isCurrent ? '#059669' : cfg.scoreColor }}>
-                          🪙 <span>{family.growthScore.toLocaleString()}</span>
+                          🪙 <span>{(family.growthScore || 0).toLocaleString()}</span>
                         </div>
                         <div className="text-[10px] font-bold uppercase tracking-wider mt-0.5" style={{ color: '#94a3b8' }}>
                           {t('leaderboardScore')}
@@ -224,7 +224,7 @@ export function FamilyLeaderboardView({ leaderboardData = [], familyNickname, t,
 
                     {/* Score */}
                     <div className="flex-shrink-0 text-sm font-black flex items-center gap-1" style={{ color: isCurrent ? '#059669' : '#334155' }}>
-                      🪙 {family.growthScore.toLocaleString()}
+                      🪙 {(family.growthScore || 0).toLocaleString()}
                     </div>
                   </div>
                 );

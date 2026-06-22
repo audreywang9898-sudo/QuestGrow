@@ -173,7 +173,12 @@ function App() {
       }
 
       const childrenData = await api.getChildren();
-      setChildren(childrenData);
+      // Normalize: ensure each child's attributes is always a valid object (never null)
+      const normalizedChildren = childrenData.map(c => ({
+        ...c,
+        attributes: c.attributes || { Wisdom: 0, Responsibility: 0, Courage: 0, Empathy: 0, Creativity: 0 }
+      }));
+      setChildren(normalizedChildren);
       
       // Restore or set active child
       if (currentUser.role === 'kid' && currentUser.childId) {
