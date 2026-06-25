@@ -16,7 +16,7 @@ import AdminPortal from './components/AdminPortal';
 import LoginPortal from './components/LoginPortal';
 import Avatar from './components/Avatar';
 import { useLanguage } from './components/LanguageContext';
-import { Trophy, ShieldAlert, Sparkles, User, Users, RefreshCw, AlertCircle, CheckCircle, Info, LogOut } from 'lucide-react';
+import { Trophy, ShieldAlert, Sparkles, User, Users, RefreshCw, AlertCircle, CheckCircle, Info, LogOut, Mail } from 'lucide-react';
 import { api } from './utils/api';
 
 function App() {
@@ -1195,9 +1195,31 @@ function App() {
         </div>
       )}
 
-      <footer className="py-6 text-center text-xs text-slate-500 border-t border-white/5 mt-auto">
-        <p>© 2026 QuestGrow Family Growth OS. 符合台灣個資法、兒少權益保障法及 PWA, COPPA & GDPR-K 隱私合規規範。</p>
+      <footer className="py-6 text-center text-xs text-slate-500 border-t border-slate-200/20 mt-auto space-y-2">
+        <p>© 2026 QuestGrow Family Growth OS. 遵循台灣個資法、兒少權益保障法及 PWA, COPPA & GDPR-K 隱私法規精神設計。</p>
+        <p className="flex items-center justify-center gap-1.5 text-slate-400">
+          <Mail className="h-3.5 w-3.5 text-indigo-400" />
+          <span>意見回饋信箱：</span>
+          <a 
+            href="mailto:questgrow6767@gmail.com" 
+            className="font-bold text-indigo-500 hover:text-indigo-655 underline transition-colors"
+          >
+            questgrow6767@gmail.com
+          </a>
+        </p>
       </footer>
+
+      {/* 懸浮意見回饋按鈕 */}
+      <a 
+        href="mailto:questgrow6767@gmail.com" 
+        className="fixed bottom-6 right-6 z-50 p-3 bg-gradient-to-tr from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-full shadow-lg shadow-indigo-600/30 border border-white/20 transition-all hover:scale-110 active:scale-95 group flex items-center justify-center cursor-pointer"
+        title="意見回饋 (Feedback)"
+      >
+        <Mail className="h-5 w-5" />
+        <span className="max-w-0 overflow-hidden group-hover:max-w-xs group-hover:ml-2 font-bold text-xs transition-all duration-300 ease-in-out whitespace-nowrap">
+          聯絡與回饋
+        </span>
+      </a>
     </div>
   );
 }

@@ -432,6 +432,18 @@ function LoginPortal({ onLogin, googleClientId }) {
           */}
         </div>
 
+        {/* 意見回饋與支援 */}
+        <div className="pt-4 border-t border-slate-150 flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
+          <Mail className="h-3.5 w-3.5 text-indigo-500" />
+          <span>需要協助或意見回饋？信箱：</span>
+          <a 
+            href="mailto:questgrow6767@gmail.com" 
+            className="font-bold text-indigo-600 hover:text-indigo-800 underline transition-colors"
+          >
+            questgrow6767@gmail.com
+          </a>
+        </div>
+
         {/* Quick presets (Testing sandbox console - Commented out)
         {activeTab === 'login' && (
           <div className="border-t border-slate-100 pt-4 space-y-2">

@@ -7,7 +7,7 @@ import {
   HelpCircle, Trash2, Award, ClipboardCheck, LayoutGrid, 
   Eye, Heart, MessageSquare, Compass, BarChart3, AlertCircle,
   Database, ShieldCheck, HelpCircle as HelpIcon, Trophy, Users,
-  ListTodo, Settings, ChevronDown
+  ListTodo, Settings, ChevronDown, Mail
 } from 'lucide-react';
 
 const difficultyRewardsMap = {
@@ -2913,6 +2913,33 @@ function ParentPortal({
             {nicknameWarning && (
               <p className="text-xs font-bold text-rose-500">{nicknameWarning}</p>
             )}
+          </div>
+
+          {/* 意見回饋與支援 */}
+          <div className="bg-white/5 border border-white/5 p-6 rounded-2xl space-y-4">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center shrink-0 border border-indigo-500/20">
+                <Mail className="h-5 w-5 text-indigo-400" />
+              </div>
+              <div className="flex-1">
+                <h4 className="text-sm font-bold text-slate-200">意見回饋與技術支援</h4>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  如果您在使用 QuestGrow 系統中遇到任何問題，或者有功能上的建議與想法，歡迎隨時透過電子郵件與我們聯繫。
+                </p>
+                <div className="mt-3 flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-mono bg-slate-900 border border-white/10 rounded px-2.5 py-1.5 text-slate-300">
+                    questgrow6767@gmail.com
+                  </span>
+                  <a 
+                    href="mailto:questgrow6767@gmail.com"
+                    className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-750 text-white font-bold text-xs rounded-lg transition-colors shadow-md flex items-center gap-1.5"
+                  >
+                    <Mail className="h-3.5 w-3.5" />
+                    發送郵件
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* V2 COPPA & GDPR-K Compliance Settings */}
