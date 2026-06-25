@@ -180,7 +180,7 @@ export const translations = {
     googleLinkPrompt: "連結 Google 帳號後，您即可使用 Google 第三方登入服務直接存取您的家長管理面板。",
     googleLinkLabel: "🔗 聯動連結 Google 帳號 (模擬)",
     coppaTitle: "隱私安全、台灣個資法與兒少保護規範 (PDPA / COPPA / GDPR-K)",
-    coppaDesc: "QuestGrow 致力維護家庭隱私政策，全面符合台灣《個人資料保護法》第 3 條規範。家長擁有隨時查閱、更新、複製、要求停止處理或『完全抹除與銷毀』子女個人資料與所有成長日誌的權利。",
+    coppaDesc: "QuestGrow 致力維護家庭隱私政策，遵循台灣《個人資料保護法》精神設計。家長擁有隨時查閱、更新、複製、要求停止處理或『完全抹除與銷毀』子女個人資料與所有成長日誌的權利。",
     destroyDataBtn: "完全銷毀與刪除孩子帳號個資 (刪除請求權)",
 
     // Child Settings Tab
@@ -261,7 +261,7 @@ export const translations = {
     presetDeveloper: "開發者 (開發/測試所有功能)",
     parentLabelText: "家長角色",
     childLabelText: "冒險者角色",
-    parentPrivacyNotice: "QuestGrow 系統已啟用家長密碼與兒童隱私合規安全機制",
+    parentPrivacyNotice: "QuestGrow 系統已啟用家長密碼與兒童隱私安全機制，遵循相關隱私法規精神設計",
     simulatedDateLabel: "系統日期:",
     cannedReason1: "整理得不夠乾淨，角落還有雜物喔。",
     cannedReason2: "請拍張完成的照片給媽媽看。",
@@ -724,7 +724,7 @@ export const translations = {
     presetDeveloper: "Developer (All Privileges Enabled)",
     parentLabelText: "Parent Profile",
     childLabelText: "Kid Profile",
-    parentPrivacyNotice: "QuestGrow has enabled parent password and child privacy compliance safety controls",
+    parentPrivacyNotice: "QuestGrow has enabled parent password and child privacy safety controls, designed in the spirit of relevant privacy regulations",
     simulatedDateLabel: "System Date:",
     cannedReason1: "Not clean enough, there is still clutter in the corners.",
     cannedReason2: "Please take a photo of the completed work for me.",
