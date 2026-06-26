@@ -6,8 +6,8 @@ import {
   Plus, Check, X, ShieldAlert, Sparkles, BookOpen, 
   HelpCircle, Trash2, Award, ClipboardCheck, LayoutGrid, 
   Eye, Heart, MessageSquare, Compass, BarChart3, AlertCircle,
-  Database, ShieldCheck, HelpCircle as HelpIcon, Trophy, Users,
-  ListTodo, Settings, ChevronDown, Mail
+  Database, ShieldCheck, Trophy, Users,
+  ListTodo, Settings, ChevronDown, Mail, Bell
 } from 'lucide-react';
 
 const difficultyRewardsMap = {
@@ -709,6 +709,32 @@ function ParentPortal({
   const pendingTasks = tasks.filter(t => t.status === '待覆核');
   const pendingRedemptions = inventory.filter(i => i.status === '待核銷');
 
+  // Push notifications generator (mocking FCM messages for parent)
+  const getFCMNotifications = () => {
+    const list = [];
+    pendingTasks.forEach(t => {
+      list.push({
+        id: `fcm-task-${t.id}`,
+        title: language === 'zh' ? "📝 新的任務待覆核" : "📝 New Task for Review",
+        body: language === 'zh' ? `「${t.name}」已提交，請覆核成果。` : `"${t.name}" has been submitted for review.`,
+        time: language === 'zh' ? "待處理" : "Pending"
+      });
+    });
+
+    pendingRedemptions.forEach(i => {
+      list.push({
+        id: `fcm-redeem-${i.inventoryId}`,
+        title: language === 'zh' ? "🎁 新的願望核銷請求" : "🎁 New Wish Redemption Request",
+        body: language === 'zh' ? `願望「${i.name}」已被兌換，請予以核銷。` : `Wish "${i.name}" has been redeemed.`,
+        time: language === 'zh' ? "待處理" : "Pending"
+      });
+    });
+
+    return list;
+  };
+
+  const fcmNotifications = getFCMNotifications();
+
   if (currentUser && currentUser.role === 'parent' && !currentUser.onboardingCompleted) {
     return (
       <div className="min-h-[85vh] flex items-center justify-center py-10 w-full px-4 animate-success">
@@ -729,28 +755,38 @@ function ParentPortal({
   return (
     <div className="space-y-6">
       
-      {/* simulated date notice */}
-      <div className="flex justify-between items-center bg-white/5 border border-white/5 p-3 rounded-xl">
-        <span className="text-xs text-slate-400 font-semibold flex items-center gap-1">
-          <ShieldCheck className="h-4 w-4 text-emerald-400" />
-          {t('parentPrivacyNotice')}
-        </span>
-        <span className="text-xs text-slate-400 font-medium">{t('simulatedDateLabel')} {simulatedDate}</span>
-      </div>
+      {/* ── Header Banner: Notifications + Simulation Date + Restart Tour ── */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white/5 border border-white/5 p-3 rounded-xl">
+        <div className="flex items-center gap-2">
+          {/* Notification status indicator */}
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-indigo-500/10 border border-indigo-500/20">
+            <Bell className="h-4 w-4 text-indigo-400" />
+          </div>
+          <div className="text-xs font-semibold">
+            <span className="text-slate-450 mr-1">PWA 推播通知中心 :</span>
+            <span className="text-slate-300 font-semibold">
+              {fcmNotifications.length > 0 ? t('newActivities', { count: fcmNotifications.length }) : t('noNewActivities')}
+            </span>
+          </div>
+        </div>
 
-      {/* Restart Tour button */}
-      <div className="flex justify-end">
-        <button
-          type="button"
-          onClick={() => {
-            setTourStep(1);
-            setShowTour(true);
-            localStorage.removeItem('questgrow_parent_tour_seen');
-          }}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold transition-all active:scale-95 whitespace-nowrap"
-        >
-          {t('reopenTourBtn')}
-        </button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-400 font-medium hidden sm:block">{t('simulatedDateLabel')} {simulatedDate}</span>
+          <button
+            type="button"
+            onClick={() => {
+              setTourStep(1);
+              setShowTour(true);
+              localStorage.removeItem('questgrow_parent_tour_seen');
+            }}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all active:scale-95 hover:scale-105"
+            style={{ background: 'rgba(99,102,241,0.08)', color: '#6366f1', border: '1px solid rgba(99,102,241,0.2)' }}
+            title={t('reopenTourBtn')}
+          >
+            <HelpCircle className="h-3.5 w-3.5 flex-shrink-0" />
+            <span className="hidden sm:inline">{t('reopenTourBtn')}</span>
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-2 p-1.5 bg-slate-950/60 border border-white/5 rounded-2xl overflow-x-auto mb-6 shadow-inner">
