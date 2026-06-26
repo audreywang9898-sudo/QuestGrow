@@ -117,6 +117,10 @@ function App() {
     contentZh: "千里之行，始於足下。",
     contentEn: "A journey of a thousand miles begins with a single step."
   });
+  const [dailyAdultProverb, setDailyAdultProverb] = useState({
+    contentZh: "教育的秘訣在於尊重學生。",
+    contentEn: "The secret of education lies in respecting the pupil."
+  });
 
   // --- Cooldown Warning Confirmation Modal ---
   const [cooldownWarning, setCooldownWarning] = useState(null);
@@ -226,12 +230,21 @@ function App() {
       }
 
       try {
-        const proverbData = await api.getDailyProverb(getSimulatedDateString());
+        const proverbData = await api.getDailyProverb(getSimulatedDateString(), 'kid');
         if (proverbData) {
           setDailyProverb(proverbData);
         }
       } catch (e) {
         console.error("Proverb fetch error:", e);
+      }
+
+      try {
+        const adultProverbData = await api.getDailyProverb(getSimulatedDateString(), 'parent');
+        if (adultProverbData) {
+          setDailyAdultProverb(adultProverbData);
+        }
+      } catch (e) {
+        console.error("Adult Proverb fetch error:", e);
       }
     } catch (error) {
       console.error('Fetch all data error:', error);
@@ -1176,6 +1189,8 @@ function App() {
             onUpdateGachaPool={handleUpdateGachaPool}
             familySettings={familySettings}
             onUpdateFamilySettings={handleUpdateFamilySettings}
+            dailyProverb={dailyAdultProverb}
+            onClaimWishlistItem={handleRedeemWishlist}
           />
         )}
       </main>

@@ -475,8 +475,11 @@ export const api = {
     return handleResponse(res);
   },
 
-  getDailyProverb: async (dateStr) => {
-    const queryParam = dateStr ? `?date=${dateStr}` : '';
+  getDailyProverb: async (dateStr, role) => {
+    const params = [];
+    if (dateStr) params.push(`date=${dateStr}`);
+    if (role) params.push(`role=${role}`);
+    const queryParam = params.length > 0 ? `?${params.join('&')}` : '';
     const res = await fetch(`${API_URL}/proverbs/daily${queryParam}`, {
       method: 'GET',
       headers: getHeaders(),

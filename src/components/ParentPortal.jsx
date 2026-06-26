@@ -7,7 +7,7 @@ import {
   HelpCircle, Trash2, Award, ClipboardCheck, LayoutGrid, 
   Eye, Heart, MessageSquare, Compass, BarChart3, AlertCircle,
   Database, ShieldCheck, Trophy, Users,
-  ListTodo, Settings, ChevronDown, Mail, Bell
+  ListTodo, Settings, ChevronDown, Mail, Bell, Volume2, VolumeX
 } from 'lucide-react';
 
 const difficultyRewardsMap = {
@@ -98,7 +98,9 @@ function ParentPortal({
   leaderboardData,
   onUpdateFamilyNickname,
   onCompleteOnboarding,
-  onOpenFeedback
+  onOpenFeedback,
+  dailyProverb,
+  onClaimWishlistItem
 }) {
   const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState('audit');
@@ -109,6 +111,166 @@ function ParentPortal({
     return localStorage.getItem('questgrow_parent_tour_seen') !== 'true';
   });
   const [tourStep, setTourStep] = useState(1);
+
+  // TTS Voice Synthesis States and Functions
+  const [proverbSpeaking, setProverbSpeaking] = useState(false);
+  const isProverbSpeakingRef = React.useRef(false);
+  const activeUtterancesRef = React.useRef([]);
+
+  const keepUtteranceAlive = (utterance) => {
+    if (!activeUtterancesRef.current) activeUtterancesRef.current = [];
+    activeUtterancesRef.current.push(utterance);
+    if (typeof window !== 'undefined') {
+      window._activeUtterances = window._activeUtterances || [];
+      window._activeUtterances.push(utterance);
+    }
+  };
+
+  const clearAliveUtterances = () => {
+    activeUtterancesRef.current = [];
+    if (typeof window !== 'undefined') {
+      window._activeUtterances = [];
+    }
+  };
+
+  const stopAllSpeech = () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.resume();
+        window.speechSynthesis.cancel();
+      } catch (e) {
+        console.error('Failed to cancel speech synthesis:', e);
+      }
+    }
+    clearAliveUtterances();
+    setProverbSpeaking(false);
+    isProverbSpeakingRef.current = false;
+  };
+
+  const speakProverb = () => {
+    if (!('speechSynthesis' in window)) {
+      alert(language === 'zh' ? '您的瀏覽器不支援語音播放功能。' : 'Your browser does not support voice playback.');
+      return;
+    }
+
+    if (proverbSpeaking) {
+      stopAllSpeech();
+      return;
+    }
+
+    stopAllSpeech();
+    setProverbSpeaking(true);
+    isProverbSpeakingRef.current = true;
+
+    // 100ms delay to clear call stack and allow obedience to stopAllSpeech's cancel
+    setTimeout(() => {
+      if (!isProverbSpeakingRef.current) return;
+
+      const prefixZh = language === 'zh' ? '每日鼓勵：' : 'Daily Encouragement: ';
+      const utterZh = new SpeechSynthesisUtterance(prefixZh + dailyProverb.contentZh);
+      utterZh.lang = 'zh-TW';
+      utterZh.rate = 0.9;
+      utterZh.pitch = 1.0;
+
+      const voices = window.speechSynthesis.getVoices();
+      const preferredZhNames = ['hanhan', 'yating', 'ting-ting', 'tingting', 'google 國語', 'google 臺灣', 'xiaoxiao', 'hsiaoyu', 'yaoyao', 'mei-jia', 'sin-ji'];
+      let selectedZhVoice = null;
+      for (const name of preferredZhNames) {
+        const found = voices.find(v => v.name.toLowerCase().includes(name) && (v.lang.includes('zh') || v.lang.includes('zho')));
+        if (found) {
+          selectedZhVoice = found;
+          break;
+        }
+      }
+      if (!selectedZhVoice) {
+        selectedZhVoice = voices.find(v => v.lang.toLowerCase().includes('zh'));
+      }
+      if (selectedZhVoice) {
+        utterZh.voice = selectedZhVoice;
+      }
+
+      const utterEn = new SpeechSynthesisUtterance(dailyProverb.contentEn);
+      utterEn.lang = 'en-US';
+      utterEn.rate = 0.9;
+      utterEn.pitch = 1.0;
+
+      const preferredEnNames = ['zira', 'samantha', 'aria', 'jenny', 'google us english'];
+      let selectedEnVoice = null;
+      for (const name of preferredEnNames) {
+        const found = voices.find(v => v.name.toLowerCase().includes(name) && v.lang.includes('en'));
+        if (found) {
+          selectedEnVoice = found;
+          break;
+        }
+      }
+      if (!selectedEnVoice) {
+        selectedEnVoice = voices.find(v => v.lang.toLowerCase().includes('en'));
+      }
+      if (selectedEnVoice) {
+        utterEn.voice = selectedEnVoice;
+      }
+
+      utterZh.onend = () => {
+        if (activeUtterancesRef.current) {
+          activeUtterancesRef.current = activeUtterancesRef.current.filter(u => u !== utterZh);
+        }
+        if (typeof window !== 'undefined' && window._activeUtterances) {
+          window._activeUtterances = window._activeUtterances.filter(u => u !== utterZh);
+        }
+        // Chain En speech only if proverb speaking is still active (not cancelled mid-speech)
+        if (isProverbSpeakingRef.current && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+          window.speechSynthesis.speak(utterEn);
+        }
+      };
+
+      utterEn.onend = () => {
+        isProverbSpeakingRef.current = false;
+        setProverbSpeaking(false);
+        if (activeUtterancesRef.current) {
+          activeUtterancesRef.current = activeUtterancesRef.current.filter(u => u !== utterEn);
+        }
+        if (typeof window !== 'undefined' && window._activeUtterances) {
+          window._activeUtterances = window._activeUtterances.filter(u => u !== utterEn);
+        }
+      };
+
+      const handleErr = (u) => {
+        if (activeUtterancesRef.current) {
+          activeUtterancesRef.current = activeUtterancesRef.current.filter(item => item !== u);
+        }
+        if (typeof window !== 'undefined' && window._activeUtterances) {
+          window._activeUtterances = window._activeUtterances.filter(item => item !== u);
+        }
+        if (u === utterZh && isProverbSpeakingRef.current) {
+          // If Zh failed, fall back to speak En if still active
+          if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+            window.speechSynthesis.speak(utterEn);
+          }
+        } else {
+          isProverbSpeakingRef.current = false;
+          setProverbSpeaking(false);
+        }
+      };
+
+      utterZh.onerror = () => handleErr(utterZh);
+      utterEn.onerror = () => handleErr(utterEn);
+
+      keepUtteranceAlive(utterZh);
+      keepUtteranceAlive(utterEn);
+
+      window.speechSynthesis.speak(utterZh);
+    }, 100);
+  };
+
+  // Initialize voices and stop synthesis when component unmounts
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.getVoices();
+    }
+    return () => {
+      stopAllSpeech();
+    };
+  }, []);
 
   React.useEffect(() => {
     if (!showTour) return;
@@ -752,6 +914,13 @@ function ParentPortal({
     );
   }
 
+  const maxPointsWish = (() => {
+    if (!wishlist || wishlist.length === 0) return null;
+    const activeWishes = wishlist.filter(w => !w.isRedeemed);
+    if (activeWishes.length === 0) return null;
+    return activeWishes.reduce((max, w) => w.pointsNeeded > max.pointsNeeded ? w : max, activeWishes[0]);
+  })();
+
   return (
     <div className="space-y-6">
       
@@ -788,6 +957,104 @@ function ParentPortal({
           </button>
         </div>
       </div>
+
+      {/* ── Merged: Daily Encouragement + Family Goal Banner ── */}
+      {(dailyProverb || maxPointsWish) && (
+        <div className="daily-goal-banner rounded-2xl overflow-hidden flex flex-col sm:flex-row">
+
+          {/* Left: Daily Proverb */}
+          {dailyProverb && (
+            <div className="flex items-center gap-3 px-4 py-3 flex-1 min-w-0" style={{ borderRight: maxPointsWish ? '1px solid rgba(99,102,241,0.12)' : 'none' }}>
+              {/* Icon */}
+              <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #ede9fe, #ddd6fe)', border: '1px solid rgba(139,92,246,0.25)' }}>
+                <Sparkles className="h-4 w-4" style={{ color: '#7c3aed' }} />
+              </div>
+              {/* Text */}
+              <div className="flex-1 min-w-0">
+                <div className="text-[9px] font-black uppercase tracking-widest mb-0.5" style={{ color: '#8b5cf6' }}>
+                  {t('dailyProverbLabel')}
+                </div>
+                <div className="text-sm font-extrabold leading-snug truncate" style={{ color: '#1e293b' }}>
+                  {dailyProverb.contentZh}
+                </div>
+                <div className="text-[11px] italic truncate mt-0.5" style={{ color: '#64748b', fontFamily: 'monospace' }}>
+                  {dailyProverb.contentEn}
+                </div>
+              </div>
+              {/* Speak button */}
+              <button
+                onClick={speakProverb}
+                className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all active:scale-90 ${
+                  proverbSpeaking
+                    ? 'animate-pulse'
+                    : ''
+                }`}
+                style={{
+                  background: proverbSpeaking ? 'rgba(244,63,94,0.12)' : 'rgba(139,92,246,0.1)',
+                  border: proverbSpeaking ? '1px solid rgba(244,63,94,0.3)' : '1px solid rgba(139,92,246,0.2)',
+                  color: proverbSpeaking ? '#f43f5e' : '#8b5cf6',
+                }}
+                title={proverbSpeaking ? t('stopSpeaking') : t('startSpeaking')}
+              >
+                {proverbSpeaking ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+              </button>
+            </div>
+          )}
+
+          {/* Highest Points Active Family Wish Card */}
+          {maxPointsWish && (
+            <div className="flex items-center gap-3 px-4 py-3 sm:w-[42%] flex-shrink-0">
+              {/* Trophy icon */}
+              <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #fffbeb, #fef3c7)', border: '1px solid rgba(245,158,11,0.3)' }}>
+                <Trophy className="h-4 w-4" style={{ color: '#d97706' }} />
+              </div>
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <span className="text-[11px] font-black truncate" style={{ color: '#1e293b' }}>
+                    {maxPointsWish.title}
+                  </span>
+                  <span className="flex-shrink-0 text-[10px] font-black tabular-nums" style={{ color: '#d97706' }}>
+                    {(familyScore || 0).toLocaleString()}<span style={{ color: '#94a3b8' }}>/{(maxPointsWish.pointsNeeded || 0).toLocaleString()}</span>
+                  </span>
+                </div>
+                {/* Progress bar */}
+                <div className="h-2 w-full rounded-full overflow-hidden" style={{ background: '#f1f5f9', border: '1px solid #e2e8f0' }}>
+                  <div
+                    className="h-full rounded-full transition-all duration-700"
+                    style={{
+                      width: `${Math.min(100, ((familyScore || 0) / (maxPointsWish.pointsNeeded || 1)) * 100)}%`,
+                      background: (familyScore || 0) >= (maxPointsWish.pointsNeeded || 0)
+                        ? 'linear-gradient(90deg, #10b981, #34d399)'
+                        : 'linear-gradient(90deg, #f59e0b, #fbbf24)',
+                    }}
+                  />
+                </div>
+                <div className="flex justify-between mt-0.5">
+                  <span className="text-[10px] font-bold" style={{ color: '#94a3b8' }}>
+                    {Math.min(100, Math.round(((familyScore || 0) / (maxPointsWish.pointsNeeded || 1)) * 100))}%
+                  </span>
+                  <span className="text-[10px] font-bold" style={{ color: '#94a3b8' }}>
+                    {(familyScore || 0) >= (maxPointsWish.pointsNeeded || 0)
+                      ? '🎉 ' + (language === 'zh' ? '可兌換！' : 'Ready!')
+                      : `還差 ${Math.max(0, (maxPointsWish.pointsNeeded || 0) - (familyScore || 0)).toLocaleString()} Pts`}
+                  </span>
+                </div>
+              </div>
+              {/* Claim button if unlocked */}
+              {familyScore >= maxPointsWish.pointsNeeded && (
+                <button
+                  onClick={() => onClaimWishlistItem(maxPointsWish.id)}
+                  className="flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-black transition-all active:scale-95 hover:scale-105"
+                  style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', boxShadow: '0 2px 8px rgba(16,185,129,0.3)' }}
+                >
+                  {language === 'zh' ? '領取' : 'Claim'}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="flex gap-2 p-1.5 bg-slate-950/60 border border-white/5 rounded-2xl overflow-x-auto mb-6 shadow-inner">
         <button

@@ -227,6 +227,15 @@ async function run() {
     `);
     console.log('✅ proverbs table ready');
 
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS daily_adult_proverbs (
+        id SERIAL PRIMARY KEY,
+        content_zh VARCHAR(500) NOT NULL,
+        content_en VARCHAR(500) NOT NULL
+      )
+    `);
+    console.log('✅ daily_adult_proverbs table ready');
+
     // ── Safe column additions (idempotent) ───────────────────────────────────
     const safeAlters = [
       `ALTER TABLE families ADD COLUMN IF NOT EXISTS family_nickname VARCHAR(255) DEFAULT NULL`,
