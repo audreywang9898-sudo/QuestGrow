@@ -6,7 +6,7 @@ import {
   Plus, Check, X, ShieldAlert, Sparkles, BookOpen, 
   HelpCircle, Trash2, Award, ClipboardCheck, LayoutGrid, 
   Eye, Heart, MessageSquare, Compass, BarChart3, AlertCircle,
-  Database, ShieldCheck, Trophy, Users,
+  Database, ShieldCheck, Trophy, Users, Search,
   ListTodo, Settings, ChevronDown, Mail, Bell, Volume2, VolumeX
 } from 'lucide-react';
 
@@ -307,6 +307,61 @@ function ParentPortal({
   const [reportsUserFilter, setReportsUserFilter] = useState('summary');
   const [manageTasksFilter, setManageTasksFilter] = useState('all');
   const [settingsSubTab, setSettingsSubTab] = useState('parent'); // 'parent', 'child'
+
+  // Optimized templates search, filter & visible counts state
+  const [templateSearch, setTemplateSearch] = useState('');
+  const [templateCategoryFilter, setTemplateCategoryFilter] = useState('all');
+  const [templateVisibleCounts, setTemplateVisibleCounts] = useState({
+    '德': 12,
+    '智': 12,
+    '體': 12,
+    '群': 12,
+    '美': 12
+  });
+
+  // Group and filter templates efficiently
+  const filteredTemplates = React.useMemo(() => {
+    const result = { '德': [], '智': [], '體': [], '群': [], '美': [] };
+    const searchLower = templateSearch.toLowerCase().trim();
+    
+    TASK_TEMPLATES.forEach(tpl => {
+      // 1. Category Filter
+      if (templateCategoryFilter !== 'all' && tpl.type !== templateCategoryFilter) {
+        return;
+      }
+      // 2. Search Filter
+      if (searchLower) {
+        const nameMatch = tpl.name?.toLowerCase().includes(searchLower);
+        const descMatch = tpl.description?.toLowerCase().includes(searchLower);
+        if (!nameMatch && !descMatch) {
+          return;
+        }
+      }
+      
+      if (result[tpl.type]) {
+        result[tpl.type].push(tpl);
+      }
+    });
+    return result;
+  }, [templateSearch, templateCategoryFilter]);
+
+  const hasMatches = React.useMemo(() => {
+    return Object.values(filteredTemplates).some(arr => arr.length > 0);
+  }, [filteredTemplates]);
+
+  const visibleCategories = React.useMemo(() => {
+    const allCats = [
+      { type: '德', label: language === 'zh' ? '德 — 責任與品德' : '德 Responsibility', color: 'text-[#16a34a]', border: 'border-[#16a34a]/20', bg: 'bg-[#16a34a]/5' },
+      { type: '智', label: language === 'zh' ? '智 — 智慧與學習' : '智 Wisdom',         color: 'text-[#0284c7]', border: 'border-[#0284c7]/20', bg: 'bg-[#0284c7]/5' },
+      { type: '體', label: language === 'zh' ? '體 — 體能與勇氣' : '體 Courage',        color: 'text-[#ea580c]', border: 'border-[#ea580c]/20', bg: 'bg-[#ea580c]/5' },
+      { type: '群', label: language === 'zh' ? '群 — 群育與同理' : '群 Empathy',        color: 'text-[#db2777]', border: 'border-[#db2777]/20', bg: 'bg-[#db2777]/5' },
+      { type: '美', label: language === 'zh' ? '美 — 美育與創意' : '美 Creativity',     color: 'text-[#7c3aed]', border: 'border-[#7c3aed]/20', bg: 'bg-[#7c3aed]/5' },
+    ];
+    if (templateCategoryFilter === 'all') {
+      return allCats;
+    }
+    return allCats.filter(cat => cat.type === templateCategoryFilter);
+  }, [templateCategoryFilter, language]);
 
   // Multi-Child Form States
   const [showAddChildForm, setShowAddChildForm] = useState(false);
@@ -2184,54 +2239,133 @@ function ParentPortal({
                 </select>
               </div>
 
-              <div className="space-y-3">
-                <h3 className="text-md font-extrabold uppercase tracking-widest text-slate-400 border-b border-white/5 pb-2">
-                  {t('quickImportTitle')}
-                </h3>
-                <div className="space-y-5">
-                  {[
-                    { type: '德', label: language === 'zh' ? '德 — 責任與品德' : '德 Responsibility', color: 'text-[#16a34a]', border: 'border-[#16a34a]/20', bg: 'bg-[#16a34a]/5' },
-                    { type: '智', label: language === 'zh' ? '智 — 智慧與學習' : '智 Wisdom',         color: 'text-[#0284c7]', border: 'border-[#0284c7]/20', bg: 'bg-[#0284c7]/5' },
-                    { type: '體', label: language === 'zh' ? '體 — 體能與勇氣' : '體 Courage',        color: 'text-[#ea580c]', border: 'border-[#ea580c]/20', bg: 'bg-[#ea580c]/5' },
-                    { type: '群', label: language === 'zh' ? '群 — 群育與同理' : '群 Empathy',        color: 'text-[#db2777]', border: 'border-[#db2777]/20', bg: 'bg-[#db2777]/5' },
-                    { type: '美', label: language === 'zh' ? '美 — 美育與創意' : '美 Creativity',     color: 'text-[#7c3aed]', border: 'border-[#7c3aed]/20', bg: 'bg-[#7c3aed]/5' },
-                  ].map(({ type, label, color, border, bg }) => {
-                    const group = TASK_TEMPLATES.filter(t => t.type === type);
-                    return (
-                      <div key={type} className="space-y-2">
-                        <div className={`flex items-center justify-between pb-1.5 border-b ${border} flex-wrap gap-2`}>
-                          <div className="flex items-center gap-2">
-                            <span className={`text-sm font-black ${color}`}>{label}</span>
-                            <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${color} ${bg} border ${border}`}>{group.length}</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => importAllCategoryTasks(type)}
-                            className={`text-[10px] font-black px-2.5 py-1 rounded-[4px] border transition-all hover:scale-[1.02] ${color} ${bg} ${border} hover:brightness-125`}
-                          >
-                            {language === 'zh' ? `匯入全部「${type}」任務` : `Import All "${type}"`}
-                          </button>
-                        </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                          {group.map((tpl) => (
-                            <button
-                              key={tpl.id}
-                              onClick={() => addTemplateTask(tpl)}
-                              className={`glass-panel p-3 border text-left transition-all flex flex-col justify-between gap-2 hover:scale-[1.02] ${border} ${bg} hover:brightness-110`}
-                            >
-                              <div>
-                                <div className="text-xs font-black text-slate-100 leading-snug">{tpl.name}</div>
-                                <div className="text-[10px] text-slate-500 mt-1">{translatePeriod(tpl.period)} | {language === 'zh' ? '難度' : 'Diff.'} {translateDifficulty(tpl.difficulty)}</div>
-                              </div>
-                              <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold ${color} ${bg} border ${border}`}>
-                                +{tpl.expReward} EXP
+              <div className="space-y-4">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-3">
+                  <h3 className="text-md font-extrabold uppercase tracking-widest text-slate-400">
+                    {t('quickImportTitle')}
+                  </h3>
+
+                  {/* Filters and Search Toolbar */}
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    {/* Category Filter Pills */}
+                    <div className="flex flex-wrap gap-1">
+                      {[
+                        { key: 'all', label: language === 'zh' ? '全部' : 'All' },
+                        { key: '德', label: '德' },
+                        { key: '智', label: '智' },
+                        { key: '體', label: '體' },
+                        { key: '群', label: '群' },
+                        { key: '美', label: '美' },
+                      ].map(cat => (
+                        <button
+                          key={cat.key}
+                          type="button"
+                          onClick={() => setTemplateCategoryFilter(cat.key)}
+                          className={`px-2.5 py-1 text-xs font-black rounded-lg transition-all border ${
+                            templateCategoryFilter === cat.key
+                              ? 'bg-gradient-to-r from-blue-600/30 to-indigo-600/30 border-indigo-500/40 text-white shadow-md'
+                              : 'bg-white/5 border-white/5 text-slate-400 hover:text-white hover:bg-white/10'
+                          }`}
+                        >
+                          {cat.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Search input */}
+                    <div className="relative min-w-[160px]">
+                      <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-slate-400" />
+                      <input
+                        type="text"
+                        value={templateSearch}
+                        onChange={(e) => setTemplateSearch(e.target.value)}
+                        placeholder={language === 'zh' ? '搜尋模板名稱/描述...' : 'Search template...'}
+                        className="bg-slate-950/60 border border-white/10 rounded-lg pl-8 pr-7 py-1 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 w-full"
+                      />
+                      {templateSearch && (
+                        <button
+                          type="button"
+                          onClick={() => setTemplateSearch('')}
+                          className="absolute right-2 top-1.5 text-slate-400 hover:text-white text-xs px-1"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Templates Grid / Sections */}
+                <div className="space-y-6">
+                  {!hasMatches ? (
+                    <div className="bg-slate-950/40 border border-white/5 rounded-xl p-8 text-center text-slate-400 text-sm shadow-inner">
+                      {language === 'zh' ? '🔍 找不到符合的冒險模板，試試看其他關鍵字吧！' : '🔍 No matching adventure templates found, try other keywords!'}
+                    </div>
+                  ) : (
+                    visibleCategories.map(({ type, label, color, border, bg }) => {
+                      const group = filteredTemplates[type] || [];
+                      if (group.length === 0) return null;
+
+                      const limit = templateVisibleCounts[type] || 12;
+                      const displayedItems = group.slice(0, limit);
+                      const hasMore = group.length > limit;
+
+                      return (
+                        <div key={type} className="space-y-2">
+                          <div className={`flex items-center justify-between pb-1.5 border-b ${border} flex-wrap gap-2`}>
+                            <div className="flex items-center gap-2">
+                              <span className={`text-sm font-black ${color}`}>{label}</span>
+                              <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${color} ${bg} border ${border}`}>
+                                {group.length}
                               </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => importAllCategoryTasks(type)}
+                              className={`text-[10px] font-black px-2.5 py-1 rounded-[4px] border transition-all hover:scale-[1.02] ${color} ${bg} ${border} hover:brightness-125`}
+                            >
+                              {language === 'zh' ? `匯入全部「${type}」任務` : `Import All "${type}"`}
                             </button>
-                          ))}
+                          </div>
+                          
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                            {displayedItems.map((tpl) => (
+                              <button
+                                key={tpl.id}
+                                onClick={() => addTemplateTask(tpl)}
+                                className={`glass-panel p-3 border text-left transition-all flex flex-col justify-between gap-2 hover:scale-[1.02] ${border} ${bg} hover:brightness-110`}
+                              >
+                                <div>
+                                  <div className="text-xs font-black text-slate-100 leading-snug">{tpl.name}</div>
+                                  <div className="text-[10px] text-slate-500 mt-1">{translatePeriod(tpl.period)} | {language === 'zh' ? '難度' : 'Diff.'} {translateDifficulty(tpl.difficulty)}</div>
+                                </div>
+                                <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold ${color} ${bg} border ${border}`}>
+                                  +{tpl.expReward} EXP
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+
+                          {hasMore && (
+                            <div className="flex justify-center pt-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setTemplateVisibleCounts(prev => ({
+                                    ...prev,
+                                    [type]: prev[type] + 24
+                                  }));
+                                }}
+                                className="text-[10px] font-black px-4 py-1.5 rounded-lg border transition-all bg-white/5 hover:bg-white/10 border-white/5 text-slate-300 hover:text-white hover:scale-[1.02]"
+                              >
+                                {language === 'zh' ? `➕ 載入更多 (還有 ${group.length - limit} 個)` : `➕ Load More (${group.length - limit} remaining)`}
+                              </button>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })
+                  )}
                 </div>
               </div>
             </div>
