@@ -17,6 +17,7 @@ import LoginPortal from './components/LoginPortal';
 import Avatar from './components/Avatar';
 import { useLanguage } from './components/LanguageContext';
 import FeedbackModal from './components/FeedbackModal';
+import { setupPushNotifications } from './utils/pushManager';
 import { Trophy, ShieldAlert, Sparkles, User, Users, RefreshCw, AlertCircle, CheckCircle, Info, LogOut, Mail } from 'lucide-react';
 import { api } from './utils/api';
 
@@ -256,6 +257,7 @@ function App() {
   useEffect(() => {
     if (currentUser) {
       fetchAllData();
+      setupPushNotifications(currentUser);
     }
   }, [currentUser]);
 

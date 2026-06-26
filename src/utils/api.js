@@ -536,4 +536,32 @@ export const api = {
     });
     return handleResponse(res);
   },
+
+  // --- Push Notifications ---
+  subscribePush: async (subscription) => {
+    const res = await fetch(`${API_URL}/push/subscribe`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ subscription }),
+    });
+    return handleResponse(res);
+  },
+
+  unsubscribePush: async (endpoint) => {
+    const res = await fetch(`${API_URL}/push/unsubscribe`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ endpoint }),
+    });
+    return handleResponse(res);
+  },
+
+  getPushKey: async () => {
+    const res = await fetch(`${API_URL}/push/key`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
 };
+

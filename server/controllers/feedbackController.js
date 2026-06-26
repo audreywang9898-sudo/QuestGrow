@@ -1,4 +1,5 @@
 import pool from '../config/db.js';
+import { sendPushNotificationToUser } from '../utils/pushNotifier.js';
 
 // 1. Submit feedback (Public or Optional Auth)
 export const submitFeedback = async (req, res) => {
@@ -91,7 +92,7 @@ export const updateFeedbackStatus = async (req, res) => {
       `UPDATE feedbacks 
        SET status = $1 
        WHERE id = $2 
-       RETURNING id, status`,
+       RETURNING id, status, user_id, category, content`,
       [status, id]
     );
 
@@ -99,9 +100,26 @@ export const updateFeedbackStatus = async (req, res) => {
       return res.status(404).json({ message: '找不到該筆意見回饋。' });
     }
 
+    const fb = result.rows[0];
+
+    // Trigger PWA Push Notification if status is '已解決' and user_id is present
+    if (status === '已解決' && fb.user_id) {
+      const payload = {
+        title: '💡 您的意見回饋已解決！',
+        body: `您反映的【${fb.category}】回饋：「${fb.content.substring(0, 30)}${fb.content.length > 30 ? '...' : ''}」已經處理解決囉。感謝您的寶貴建議！`,
+        data: {
+          url: '/'
+        }
+      };
+
+      sendPushNotificationToUser(fb.user_id, payload).catch(err => {
+        console.error('Failed to trigger background push notification:', err);
+      });
+    }
+
     res.json({
       message: '回饋狀態更新成功。',
-      feedback: result.rows[0]
+      feedback: fb
     });
   } catch (error) {
     console.error('updateFeedbackStatus error:', error);
