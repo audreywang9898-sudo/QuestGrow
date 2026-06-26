@@ -483,4 +483,38 @@ export const api = {
     });
     return handleResponse(res);
   },
+
+  submitFeedback: async (feedbackData) => {
+    const res = await fetch(`${API_URL}/feedback`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(feedbackData),
+    });
+    return handleResponse(res);
+  },
+
+  getAdminFeedbacks: async () => {
+    const res = await fetch(`${API_URL}/feedback`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  updateFeedbackStatus: async (id, status) => {
+    const res = await fetch(`${API_URL}/feedback/${id}`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify({ status }),
+    });
+    return handleResponse(res);
+  },
+
+  deleteFeedback: async (id) => {
+    const res = await fetch(`${API_URL}/feedback/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
 };

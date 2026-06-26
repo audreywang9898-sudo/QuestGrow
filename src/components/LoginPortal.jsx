@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Shield, Sparkles, Key, Mail, User, AlertCircle, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { useLanguage } from './LanguageContext';
 
-function LoginPortal({ onLogin, googleClientId }) {
+function LoginPortal({ onLogin, googleClientId, onOpenFeedback }) {
   const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState('login'); // login, register, google_setup
   const [email, setEmail] = useState('');
@@ -436,12 +436,13 @@ function LoginPortal({ onLogin, googleClientId }) {
         <div className="pt-4 border-t border-slate-150 flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
           <Mail className="h-3.5 w-3.5 text-indigo-500" />
           <span>需要協助或意見回饋？信箱：</span>
-          <a 
-            href="mailto:questgrow6767@gmail.com" 
-            className="font-bold text-indigo-600 hover:text-indigo-800 underline transition-colors"
+          <button 
+            type="button"
+            onClick={onOpenFeedback}
+            className="font-bold text-indigo-600 hover:text-indigo-800 underline transition-colors focus:outline-none"
           >
             questgrow6767@gmail.com
-          </a>
+          </button>
         </div>
 
         {/* Quick presets (Testing sandbox console - Commented out)

@@ -26,6 +26,23 @@ export const authenticateToken = (req, res, next) => {
   });
 };
 
+export const optionalAuthenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return next();
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (!err) {
+      req.user = decoded;
+      trackUserActivity(decoded.id);
+    }
+    next();
+  });
+};
+
 // requireRole accepts one or more role strings.
 // Example: requireRole('parent') or requireRole('parent', 'admin')
 export const requireRole = (...roles) => {

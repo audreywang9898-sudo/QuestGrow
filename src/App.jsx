@@ -16,6 +16,7 @@ import AdminPortal from './components/AdminPortal';
 import LoginPortal from './components/LoginPortal';
 import Avatar from './components/Avatar';
 import { useLanguage } from './components/LanguageContext';
+import FeedbackModal from './components/FeedbackModal';
 import { Trophy, ShieldAlert, Sparkles, User, Users, RefreshCw, AlertCircle, CheckCircle, Info, LogOut, Mail } from 'lucide-react';
 import { api } from './utils/api';
 
@@ -122,6 +123,7 @@ function App() {
   
   // --- Toast State ---
   const [toasts, setToasts] = useState([]);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
   const showToast = (message, type = 'info') => {
     const id = Date.now() + Math.random().toString();
@@ -910,7 +912,22 @@ function App() {
   };
 
   if (!currentUser) {
-    return <LoginPortal onLogin={handleLogin} googleClientId={googleClientId} />;
+    return (
+      <>
+        <LoginPortal 
+          onLogin={handleLogin} 
+          googleClientId={googleClientId} 
+          onOpenFeedback={() => setShowFeedbackModal(true)} 
+        />
+        {showFeedbackModal && (
+          <FeedbackModal 
+            onClose={() => setShowFeedbackModal(false)} 
+            currentUser={null}
+            showToast={showToast}
+          />
+        )}
+      </>
+    );
   }
 
   return (
@@ -1119,6 +1136,7 @@ function App() {
           <ParentPortal 
             stats={childStats}
             tasks={tasks}
+            onOpenFeedback={() => setShowFeedbackModal(true)}
             inventory={inventory}
             wishlist={wishlist}
             familyScore={familyScore}
@@ -1200,26 +1218,34 @@ function App() {
         <p className="flex items-center justify-center gap-1.5 text-slate-400">
           <Mail className="h-3.5 w-3.5 text-indigo-400" />
           <span>意見回饋信箱：</span>
-          <a 
-            href="mailto:questgrow6767@gmail.com" 
-            className="font-bold text-indigo-500 hover:text-indigo-655 underline transition-colors"
+          <button 
+            onClick={() => setShowFeedbackModal(true)}
+            className="font-bold text-indigo-500 hover:text-indigo-600 underline transition-colors focus:outline-none"
           >
             questgrow6767@gmail.com
-          </a>
+          </button>
         </p>
       </footer>
 
       {/* 懸浮意見回饋按鈕 */}
-      <a 
-        href="mailto:questgrow6767@gmail.com" 
-        className="fixed bottom-6 right-6 z-50 p-3 bg-gradient-to-tr from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-full shadow-lg shadow-indigo-600/30 border border-white/20 transition-all hover:scale-110 active:scale-95 group flex items-center justify-center cursor-pointer"
+      <button 
+        onClick={() => setShowFeedbackModal(true)} 
+        className="fixed bottom-6 right-6 z-50 p-3 bg-gradient-to-tr from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-full shadow-lg shadow-indigo-600/30 border border-white/20 transition-all hover:scale-110 active:scale-95 group flex items-center justify-center cursor-pointer focus:outline-none"
         title="意見回饋 (Feedback)"
       >
         <Mail className="h-5 w-5" />
         <span className="max-w-0 overflow-hidden group-hover:max-w-xs group-hover:ml-2 font-bold text-xs transition-all duration-300 ease-in-out whitespace-nowrap">
           聯絡與回饋
         </span>
-      </a>
+      </button>
+
+      {showFeedbackModal && (
+        <FeedbackModal 
+          onClose={() => setShowFeedbackModal(false)} 
+          currentUser={currentUser}
+          showToast={showToast}
+        />
+      )}
     </div>
   );
 }

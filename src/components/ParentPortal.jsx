@@ -97,7 +97,8 @@ function ParentPortal({
   familyNickname,
   leaderboardData,
   onUpdateFamilyNickname,
-  onCompleteOnboarding
+  onCompleteOnboarding,
+  onOpenFeedback
 }) {
   const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState('audit');
@@ -2930,13 +2931,13 @@ function ParentPortal({
                   <span className="text-xs font-mono bg-slate-900 border border-white/10 rounded px-2.5 py-1.5 text-slate-300">
                     questgrow6767@gmail.com
                   </span>
-                  <a 
-                    href="mailto:questgrow6767@gmail.com"
-                    className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-750 text-white font-bold text-xs rounded-lg transition-colors shadow-md flex items-center gap-1.5"
+                  <button 
+                    onClick={onOpenFeedback}
+                    className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-750 text-white font-bold text-xs rounded-lg transition-colors shadow-md flex items-center gap-1.5 focus:outline-none"
                   >
                     <Mail className="h-3.5 w-3.5" />
-                    發送郵件
-                  </a>
+                    提供回饋
+                  </button>
                 </div>
               </div>
             </div>
