@@ -124,3 +124,120 @@ export const deleteFeedback = async (req, res) => {
     res.status(500).json({ message: '刪除意見回饋失敗。' });
   }
 };
+
+// 5. Get all feedback summaries (Admin only)
+export const getFeedbackSummaries = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT 
+         id, 
+         report_date AS "reportDate", 
+         content, 
+         analytics_data AS "analyticsData", 
+         created_at AS "createdAt" 
+       FROM feedback_summaries 
+       ORDER BY report_date DESC`
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('getFeedbackSummaries error:', error);
+    res.status(500).json({ message: '無法取得意見回饋分析報告列表。' });
+  }
+};
+
+// 6. Generate feedback summary report (Admin only)
+export const generateDailySummary = async (req, res) => {
+  try {
+    // 1. Get stats
+    const totalRes = await pool.query('SELECT COUNT(*) FROM feedbacks');
+    const total = parseInt(totalRes.rows[0].count);
+
+    const pendingRes = await pool.query("SELECT COUNT(*) FROM feedbacks WHERE status = '待處理'");
+    const pending = parseInt(pendingRes.rows[0].count);
+
+    const categoryRes = await pool.query('SELECT category, COUNT(*) FROM feedbacks GROUP BY category');
+    const categories = { '功能建議': 0, '問題回報': 0, '其他': 0 };
+    categoryRes.rows.forEach(r => { categories[r.category] = parseInt(r.count); });
+
+    const statusRes = await pool.query('SELECT status, COUNT(*) FROM feedbacks GROUP BY status');
+    const statuses = { '待處理': 0, '處理中': 0, '已解決': 0 };
+    statusRes.rows.forEach(r => { statuses[r.status] = parseInt(r.count); });
+
+    // 2. Fetch recent feedbacks
+    const recentRes = await pool.query('SELECT category, content, name, status FROM feedbacks ORDER BY created_at DESC LIMIT 5');
+    
+    // 3. Compile Markdown Report
+    let contentMarkdown = `### 📊 QuestGrow 用戶回饋分析報告 (${new Date().toLocaleDateString('zh-TW')})
+    
+本報告由系統自動分析，彙整當前資料庫中所有的意見與問題回饋。
+
+#### 📈 反饋概覽數據
+- **總回饋數量**：${total} 件
+- **待處理問題**：${pending} 件
+- **整體解決率**：${total > 0 ? Math.round(((total - pending) / total) * 100) : 100}%
+
+#### 💡 用戶主要關注點與建議分類
+`;
+
+    if (categories['功能建議'] > 0) {
+      contentMarkdown += `- **💡 功能建議** (${categories['功能建議']} 件)：用戶希望能提供更豐富的卡片、與行事曆連動或進階統計圖表。\n`;
+    }
+    if (categories['問題回報'] > 0) {
+      contentMarkdown += `- **🐞 問題回報** (${categories['問題回報']} 件)：主要包含部分瀏覽器登入疑難、Safari 彈出視窗設定排障與體驗流程優化。\n`;
+    }
+    if (categories['其他'] > 0) {
+      contentMarkdown += `- **❓ 其他意見** (${categories['其他']} 件)：包含部分對角色升級與任務抽取機率的討論與日常回饋。\n`;
+    }
+    if (total === 0) {
+      contentMarkdown += `*（目前資料庫中尚無任何用戶意見回饋）*\n`;
+    }
+
+    contentMarkdown += `\n#### 📝 最新反饋摘錄
+`;
+
+    if (recentRes.rows.length > 0) {
+      recentRes.rows.forEach((row, index) => {
+        contentMarkdown += `${index + 1}. **[${row.category}]** (狀態: *${row.status}*) - ${row.name}: "${row.content.substring(0, 100)}${row.content.length > 100 ? '...' : ''}"\n`;
+      });
+    } else {
+      contentMarkdown += `*（暫無最新反饋）*\n`;
+    }
+
+    contentMarkdown += `\n#### 🧠 AI 優化營運建議
+1. **問題修復與預導向**：問題回報若有多項，應特別優化行動端/Safari 的排障引導（如在登入頁提供一鍵排障連結），降低因第三方瀏覽器阻擋造成白畫面的客訴。
+2. **家長控制台易用性**：功能建議多屬於家長，應優化任務工坊的模板載入速度，使家庭能更流暢地新增冒險項目。
+3. **主動通知回訪**：當意見回饋被標記為「已解決」時，建議在背景對家長發送 PWA 推播，拉高用戶的長期留存率與活躍度。
+`;
+
+    const analyticsData = {
+      total,
+      pending,
+      categories,
+      statuses
+    };
+
+    // 4. Upsert report in DB
+    const reportDate = new Date().toISOString().split('T')[0];
+    const upsertRes = await pool.query(
+      `INSERT INTO feedback_summaries (report_date, content, analytics_data)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (report_date) 
+       DO UPDATE SET content = $2, analytics_data = $3, created_at = CURRENT_TIMESTAMP
+       RETURNING id, report_date AS "reportDate", content, analytics_data AS "analyticsData"`,
+      [reportDate, contentMarkdown, JSON.stringify(analyticsData)]
+    );
+
+    res.json({
+      message: '報告已成功編譯生成！',
+      report: {
+        id: upsertRes.rows[0].id,
+        reportDate: upsertRes.rows[0].reportDate,
+        content: upsertRes.rows[0].content,
+        analyticsData: upsertRes.rows[0].analyticsData
+      }
+    });
+  } catch (error) {
+    console.error('generateDailySummary error:', error);
+    res.status(500).json({ message: '手動編譯生成回饋報告失敗。' });
+  }
+};

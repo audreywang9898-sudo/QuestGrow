@@ -517,4 +517,20 @@ export const api = {
     });
     return handleResponse(res);
   },
+
+  getFeedbackSummaries: async () => {
+    const res = await fetch(`${API_URL}/feedback/summary`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  generateFeedbackSummary: async () => {
+    const res = await fetch(`${API_URL}/feedback/summary/generate`, {
+      method: 'POST',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
 };

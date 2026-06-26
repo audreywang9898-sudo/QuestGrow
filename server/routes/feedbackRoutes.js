@@ -3,7 +3,9 @@ import {
   submitFeedback, 
   getFeedbacks, 
   updateFeedbackStatus, 
-  deleteFeedback 
+  deleteFeedback,
+  getFeedbackSummaries,
+  generateDailySummary
 } from '../controllers/feedbackController.js';
 import { 
   authenticateToken, 
@@ -18,6 +20,8 @@ router.post('/', optionalAuthenticateToken, submitFeedback);
 
 // Admin-only endpoints
 router.get('/', authenticateToken, requireRole('admin'), getFeedbacks);
+router.get('/summary', authenticateToken, requireRole('admin'), getFeedbackSummaries);
+router.post('/summary/generate', authenticateToken, requireRole('admin'), generateDailySummary);
 router.put('/:id', authenticateToken, requireRole('admin'), updateFeedbackStatus);
 router.delete('/:id', authenticateToken, requireRole('admin'), deleteFeedback);
 

@@ -50,9 +50,58 @@ export const getAdminStats = async (req, res) => {
         childJobClass: row.childJobClass
       };
     });
+    // 3. Query all families and their retention metrics
+    const familiesResult = await pool.query(`
+      SELECT 
+        f.id AS "familyId",
+        f.name AS "familyName",
+        f.family_nickname AS "familyNickname",
+        f.growth_score AS "familyGrowthScore",
+        COUNT(DISTINCT u.id)::int AS "membersCount",
+        COALESCE(MIN(u.created_at), f.created_at) AS "createdAt",
+        COALESCE(MAX(el.timestamp), COALESCE(MIN(u.created_at), f.created_at)) AS "lastActiveAt",
+        COUNT(el.id)::int AS "totalEvents"
+      FROM families f
+      LEFT JOIN users u ON u.family_id = f.id
+      LEFT JOIN event_logs el ON el.family_id = f.id
+      GROUP BY f.id, f.name, f.family_nickname, f.growth_score
+      ORDER BY "createdAt" DESC
+    `);
 
+    const now = new Date();
+    const familiesList = familiesResult.rows.map(row => {
+      const createdAt = new Date(row.createdAt);
+      const lastActiveAt = new Date(row.lastActiveAt);
+      
+      // Calculate stay duration (minimum 0.1 days)
+      const diffTime = Math.abs(lastActiveAt - createdAt);
+      let stayDurationDays = diffTime / (1000 * 60 * 60 * 24);
+      if (stayDurationDays < 0.1) {
+        stayDurationDays = 0.1;
+      }
+      stayDurationDays = Math.round(stayDurationDays * 10) / 10;
 
-    // 3. Query admin notifications
+      // Retention status based on last active timestamp compared to now
+      const timeSinceLastActive = Math.abs(now - lastActiveAt);
+      const hoursSinceLastActive = timeSinceLastActive / (1000 * 60 * 60);
+      
+      let retentionStatus = '🔴 已流失';
+      if (hoursSinceLastActive <= 24) {
+        retentionStatus = '🟢 活躍中';
+      } else if (hoursSinceLastActive <= 24 * 7) {
+        retentionStatus = '🟡 閒置中';
+      }
+
+      return {
+        ...row,
+        createdAt: row.createdAt ? row.createdAt.toISOString() : null,
+        lastActiveAt: row.lastActiveAt ? row.lastActiveAt.toISOString() : null,
+        stayDurationDays,
+        retentionStatus
+      };
+    });
+
+    // 4. Query admin notifications
     const notificationsResult = await pool.query(`
       SELECT 
         id,
@@ -69,6 +118,7 @@ export const getAdminStats = async (req, res) => {
     res.json({
       onlineUsers: onlineCount,
       members: membersList,
+      families: familiesList,
       notifications: notificationsResult.rows
     });
   } catch (error) {
