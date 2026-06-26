@@ -1781,12 +1781,12 @@ function ParentPortal({
 
           {/* Right Column: Pending Audits & History Logs */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="guild-bounty-wood p-6 rounded-2xl space-y-6 border-4 border-[#4a382c] shadow-lg">
+            <div className="glass-panel p-6 border border-white/5 bg-slate-950/20 space-y-6 rounded-2xl shadow-xl">
               {/* Pending Tasks */}
               <div className="space-y-4">
                 <div className="flex justify-between items-center flex-wrap gap-2">
-                  <h3 className="text-lg font-bold text-amber-100 flex items-center gap-2">
-                    <ClipboardCheck className="h-5 w-5 text-amber-400" />
+                  <h3 className="text-sm font-black text-slate-100 flex items-center gap-2 tracking-wider">
+                    <ClipboardCheck className="h-5 w-5 text-indigo-400" />
                     {t('auditTitleTasks')} ({pendingTasks.length})
                   </h3>
                   {pendingTasks.length > 0 && (
@@ -1802,7 +1802,7 @@ function ParentPortal({
                 </div>
 
                 {pendingTasks.length === 0 ? (
-                  <div className="bg-white/5 border border-white/10 rounded-xl p-8 text-center text-slate-400 text-sm">
+                  <div className="bg-slate-955/40 border border-white/5 rounded-xl p-8 text-center text-slate-400 text-sm shadow-inner">
                     {t('noPendingTasks')}
                   </div>
                 ) : (
@@ -1815,7 +1815,7 @@ function ParentPortal({
                         return null;
                       };
                       const cardClass = `p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all relative rounded-2xl ${
-                        isBoss ? 'boss-quest-card' : 'guild-scroll border-[#bfa470]/50 text-slate-800 shadow-sm'
+                        isBoss ? 'boss-quest-card' : 'bg-slate-900/60 border border-white/5 text-slate-100 shadow-sm'
                       }`;
 
                       return (
@@ -1827,14 +1827,14 @@ function ParentPortal({
                                   {getBossLabel(task.difficulty)}
                                 </span>
                               )}
-                              <span className={`text-md font-bold ${isBoss ? 'text-slate-200' : 'text-slate-900 font-extrabold'}`}>
-                                {task.name}
+                              <span className={`text-md font-bold ${isBoss ? 'text-slate-200' : 'text-slate-100 font-extrabold'}`}>
+                                  {task.name}
                               </span>
                               {task.isRepeated && (
                                 <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider border ${
                                   isBoss 
                                     ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' 
-                                    : 'bg-amber-100 text-amber-800 border-amber-300'
+                                    : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                                 }`}>
                                   {language === 'zh' ? '⚠️ 30天內重複完成任務' : '⚠️ 30-Day Repeated Quest'}
                                 </span>
@@ -1844,28 +1844,28 @@ function ParentPortal({
                               </span>
                             </div>
                             
-                            <p className={`text-xs ${isBoss ? 'text-slate-400' : 'text-amber-955/80 font-medium'}`}>
+                            <p className={`text-xs ${isBoss ? 'text-slate-400' : 'text-slate-400 font-medium'}`}>
                               {task.description}
                             </p>
                           
                             {task.submission && (
                               <div className={`p-3 rounded-xl space-y-2 border ${
-                                isBoss ? 'bg-white/5 border-white/5' : 'bg-amber-900/5 border-amber-900/10'
+                                isBoss ? 'bg-white/5 border-white/5' : 'bg-slate-950/40 border border-white/5'
                               }`}>
                                 <div className={`text-[11px] flex items-center gap-1 ${
-                                  isBoss ? 'text-slate-400' : 'text-[#5c442e]/70'
+                                  isBoss ? 'text-slate-400' : 'text-slate-400'
                                 }`}>
                                   <MessageSquare className="h-3 w-3" />
                                   {t('childNotesLabel')}
                                 </div>
                                 <p className={`text-xs font-semibold ${
-                                  isBoss ? 'text-slate-200' : 'text-[#4e361d]'
+                                  isBoss ? 'text-slate-200' : 'text-slate-200'
                                 }`}>{task.submission.notes}</p>
                                 {task.submission.photo && (
                                   <button 
                                     onClick={() => setPreviewPhotoUrl(task.submission.photo)}
                                     className={`flex items-center gap-1 text-[11px] font-bold ${
-                                      isBoss ? 'text-cyan-400 hover:text-cyan-300' : 'text-indigo-700 hover:text-indigo-900'
+                                      isBoss ? 'text-cyan-400 hover:text-cyan-300' : 'text-indigo-400 hover:text-indigo-300'
                                     }`}
                                   >
                                     <Eye className="h-3.5 w-3.5" />
@@ -1918,10 +1918,10 @@ function ParentPortal({
                             setSelectedCannedReason(reason);
                             setRejectReason('');
                           }}
-                          className={`text-left px-3 py-1.5 text-xs rounded-lg border transition-all ${
+                          className={`p-2 text-left text-xs rounded transition-colors ${
                             selectedCannedReason === reason 
-                              ? 'bg-rose-500/20 border-rose-500/50 text-rose-200' 
-                              : 'bg-white/5 border-white/5 text-slate-200 hover:bg-white/10 hover:text-white'
+                              ? 'bg-rose-500/20 border border-rose-500/40 text-rose-300' 
+                              : 'bg-white/5 border border-white/5 text-slate-300 hover:bg-white/10'
                           }`}
                         >
                           {reason}
@@ -1930,9 +1930,9 @@ function ParentPortal({
                     </div>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <label className="block text-[10px] text-slate-200 font-bold uppercase tracking-wider">
-                      {t('customReasonTitle')}
+                      {t('customReasonLabel')}
                     </label>
                     <textarea
                       value={rejectReason}
@@ -1940,13 +1940,12 @@ function ParentPortal({
                         setRejectReason(e.target.value);
                         setSelectedCannedReason('');
                       }}
-                      placeholder={t('customReasonPlaceholder')}
-                      className="w-full bg-slate-900 border border-white/15 rounded-lg p-2.5 text-xs text-slate-100 placeholder-slate-400 focus:outline-none"
-                      rows="3"
+                      placeholder={t('rejectionPlaceholder')}
+                      className="w-full bg-[#111216] border border-[#35363A] text-slate-200 text-xs p-3 rounded focus:outline-none focus:border-rose-500/50 resize-none h-20"
                     />
                   </div>
 
-                  <div className="flex gap-2 justify-end">
+                  <div className="flex gap-3 justify-end">
                     <button onClick={submitRejection} className="px-4 py-2 rounded-[4px] text-xs font-black bg-[#FF4747] text-white hover:bg-[#ff3030]">{t('confirmReject')}</button>
                     <button onClick={() => { setRejectingTaskId(null); setRejectReason(''); setSelectedCannedReason(''); }} className="px-4 py-2 rounded-[4px] text-xs font-bold bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white">{t('cancel')}</button>
                   </div>
@@ -1956,8 +1955,8 @@ function ParentPortal({
               {/* Pending Redemptions with V2 Expired warning and block protection */}
               <div className="space-y-4">
                 <div className="flex justify-between items-center flex-wrap gap-2">
-                  <h3 className="text-lg font-bold text-amber-100 flex items-center gap-2">
-                    <ClipboardCheck className="h-5 w-5 text-amber-400" />
+                  <h3 className="text-sm font-black text-slate-100 flex items-center gap-2 tracking-wider">
+                    <ClipboardCheck className="h-5 w-5 text-indigo-400" />
                     {t('auditTitleRedeems')} ({pendingRedemptions.length})
                   </h3>
                   {pendingRedemptions.length > 0 && (
@@ -1973,7 +1972,7 @@ function ParentPortal({
                 </div>
 
                 {pendingRedemptions.length === 0 ? (
-                  <div className="bg-white/5 border border-white/10 rounded-xl p-8 text-center text-slate-400 text-sm">
+                  <div className="bg-slate-955/40 border border-white/5 rounded-xl p-8 text-center text-slate-400 text-sm shadow-inner">
                     {t('noPendingRedeems')}
                   </div>
                 ) : (
@@ -1986,7 +1985,7 @@ function ParentPortal({
                           className={`p-5 border flex flex-col justify-between gap-4 rounded-2xl ${
                             isExpired 
                               ? 'border-rose-500/30 bg-rose-955/10 text-slate-300 shadow-sm' 
-                              : 'guild-scroll border-[#bfa470]/50 text-slate-800 shadow-sm'
+                              : 'bg-slate-900/60 border border-white/5 text-slate-100 shadow-sm'
                           }`}
                         >
                           <div className="space-y-2">
@@ -1994,14 +1993,14 @@ function ParentPortal({
                               <span className={`px-2 py-0.5 text-[9px] font-black rounded-md uppercase tracking-wider ${getRarityBadge(item.rarity)}`}>
                                 {item.rarity} | {item.type}
                               </span>
-                              <span className={`text-[10px] font-bold ${isExpired ? 'text-slate-400' : 'text-[#5c442e]/70'}`}>
+                              <span className={`text-[10px] font-bold ${isExpired ? 'text-slate-450' : 'text-slate-400'}`}>
                                 {t('applicantLabel', { name: children.find(c => c.id === item.ownerId)?.name || stats.name })}
                               </span>
                             </div>
-                            <h4 className={`text-md font-bold ${isExpired ? 'text-slate-100' : 'text-[#4e361d]'}`}>
+                            <h4 className={`text-md font-bold ${isExpired ? 'text-slate-100' : 'text-slate-100'}`}>
                               {item.name}
                             </h4>
-                            <p className={`text-xs ${isExpired ? 'text-slate-400' : 'text-[#5c442e]/90 font-medium'}`}>
+                            <p className={`text-xs ${isExpired ? 'text-slate-450' : 'text-slate-400 font-medium'}`}>
                               {item.desc}
                             </p>
                             {item.expireAt && (
