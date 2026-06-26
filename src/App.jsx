@@ -1217,12 +1217,12 @@ function App() {
         <p>© 2026 QuestGrow Family Growth OS. 遵循台灣個資法、兒少權益保障法及 PWA, COPPA & GDPR-K 隱私法規精神設計。</p>
         <p className="flex items-center justify-center gap-1.5 text-slate-400">
           <Mail className="h-3.5 w-3.5 text-indigo-400" />
-          <span>意見回饋信箱：</span>
+          <span>有任何疑問或想法？歡迎：</span>
           <button 
             onClick={() => setShowFeedbackModal(true)}
             className="font-bold text-indigo-500 hover:text-indigo-600 underline transition-colors focus:outline-none"
           >
-            questgrow6767@gmail.com
+            填寫線上意見回饋表單
           </button>
         </p>
       </footer>

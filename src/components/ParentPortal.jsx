@@ -2925,18 +2925,15 @@ function ParentPortal({
               <div className="flex-1">
                 <h4 className="text-sm font-bold text-slate-200">意見回饋與技術支援</h4>
                 <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                  如果您在使用 QuestGrow 系統中遇到任何問題，或者有功能上的建議與想法，歡迎隨時透過電子郵件與我們聯繫。
+                  如果您在使用 QuestGrow 系統中遇到任何問題，或者有功能上的建議與想法，歡迎隨時透過線上意見回饋表單與我們聯繫。
                 </p>
                 <div className="mt-3 flex items-center gap-2 flex-wrap">
-                  <span className="text-xs font-mono bg-slate-900 border border-white/10 rounded px-2.5 py-1.5 text-slate-300">
-                    questgrow6767@gmail.com
-                  </span>
                   <button 
                     onClick={onOpenFeedback}
                     className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-750 text-white font-bold text-xs rounded-lg transition-colors shadow-md flex items-center gap-1.5 focus:outline-none"
                   >
                     <Mail className="h-3.5 w-3.5" />
-                    提供回饋
+                    填寫意見回饋表單
                   </button>
                 </div>
               </div>

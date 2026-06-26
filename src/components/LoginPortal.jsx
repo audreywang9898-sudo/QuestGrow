@@ -435,13 +435,13 @@ function LoginPortal({ onLogin, googleClientId, onOpenFeedback }) {
         {/* 意見回饋與支援 */}
         <div className="pt-4 border-t border-slate-150 flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
           <Mail className="h-3.5 w-3.5 text-indigo-500" />
-          <span>需要協助或意見回饋？信箱：</span>
+          <span>需要協助或意見回饋？請點此：</span>
           <button 
             type="button"
             onClick={onOpenFeedback}
             className="font-bold text-indigo-600 hover:text-indigo-800 underline transition-colors focus:outline-none"
           >
-            questgrow6767@gmail.com
+            填寫線上意見回饋表單
           </button>
         </div>
 
