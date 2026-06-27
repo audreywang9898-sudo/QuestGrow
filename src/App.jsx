@@ -51,43 +51,49 @@ function App() {
   });
 
   const [googleClientId, setGoogleClientId] = useState('');
+  const [isRestoringSession, setIsRestoringSession] = useState(true);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Initialize Auth configuration and verify/restore session on mount
   useEffect(() => {
     const initAuth = async () => {
-      // 1. Fetch Google Client ID
       try {
-        const config = await api.getAuthConfig();
-        if (config && config.googleClientId) {
-          setGoogleClientId(config.googleClientId);
-        }
-      } catch (error) {
-        console.error('Failed to fetch auth config:', error);
-      }
-
-      // 2. Fetch updated user profile & fresh token if logged in
-      const token = localStorage.getItem('questgrow_jwt_token');
-      if (token) {
+        // 1. Fetch Google Client ID
         try {
-          const res = await api.getMe();
-          if (res && res.user) {
-            const mappedUser = {
-              ...res.user,
-              childId: res.user.childId || res.user.child_id
-            };
-            setCurrentUser(mappedUser);
-            if (mappedUser.role === 'admin') {
-              setRole('admin');
-            } else if (mappedUser.role === 'kid') {
-              setRole('kid');
-            }
+          const config = await api.getAuthConfig();
+          if (config && config.googleClientId) {
+            setGoogleClientId(config.googleClientId);
           }
         } catch (error) {
-          console.error('Failed to restore session:', error);
-          // If the token is invalid/expired or user is not found, clear current user
-          setCurrentUser(null);
-          setRole('kid');
+          console.error('Failed to fetch auth config:', error);
         }
+
+        // 2. Fetch updated user profile & fresh token if logged in
+        const token = localStorage.getItem('questgrow_jwt_token');
+        if (token) {
+          try {
+            const res = await api.getMe();
+            if (res && res.user) {
+              const mappedUser = {
+                ...res.user,
+                childId: res.user.childId || res.user.child_id
+              };
+              setCurrentUser(mappedUser);
+              if (mappedUser.role === 'admin') {
+                setRole('admin');
+              } else if (mappedUser.role === 'kid') {
+                setRole('kid');
+              }
+            }
+          } catch (error) {
+            console.error('Failed to restore session:', error);
+            // If the token is invalid/expired or user is not found, clear current user
+            setCurrentUser(null);
+            setRole('kid');
+          }
+        }
+      } finally {
+        setIsRestoringSession(false);
       }
     };
     initAuth();
@@ -303,6 +309,7 @@ function App() {
   // --- Auth Handlers ---
   const handleLogin = async (authData) => {
     const { email, password, name, role: selectedRole, isRegister, isGoogle, credential, avatar } = authData;
+    setIsLoggingIn(true);
 
     try {
       if (isRegister) {
@@ -336,6 +343,8 @@ function App() {
     } catch (error) {
       showToast(error.message || '身分驗證失敗，請檢查輸入。', 'error');
       return false;
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -925,6 +934,33 @@ function App() {
 
     return Math.round((totalCappedScore / 5) * 100);
   };
+
+  if (isRestoringSession || isLoggingIn) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#EBF4FC] select-none relative">
+        {/* Background glowing effects */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-400/20 rounded-full blur-[120px] animate-float"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-violet-400/20 rounded-full blur-[120px] animate-float" style={{ animationDelay: '2s' }}></div>
+        </div>
+        
+        <div className="glass-panel p-8 border border-white/50 bg-white/70 shadow-2xl space-y-6 text-center max-w-sm w-full relative z-10">
+          <div className="w-16 h-16 mx-auto bg-gradient-to-tr from-indigo-600 to-cyan-500 rounded-full flex items-center justify-center shadow-lg border border-white/20 relative animate-spin">
+            <div className="absolute inset-1 rounded-full bg-white/90"></div>
+            <div className="w-3 h-3 bg-indigo-600 rounded-full absolute top-1 left-1/2 -ml-1.5"></div>
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-xl font-black text-slate-800 tracking-wider">
+              {isLoggingIn ? '正在進行身分驗證...' : '正在載入冒險世界...'}
+            </h3>
+            <p className="text-xs text-slate-500 font-bold uppercase tracking-widest leading-relaxed">
+              {isLoggingIn ? '冒險之門即將開啟，請稍候。' : '正在進行安全驗證與資料同步，請稍候。'}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!currentUser) {
     return (
