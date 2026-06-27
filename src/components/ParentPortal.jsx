@@ -4213,10 +4213,14 @@ function ParentPortal({
                             const r = 65 * (Math.min(maxVal, Math.max(5, val)) / maxVal);
                             return `${100 + r * Math.cos(angle)},${100 + r * Math.sin(angle)}`;
                           }).join(' ')} 
-                          fill="rgba(168, 85, 247, 0.25)" 
-                          stroke="#a855f7" 
+                          fill={children.find(c => c.id === reportsUserFilter)?.avatar === 'girl' ? "rgba(236, 72, 153, 0.25)" : "rgba(168, 85, 247, 0.25)"} 
+                          stroke={children.find(c => c.id === reportsUserFilter)?.avatar === 'girl' ? "#ec4899" : "#a855f7"} 
                           strokeWidth="2.5" 
-                          style={{ filter: 'drop-shadow(0px 0px 6px rgba(168, 85, 247, 0.6))' }}
+                          style={{
+                            filter: children.find(c => c.id === reportsUserFilter)?.avatar === 'girl'
+                              ? 'drop-shadow(0px 0px 6px rgba(236, 72, 153, 0.6))'
+                              : 'drop-shadow(0px 0px 6px rgba(168, 85, 247, 0.6))'
+                          }}
                         />
                         {(() => {
                           const scores = [

@@ -1731,9 +1731,15 @@ function KidPortal({
 
             {/* Radar Chart Panel */}
             <div className="lg:col-span-2 rounded-3xl p-5 flex flex-col items-center gap-3" style={{
-              background: 'linear-gradient(135deg, #f8faff 0%, #eef2ff 100%)',
-              border: '1.5px solid rgba(99,102,241,0.15)',
-              boxShadow: '0 8px 32px rgba(99,102,241,0.1)'
+              background: stats.avatar === 'girl'
+                ? 'linear-gradient(135deg, #fffafb 0%, #fff1f2 100%)'
+                : 'linear-gradient(135deg, #f8faff 0%, #eef2ff 100%)',
+              border: stats.avatar === 'girl'
+                ? '1.5px solid rgba(244,63,94,0.15)'
+                : '1.5px solid rgba(99,102,241,0.15)',
+              boxShadow: stats.avatar === 'girl'
+                ? '0 8px 32px rgba(244,63,94,0.1)'
+                : '0 8px 32px rgba(99,102,241,0.1)'
             }}>
               <div className="text-xs font-black text-indigo-500 uppercase tracking-widest">⬡ 五大能力雷達圖</div>
               <svg width="240" height="240" viewBox="-20 -20 240 240" className="w-full max-w-[240px]">
@@ -1751,11 +1757,15 @@ function KidPortal({
                 {/* Data polygon */}
                 <polygon
                   points={getRadarPoints()}
-                  fill="rgba(99,102,241,0.15)"
-                  stroke="#6366f1"
+                  fill={stats.avatar === 'girl' ? 'rgba(236,72,153,0.15)' : 'rgba(99,102,241,0.15)'}
+                  stroke={stats.avatar === 'girl' ? '#ec4899' : '#6366f1'}
                   strokeWidth="2.5"
                   strokeLinejoin="round"
-                  style={{ filter: 'drop-shadow(0 0 6px rgba(99,102,241,0.4))' }}
+                  style={{
+                    filter: stats.avatar === 'girl'
+                      ? 'drop-shadow(0 0 6px rgba(236,72,153,0.4))'
+                      : 'drop-shadow(0 0 6px rgba(99,102,241,0.4))'
+                  }}
                 />
                 {/* Labels */}
                 {(() => {
