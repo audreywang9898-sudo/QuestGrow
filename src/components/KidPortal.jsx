@@ -282,7 +282,7 @@ function KidPortal({
 
   const activeBadgeItem = inventory.find(i => i.type === '收藏卡' && i.status === '已使用');
   const activeBadge = activeBadgeItem ? activeBadgeItem.id : null;
-  const [activeSubTab, setActiveSubTab] = useState('wishlist');
+  const [activeSubTab, setActiveSubTab] = useState('character');
   const [backpackSortBy, setBackpackSortBy] = useState('default');
   const [backpackFilterType, setBackpackFilterType] = useState('all');
 
