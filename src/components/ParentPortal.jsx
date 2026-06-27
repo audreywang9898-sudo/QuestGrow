@@ -4402,9 +4402,15 @@ export function ParentOnboardingWizard({
 
       {step === 1 && (
         <div className="space-y-6 animate-success">
+          <div className="overflow-hidden rounded-xl border border-white/10 shadow-lg relative aspect-[1.618/1] bg-slate-950">
+            <img 
+              src="/onboarding_banner.jpg" 
+              alt="QuestGrow Welcome" 
+              className="w-full h-full object-cover select-none pointer-events-none"
+            />
+          </div>
           <div className="text-center space-y-2">
-            <span className="text-5xl block select-none animate-bounce-gentle">👋</span>
-            <h2 className="text-xl font-black text-slate-100">{t('parentWizardStep1Title')}</h2>
+            <h2 className="text-xl font-black text-slate-100">{t('parentWizardStep1Title').replace('👋 ', '')}</h2>
             <p className="text-xs text-slate-400 leading-relaxed max-w-sm mx-auto">
               {t('parentWizardStep1Desc')}
             </p>
