@@ -4743,6 +4743,7 @@ export function ParentOnboardingWizard({
         }
       }
       sessionStorage.setItem('questgrow_just_completed_onboarding', 'true');
+      sessionStorage.setItem('questgrow_just_switched_to_kid_first_time', 'true');
       await onCompleteOnboarding();
     } catch (err) {
       console.error('Error finishing onboarding:', err);
@@ -5229,6 +5230,7 @@ export function ParentOnboardingWizard({
                   setIsCompleting(true);
                   try {
                     sessionStorage.setItem('questgrow_just_completed_onboarding', 'true');
+                    sessionStorage.setItem('questgrow_just_switched_to_kid_first_time', 'true');
                     await onCompleteOnboarding();
                   } catch (err) {
                     console.error('Error completing onboarding:', err);

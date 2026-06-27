@@ -308,6 +308,16 @@ function KidPortal({
       setActiveSubTab('wishlist');
     }
   }, [tourStep, showTour]);
+ 
+  React.useEffect(() => {
+    const forceKidTour = sessionStorage.getItem('questgrow_just_switched_to_kid_first_time');
+    if (forceKidTour === 'true') {
+      sessionStorage.removeItem('questgrow_just_switched_to_kid_first_time');
+      setTourStep(1);
+      setShowTour(true);
+      localStorage.removeItem('questgrow_kid_tour_seen');
+    }
+  }, []);
 
   const [submittingTaskId, setSubmittingTaskId] = useState(null);
   const [submissionNotes, setSubmissionNotes] = useState('');
