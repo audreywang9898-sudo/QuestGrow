@@ -289,6 +289,18 @@ function ParentPortal({
       setSettingsSubTab('parent');
     }
   }, [tourStep, showTour]);
+ 
+  React.useEffect(() => {
+    if (currentUser && currentUser.onboardingCompleted) {
+      const justCompleted = sessionStorage.getItem('questgrow_just_completed_onboarding');
+      if (justCompleted === 'true') {
+        sessionStorage.removeItem('questgrow_just_completed_onboarding');
+        setTourStep(1);
+        setShowTour(true);
+        localStorage.removeItem('questgrow_parent_tour_seen');
+      }
+    }
+  }, [currentUser?.onboardingCompleted]);
 
   
   // Workshop Form State
@@ -4730,6 +4742,7 @@ export function ParentOnboardingWizard({
           }
         }
       }
+      sessionStorage.setItem('questgrow_just_completed_onboarding', 'true');
       await onCompleteOnboarding();
     } catch (err) {
       console.error('Error finishing onboarding:', err);
@@ -5215,6 +5228,7 @@ export function ParentOnboardingWizard({
                 onClick={async () => {
                   setIsCompleting(true);
                   try {
+                    sessionStorage.setItem('questgrow_just_completed_onboarding', 'true');
                     await onCompleteOnboarding();
                   } catch (err) {
                     console.error('Error completing onboarding:', err);
