@@ -4598,6 +4598,7 @@ export function ParentOnboardingWizard({
   language
 }) {
   const [step, setStep] = useState(1);
+  const [isCompleting, setIsCompleting] = useState(false);
 
   // Step 2 State (Family Nickname)
   const [nickname, setNickname] = useState(familyNickname || '');
@@ -4708,26 +4709,33 @@ export function ParentOnboardingWizard({
   };
 
   const handleFinishOnboarding = async () => {
-    if (selectedQuests.length > 0 && children.length > 0) {
-      for (const child of children) {
-        for (const idx of selectedQuests) {
-          const questTemplate = STARTER_QUESTS_TEMPLATES[idx];
-          await onAddTask({
-            name: questTemplate.name,
-            description: questTemplate.description,
-            type: questTemplate.type,
-            difficulty: questTemplate.difficulty,
-            expReward: questTemplate.expReward,
-            goldReward: questTemplate.goldReward,
-            ticketReward: questTemplate.ticketReward,
-            attributeReward: questTemplate.attributeReward,
-            period: questTemplate.period === '每日' ? '每日' : '每週',
-            assignedTo: child.id
-          });
+    setIsCompleting(true);
+    try {
+      if (selectedQuests.length > 0 && children.length > 0) {
+        for (const child of children) {
+          for (const idx of selectedQuests) {
+            const questTemplate = STARTER_QUESTS_TEMPLATES[idx];
+            await onAddTask({
+              name: questTemplate.name,
+              description: questTemplate.description,
+              type: questTemplate.type,
+              difficulty: questTemplate.difficulty,
+              expReward: questTemplate.expReward,
+              goldReward: questTemplate.goldReward,
+              ticketReward: questTemplate.ticketReward,
+              attributeReward: questTemplate.attributeReward,
+              period: questTemplate.period === '每日' ? '每日' : '每週',
+              assignedTo: child.id
+            });
+          }
         }
       }
+      await onCompleteOnboarding();
+    } catch (err) {
+      console.error('Error finishing onboarding:', err);
+    } finally {
+      setIsCompleting(false);
     }
-    await onCompleteOnboarding();
   };
 
   const getQuestColor = (type) => {
@@ -4744,6 +4752,23 @@ export function ParentOnboardingWizard({
   return (
     <div className="w-full max-w-xl glass-panel p-8 border border-white/10 space-y-6 relative overflow-hidden bg-gradient-to-b from-slate-900 to-indigo-950/40">
       <div className="absolute top-[-100px] right-[-100px] w-[300px] h-[300px] bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      {isCompleting && (
+        <div className="absolute inset-0 bg-slate-950/90 z-50 flex flex-col items-center justify-center p-6 text-center space-y-6 backdrop-blur-sm animate-success">
+          <div className="w-16 h-16 bg-gradient-to-tr from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center shadow-lg border border-white/20 relative animate-spin">
+            <div className="absolute inset-1 rounded-full bg-slate-950"></div>
+            <div className="w-3 h-3 bg-emerald-400 rounded-full absolute top-1 left-1/2 -ml-1.5"></div>
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-base font-extrabold text-slate-105 tracking-wider">
+              {language === 'zh' ? '正在建立角色與配置初始冒險...' : 'Setting up child profile & initial quests...'}
+            </h3>
+            <p className="text-[10px] text-slate-450 font-bold uppercase tracking-widest leading-relaxed">
+              {language === 'zh' ? '冒險大門即將開啟，請稍候。' : 'Adventure gates are opening, please wait.'}
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center justify-between mb-2 border-b border-white/5 pb-4">
         {[1, 2, 3, 4].map((s) => (
@@ -5187,7 +5212,16 @@ export function ParentOnboardingWizard({
                 {language === 'zh' ? '上一步' : 'Back'}
               </button>
               <button
-                onClick={onCompleteOnboarding}
+                onClick={async () => {
+                  setIsCompleting(true);
+                  try {
+                    await onCompleteOnboarding();
+                  } catch (err) {
+                    console.error('Error completing onboarding:', err);
+                  } finally {
+                    setIsCompleting(false);
+                  }
+                }}
                 className="flex-1 py-2 rounded-xl text-xs font-bold bg-white/5 border border-white/10 text-[#b5b7bc] hover:text-white transition-all active:scale-95"
               >
                 {t('parentWizardSkipBtn')}
