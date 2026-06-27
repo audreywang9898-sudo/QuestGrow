@@ -305,6 +305,18 @@ function ParentPortal({
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [importAssignedTo, setImportAssignedTo] = useState('all');
   const [reportsUserFilter, setReportsUserFilter] = useState('summary');
+  // AI Coach interactive states
+  const [aiCoachTab, setAiCoachTab] = useState('diagnostic'); // 'diagnostic', 'chat'
+  const [aiCoachMessages, setAiCoachMessages] = useState(() => {
+    return [
+      {
+        sender: 'coach',
+        content: '你好！我是你的 AI 家庭成長教練。我會分析孩子的冒險數據，提供五育全人成長的引導與專屬建議。有什麼我可以幫忙的嗎？'
+      }
+    ];
+  });
+  const [isAiThinking, setIsAiThinking] = useState(false);
+  const [aiCoachInput, setAiCoachInput] = useState('');
   const [manageTasksFilter, setManageTasksFilter] = useState('all');
   const [settingsSubTab, setSettingsSubTab] = useState('parent'); // 'parent', 'child'
 
@@ -3881,8 +3893,203 @@ function ParentPortal({
           }
         };
 
+        const handleAiAssignQuest = async () => {
+          const isSummary = reportsUserFilter === 'summary';
+          const targetChild = isSummary ? children[0] : children.find(c => c.id === reportsUserFilter);
+          
+          if (!targetChild) {
+            alert(language === 'zh' ? '請先新增兒童角色！' : 'Please add a child profile first!');
+            return;
+          }
+
+          const attrs = targetChild.attributes || { Wisdom: 10, Responsibility: 10, Empathy: 10, Creativity: 10, Courage: 10 };
+          
+          // Find lowest attribute
+          let lowestAttr = 'Wisdom';
+          let lowestVal = 99999;
+          Object.entries(attrs).forEach(([key, val]) => {
+            if (val < lowestVal) {
+              lowestVal = val;
+              lowestAttr = key;
+            }
+          });
+
+          const questsMap = {
+            Wisdom: {
+              name: language === 'zh' ? '📚 冒險日誌：閱讀與心得分享' : '📚 Adventure Log: Reading & Share',
+              type: '智',
+              difficulty: '中等',
+              desc: language === 'zh' 
+                ? '閱讀一本課外書籍 30 分鐘，並向爸爸或媽媽分享書中最有趣的一個章節或知識點！' 
+                : 'Read a book for 30 minutes and share the most interesting chapter with your parents!',
+              exp: 100, gold: 50, ticket: 1, attr: 'Wisdom'
+            },
+            Responsibility: {
+              name: language === 'zh' ? '🧹 領地守護：自主整理書桌與房間' : '🧹 Territory Guard: Organize Desk & Room',
+              type: '德',
+              difficulty: '簡單',
+              desc: language === 'zh' 
+                ? '主動將自己的書桌整理乾淨，並把玩具或書本放回原位，完成領地環境的守護任務！' 
+                : 'Take the initiative to tidy up your desk and return toys/books to their places!',
+              exp: 80, gold: 30, ticket: 0, attr: 'Responsibility'
+            },
+            Empathy: {
+              name: language === 'zh' ? '💖 溫暖傳遞：幫爸爸媽媽搥背按摩' : '💖 Warmth Transfer: Massage for Parents',
+              type: '群',
+              difficulty: '簡單',
+              desc: language === 'zh' 
+                ? '幫辛苦工作的爸爸或媽媽搥背或按摩肩膀 5 分鐘，說一句溫暖的感謝話語！' 
+                : 'Massage your parents shoulders for 5 minutes and say a warm thank-you!',
+              exp: 80, gold: 30, ticket: 0, attr: 'Empathy'
+            },
+            Creativity: {
+              name: language === 'zh' ? '🎨 想像之翼：繪製今日冒險塗鴉' : '🎨 Wings of Imagination: Daily Sketch',
+              type: '美',
+              difficulty: '中等',
+              desc: language === 'zh' 
+                ? '用彩色畫筆在一張白紙上，畫出今天你最開心的事或是想像中的怪獸，並展示給家人看！' 
+                : 'Draw today\'s happiest moment or an imaginary monster, and show it to the family!',
+              exp: 100, gold: 50, ticket: 1, attr: 'Creativity'
+            },
+            Courage: {
+              name: language === 'zh' ? '🏃‍♂️ 體能鍛鍊：仰臥起坐與體育拉伸' : '🏃‍♂️ Physical Exercise: Sit-ups & Stretching',
+              type: '體',
+              difficulty: '中等',
+              desc: language === 'zh' 
+                ? '完成 15 次仰臥起坐或跟著拉伸影片進行 15 分鐘的體能鍛鍊，鍛鍊強健的體魄！' 
+                : 'Complete 15 sit-ups or follow a 15-minute stretching video to train your body!',
+              exp: 100, gold: 50, ticket: 1, attr: 'Courage'
+            }
+          };
+
+          const targetQuest = questsMap[lowestAttr] || questsMap.Wisdom;
+          
+          const newTask = {
+            name: targetQuest.name,
+            description: targetQuest.desc,
+            type: targetQuest.type,
+            difficulty: targetQuest.difficulty,
+            expReward: targetQuest.exp,
+            goldReward: targetQuest.gold,
+            ticketReward: targetQuest.ticket,
+            attributeReward: targetQuest.attr,
+            period: '每日',
+            assignedTo: targetChild.id
+          };
+
+          await onAddTask(newTask);
+          alert(language === 'zh' 
+            ? `🤖 AI 成長教練已成功為 ${targetChild.name} 建立並指派任務：「${targetQuest.name}」！`
+            : `🤖 AI Coach has successfully assigned quest "${targetQuest.name}" to ${targetChild.name}!`
+          );
+        };
+
+        const generateCoachResponse = (q, rData) => {
+          const lowercaseQ = q.toLowerCase();
+          const name = reportsUserFilter === 'summary' ? (language === 'zh' ? '孩子們' : 'children') : rData.name;
+          const attrs = rData.attributes;
+
+          const translateAttr = (attr) => {
+            const mapping = { Wisdom: '智慧', Responsibility: '責任感', Empathy: '同理心', Creativity: '創造力', Courage: '勇氣' };
+            return mapping[attr] || attr;
+          };
+
+          let highestAttr = 'Wisdom';
+          let highestVal = -1;
+          let lowestAttr = 'Wisdom';
+          let lowestVal = 99999;
+          Object.entries(attrs).forEach(([key, val]) => {
+            if (val > highestVal) {
+              highestVal = val;
+              highestAttr = key;
+            }
+            if (val < lowestVal) {
+              lowestVal = val;
+              lowestAttr = key;
+            }
+          });
+
+          if (lowercaseQ.includes('弱') || lowercaseQ.includes('最') || lowercaseQ.includes('低') || lowercaseQ.includes('改善') || lowercaseQ.includes('提升') || lowercaseQ.includes('加強')) {
+            return `### 🎯 針對弱項屬性「${translateAttr(lowestAttr)}」的改善建議：\n\n` +
+              `目前 **${name}** 在「**${translateAttr(lowestAttr)}**」的屬性點數為 **${lowestVal}**，是目前相對落後的方向。我為您設計了以下 AI 導向的具體改善方案：\n\n` +
+              `1. **日常協同指派**：在任務工坊中新增更多「${translateAttr(lowestAttr)}」相關的任務。例如，我們已在診斷報告中為您推薦了特別任務。\n` +
+              `2. **微步增強原則**：將大任務拆解成容易執行的小冒險。例如：如果「責任感」偏低，可以從「自主整理餐具」或「倒垃圾」等簡單任務開始，讓孩子獲得即時成就感。\n` +
+              `3. **關聯性激勵**：孩子完成弱項任務時，除了系統獎勵，家長可在現實中給予加倍的言語誇獎或心願卡集點點數！`;
+          }
+
+          if (lowercaseQ.includes('均衡') || lowercaseQ.includes('全人') || lowercaseQ.includes('評估') || lowercaseQ.includes('雷達') || lowercaseQ.includes('指數')) {
+            const balance = getReportBalanceIndex(reportsUserFilter);
+            const completion = getCompletionRate(reportsUserFilter);
+            let evaluation = '';
+            if (balance >= 75) {
+              evaluation = '能力非常均衡！孩子在五育的長期發展非常健全。請繼續保持！';
+            } else {
+              evaluation = `目前的均衡指數為 **${balance}%**。雷達圖有些許偏斜，主要是「${translateAttr(lowestAttr)}」與「${translateAttr(highestAttr)}」差距較大。建議暫停增加已飽和的智育任務，多指派美育或群育等弱項。`;
+            }
+
+            return `### 📊 全人發展與均衡度評估報告：\n\n` +
+              `- **全人均衡指數**：\`${balance}%\`\n` +
+              `- **本週任務完成率**：\`${completion}%\`\n` +
+              `- **AI 診斷結論**：${evaluation}\n\n` +
+              `**💡 下週策略**：\n` +
+              `下週指派任務時，請聯絡五育平衡，保持「德、智、體、群、美」各指派 1~2 個任務，這能大提升下週的均衡指標，並解鎖稀有的冒險稱號！`;
+          }
+
+          if (lowercaseQ.includes('獎勵') || lowercaseQ.includes('金幣') || lowercaseQ.includes('心願') || lowercaseQ.includes('吸引') || lowercaseQ.includes('激勵')) {
+            return `### 🪙 如何設定吸引人的冒險獎勵系統：\n\n` +
+              `家長的心願設定是讓孩子保持長久動力的核心。建議遵循以下 **AI 激勵模型**：\n\n` +
+              `1. **日常小獎勵（抽卡券/金幣）**：金幣可用於兌換「日常特權」（如玩遊戲 30 分鐘、多吃一份點心）。這些需要設定適中的金幣價格（例如：50 金幣）。\n` +
+              `2. **長期大夢想（心願清單）**：在「許願池」中放入孩子極度渴望的禮物（例如：去遊樂園、新的樂高積木），並設定較高的金幣價格（例如：500 金幣）。這能培養孩子儲蓄與長遠規劃的觀念。\n` +
+              `3. **稀有獎勵（扭蛋卡片）**：鼓勵孩子存抽卡券抽卡。可以設定集滿特定主題卡片，即可額外解鎖隱藏的大獎，提升收藏樂趣！`;
+          }
+
+          if (lowercaseQ.includes('職業') || lowercaseQ.includes('角色') || lowercaseQ.includes('探索者') || lowercaseQ.includes('智者') || lowercaseQ.includes('守護者')) {
+            return `### ⚔️ 冒險者職業與屬性關聯深度分析：\n\n` +
+              `QuestGrow 目前支援三種核心職業，每種職業對應不同的成長重點：\n\n` +
+              `1. **Scholar (智者) 🧙‍♂️**：關聯「智慧」與「創造力」。適合喜歡閱讀、寫作、科學探索的孩子。\n` +
+              `2. **Explorer (探索者) ⚔️**：關聯「勇氣」與「體能」。適合喜歡體育、戶外活動、挑戰新事物的孩子。\n` +
+              `3. **Guardian (守護者) 🛡️**：關聯「責任感」與「同理心」。適合喜歡協助家務、照顧寵物、關懷家人的孩子。\n\n` +
+              `**💡 建議**：\n` +
+              `目前 **${name}** 的屬性中，最高的屬性為「**${translateAttr(highestAttr)}**」，表現最適合發揮 **${highestAttr === 'Wisdom' ? '智者' : highestAttr === 'Courage' ? '探索者' : '守護者'}** 職業的特長。您可以引導孩子在角色頁面中轉職，或維持均衡全能發展！`;
+          }
+
+          return `### 🧙‍♂️ 冒險日誌評估與動態建議：\n\n` +
+            `你好！已為您彙整 **${name}** 目前的冒險狀態：\n` +
+            `- **累計等級**：\`Lv. ${rData.level}\` | **金幣**：\`🪙 ${rData.gold}\` | **抽卡券**：\`🎫 ${rData.tickets}\`\n` +
+            `- **最強項能力**：\`${translateAttr(highestAttr)} (${highestVal})\`\n` +
+            `- **最待加強能力**：\`${translateAttr(lowestAttr)} (${lowestVal})\`\n\n` +
+            `這是一份精準的成長軌跡。如果您有以下特定疑問，可以直接點選下方的快捷按鈕，或輸入關鍵字詢問我：\n` +
+            `- *點選「**改善最弱屬性**」按鈕查詢*\n` +
+            `- *點選「**評估冒險者均衡度**」按鈕查詢*\n` +
+            `- *點選「**設定吸引人獎勵**」按鈕查詢*`;
+        };
+
+        const handleSendAiQuestion = (text) => {
+          if (!text.trim()) return;
+          const userMsg = { sender: 'parent', content: text };
+          setAiCoachMessages(prev => [...prev, userMsg]);
+          setAiCoachInput('');
+          setIsAiThinking(true);
+
+          setTimeout(() => {
+            const responseText = generateCoachResponse(text, getSelectedReportData());
+            setAiCoachMessages(prev => [...prev, { sender: 'coach', content: responseText }]);
+            setIsAiThinking(false);
+          }, 800);
+        };
+
+        const getAdventurerRank = () => {
+          const rate = getCompletionRate(reportsUserFilter);
+          const balance = getReportBalanceIndex(reportsUserFilter);
+          if (rate >= 80 && balance >= 70) return { title: '🏆 傳奇黃金冒險團隊', color: 'text-amber-400 border-amber-500/20 bg-amber-500/5' };
+          if (rate >= 50 && balance >= 50) return { title: '🛡️ 資深白銀冒險團隊', color: 'text-slate-300 border-slate-400/20 bg-slate-400/5' };
+          if (rate >= 15 || balance >= 30) return { title: '⚔️ 新手青銅冒險團隊', color: 'text-orange-400 border-orange-500/20 bg-orange-500/5' };
+          return { title: '🌱 初心見習冒險團隊', color: 'text-emerald-400 border-emerald-500/20 bg-emerald-500/5' };
+        };
+
         const reportData = getSelectedReportData();
         const aiFeedback = getAiCoachFeedback();
+        const rank = getAdventurerRank();
 
         return (
           <div className="space-y-6 animate-success">
@@ -3924,11 +4131,17 @@ function ParentPortal({
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 glass-panel p-6 space-y-6">
-                <div>
-                  <h3 className="text-lg font-bold text-slate-200">
-                    {t('growthDashboardTitle')} - {reportData.name}
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-1">{t('growthDashboardDesc')}</p>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-205">
+                      {t('growthDashboardTitle')} - {reportData.name}
+                    </h3>
+                    <p className="text-xs text-slate-450 mt-1">{t('growthDashboardDesc')}</p>
+                  </div>
+                  {/* AI Rank Badge */}
+                  <div className={`px-3 py-1.5 rounded-xl border text-[10px] font-black shrink-0 flex items-center gap-1.5 ${rank.color}`}>
+                    {rank.title}
+                  </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                   <div className="space-y-4">
@@ -3945,12 +4158,36 @@ function ParentPortal({
                     <div className="text-xs text-slate-400 font-bold uppercase text-center">{t('radarTitle')}</div>
                     <div className="flex justify-center">
                       <svg width="225" height="225" viewBox="-20 -20 240 240" className="w-[216px] h-[216px]">
+                        {/* Concentric grid lines */}
                         {[0.3, 0.6, 1.0].map((level, i) => (
-                          <polygon key={i} points={[[0,0],[0,0],[0,0],[0,0],[0,0]].map((_, j) => {
-                            const angle = (j * 2 * Math.PI / 5) - Math.PI / 2;
-                            return `${100 + 65 * level * Math.cos(angle)},${100 + 65 * level * Math.sin(angle)}`;
-                          }).join(' ')} className="radar-grid" />
+                          <polygon 
+                            key={i} 
+                            points={[[0,0],[0,0],[0,0],[0,0],[0,0]].map((_, j) => {
+                              const angle = (j * 2 * Math.PI / 5) - Math.PI / 2;
+                              return `${100 + 65 * level * Math.cos(angle)},${100 + 65 * level * Math.sin(angle)}`;
+                            }).join(' ')} 
+                            fill="none" 
+                            stroke="rgba(255, 255, 255, 0.08)" 
+                            strokeDasharray="3,3" 
+                            strokeWidth="1"
+                          />
                         ))}
+                        {/* Radial guidelines */}
+                        {[0, 1, 2, 3, 4].map((j) => {
+                          const angle = (j * 2 * Math.PI / 5) - Math.PI / 2;
+                          return (
+                            <line 
+                              key={j}
+                              x1="100" 
+                              y1="100" 
+                              x2={100 + 65 * Math.cos(angle)} 
+                              y2={100 + 65 * Math.sin(angle)} 
+                              stroke="rgba(255, 255, 255, 0.15)" 
+                              strokeWidth="1" 
+                            />
+                          );
+                        })}
+                        {/* Active Radar Polygon */}
                         <polygon 
                           points={[
                             reportData.attributes.Wisdom,
@@ -3964,7 +4201,10 @@ function ParentPortal({
                             const r = 65 * (Math.min(maxVal, Math.max(5, val)) / maxVal);
                             return `${100 + r * Math.cos(angle)},${100 + r * Math.sin(angle)}`;
                           }).join(' ')} 
-                          className="radar-polygon" 
+                          fill="rgba(168, 85, 247, 0.25)" 
+                          stroke="#a855f7" 
+                          strokeWidth="2.5" 
+                          style={{ filter: 'drop-shadow(0px 0px 6px rgba(168, 85, 247, 0.6))' }}
                         />
                         {(() => {
                           const scores = [
@@ -4024,24 +4264,163 @@ function ParentPortal({
                 </div>
               </div>
 
-              <div className="glass-panel p-6 border border-violet-500/20 bg-gradient-to-b from-violet-500/5 to-transparent space-y-4">
-                <h3 className="text-md font-bold text-violet-300 flex items-center gap-1.5 uppercase tracking-wider">
-                  <Sparkles className="h-5 w-5 text-violet-400 animate-float" />
-                  {t('aiCoachTitle')}
-                </h3>
-                <div className="space-y-4 text-xs leading-relaxed text-slate-300">
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest block">{aiFeedback.highlight}</span>
-                    <p>{aiFeedback.highlightDesc}</p>
+              <div className="glass-panel border border-violet-500/20 bg-gradient-to-b from-violet-500/5 to-slate-900/60 p-6 flex flex-col justify-between min-h-[460px]">
+                <div className="space-y-4">
+                  {/* Card Header & Tabs */}
+                  <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                    <h3 className="text-sm font-black text-violet-300 flex items-center gap-1.5 uppercase tracking-wider">
+                      <Sparkles className="h-4.5 w-4.5 text-violet-400 animate-float" />
+                      {t('aiCoachTitle')}
+                    </h3>
+                    <div className="flex bg-slate-950/80 rounded-lg p-0.5 border border-white/5">
+                      <button
+                        type="button"
+                        onClick={() => setAiCoachTab('diagnostic')}
+                        className={`px-3 py-1 rounded-md text-[10px] font-black transition-all ${
+                          aiCoachTab === 'diagnostic' 
+                            ? 'bg-[#3661FF] text-white shadow-sm' 
+                            : 'text-slate-400 hover:text-slate-205'
+                        }`}
+                      >
+                        {language === 'zh' ? '智能診斷' : 'Diagnostic'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAiCoachTab('chat')}
+                        className={`px-3 py-1 rounded-md text-[10px] font-black transition-all ${
+                          aiCoachTab === 'chat' 
+                            ? 'bg-[#3661FF] text-white shadow-sm' 
+                            : 'text-slate-400 hover:text-slate-205'
+                        }`}
+                      >
+                        {language === 'zh' ? '互動諮詢' : 'Coach Chat'}
+                      </button>
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest block">{aiFeedback.improve}</span>
-                    <p>{aiFeedback.improveDesc}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-black text-purple-400 uppercase tracking-widest block">{aiFeedback.suggest}</span>
-                    <p>{aiFeedback.suggestDesc}</p>
-                  </div>
+
+                  {aiCoachTab === 'diagnostic' ? (
+                    <div className="space-y-4 text-xs leading-relaxed text-slate-350">
+                      <div className="space-y-1 bg-white/5 p-3 rounded-xl border border-white/5">
+                        <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest block">{aiFeedback.highlight}</span>
+                        <p>{aiFeedback.highlightDesc}</p>
+                      </div>
+                      <div className="space-y-1 bg-white/5 p-3 rounded-xl border border-white/5">
+                        <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest block">{aiFeedback.improve}</span>
+                        <p>{aiFeedback.improveDesc}</p>
+                      </div>
+                      <div className="space-y-2 bg-indigo-500/5 p-3 rounded-xl border border-indigo-500/10">
+                        <span className="text-[10px] font-black text-purple-400 uppercase tracking-widest block">{aiFeedback.suggest}</span>
+                        <p>{aiFeedback.suggestDesc}</p>
+                        
+                        {/* Auto Quest Assignment Button */}
+                        <button
+                          type="button"
+                          onClick={handleAiAssignQuest}
+                          className="w-full mt-2 py-2 px-3 bg-[#3661FF] hover:bg-[#254edb] active:scale-95 text-white font-extrabold text-[10px] rounded-lg transition-all flex items-center justify-center gap-1 shadow-md shadow-indigo-950/40"
+                        >
+                          <span>🤖</span>
+                          {language === 'zh' ? '一鍵 AI 指派推薦任務' : 'One-Click AI Assign Quest'}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Chat Tab Content */
+                    <div className="flex flex-col h-[350px] justify-between">
+                      {/* Message History */}
+                      <div className="flex-1 overflow-y-auto space-y-3 pr-1 mb-2 max-h-[250px]">
+                        {aiCoachMessages.map((msg, index) => (
+                          <div 
+                            key={index} 
+                            className={`flex ${msg.sender === 'coach' ? 'justify-start' : 'justify-end'}`}
+                          >
+                            <div 
+                              className={`max-w-[88%] p-2.5 rounded-xl text-[11px] leading-relaxed shadow-sm ${
+                                msg.sender === 'coach'
+                                  ? 'bg-slate-900/90 text-slate-350 border border-white/5 rounded-tl-none'
+                                  : 'bg-[#3661FF]/90 text-white rounded-tr-none'
+                              }`}
+                            >
+                              {/* Simple Markdown-like Renderer */}
+                              {msg.content.split('\n\n').map((para, i) => (
+                                <p key={i} className={i > 0 ? 'mt-2' : ''}>
+                                  {para.startsWith('###') ? (
+                                    <span className="font-extrabold text-violet-300 block mb-1 text-xs">
+                                      {para.replace('### ', '')}
+                                    </span>
+                                  ) : para.startsWith('- ') ? (
+                                    <span className="block pl-1 space-y-1">
+                                      {para.split('\n').map((li, j) => (
+                                        <span key={j} className="block">{li}</span>
+                                      ))}
+                                    </span>
+                                  ) : (
+                                    para
+                                  )}
+                                </p>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                        {isAiThinking && (
+                          <div className="flex justify-start">
+                            <div className="bg-slate-900/90 text-slate-400 p-2.5 rounded-xl border border-white/5 rounded-tl-none text-[10px] flex items-center gap-1.5 font-bold">
+                              <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce"></span>
+                              <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></span>
+                              <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></span>
+                              {language === 'zh' ? 'AI 教練思考中...' : 'AI Coach is thinking...'}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Chat Input & Suggestions */}
+                      <div className="space-y-2 pt-2 border-t border-white/5">
+                        {/* Quick Presets Pills */}
+                        <div className="flex gap-1 overflow-x-auto pb-1 max-w-full">
+                          {[
+                            language === 'zh' ? '改善最弱屬性' : 'Improve weak attributes?',
+                            language === 'zh' ? '評估冒險者均衡度' : 'Assess balance index?',
+                            language === 'zh' ? '設定吸引人獎勵' : 'How to set rewards?'
+                          ].map((preset, i) => (
+                            <button
+                              key={i}
+                              type="button"
+                              disabled={isAiThinking}
+                              onClick={() => handleSendAiQuestion(preset)}
+                              className="px-2.5 py-1 bg-white/5 border border-white/5 text-[9px] font-bold text-violet-300 rounded-full hover:bg-[#3661FF]/10 hover:border-[#3661FF]/20 hover:text-white transition-all whitespace-nowrap"
+                            >
+                              💡 {preset}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Input Box */}
+                        <form 
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            handleSendAiQuestion(aiCoachInput);
+                          }}
+                          className="flex gap-1.5"
+                        >
+                          <input
+                            type="text"
+                            value={aiCoachInput}
+                            disabled={isAiThinking}
+                            onChange={(e) => setAiCoachInput(e.target.value)}
+                            placeholder={language === 'zh' ? '輸入您的成長疑問...' : 'Ask the AI Coach...'}
+                            className="flex-1 bg-slate-900 border border-white/10 rounded-lg px-2.5 py-1.5 text-[11px] text-slate-205 focus:outline-none focus:ring-1 focus:ring-[#3661FF] disabled:opacity-50"
+                          />
+                          <button
+                            type="submit"
+                            disabled={isAiThinking || !aiCoachInput.trim()}
+                            className="bg-[#3661FF] hover:bg-[#254edb] active:scale-95 disabled:opacity-50 text-white px-3 py-1.5 rounded-lg text-[10px] font-black transition-all flex items-center justify-center"
+                          >
+                            {language === 'zh' ? '送出' : 'Send'}
+                          </button>
+                        </form>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
