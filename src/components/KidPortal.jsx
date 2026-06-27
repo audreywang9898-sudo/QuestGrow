@@ -287,8 +287,9 @@ function KidPortal({
   const [backpackFilterType, setBackpackFilterType] = useState('all');
 
   // Onboarding Tour state
+  const tourKey = currentUser ? `questgrow_kid_tour_seen_${currentUser.id}` : 'questgrow_kid_tour_seen';
   const [showTour, setShowTour] = useState(() => {
-    return localStorage.getItem('questgrow_kid_tour_seen') !== 'true';
+    return localStorage.getItem(tourKey) !== 'true';
   });
   const [tourStep, setTourStep] = useState(1);
 
@@ -315,9 +316,9 @@ function KidPortal({
       sessionStorage.removeItem('questgrow_just_switched_to_kid_first_time');
       setTourStep(1);
       setShowTour(true);
-      localStorage.removeItem('questgrow_kid_tour_seen');
+      localStorage.removeItem(tourKey);
     }
-  }, []);
+  }, [tourKey]);
 
   const [submittingTaskId, setSubmittingTaskId] = useState(null);
   const [submissionNotes, setSubmissionNotes] = useState('');
@@ -1401,7 +1402,7 @@ function KidPortal({
               onClick={() => {
                 setTourStep(1);
                 setShowTour(true);
-                localStorage.removeItem('questgrow_kid_tour_seen');
+                localStorage.removeItem(tourKey);
               }}
               className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all active:scale-95 hover:scale-105"
               style={{ background: 'rgba(99,102,241,0.08)', color: '#6366f1', border: '1px solid rgba(99,102,241,0.2)' }}
@@ -3376,7 +3377,7 @@ function KidPortal({
               <button 
                 onClick={() => {
                   setShowTour(false);
-                  localStorage.setItem('questgrow_kid_tour_seen', 'true');
+                  localStorage.setItem(tourKey, 'true');
                 }}
                 className="text-slate-400 hover:text-slate-600 transition-colors text-xs font-black"
               >
@@ -3433,7 +3434,7 @@ function KidPortal({
                 onClick={() => {
                   if (tourStep === 6) {
                     setShowTour(false);
-                    localStorage.setItem('questgrow_kid_tour_seen', 'true');
+                    localStorage.setItem(tourKey, 'true');
                   } else {
                     setTourStep(prev => prev + 1);
                   }
