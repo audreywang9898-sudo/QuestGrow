@@ -1623,8 +1623,12 @@ function KidPortal({
 
           {/* ── TOP HERO BANNER ── */}
           <div className="relative rounded-3xl overflow-hidden" style={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 40%, #f093fb 70%, #f5576c 100%)',
-            boxShadow: '0 20px 60px rgba(102,126,234,0.35), 0 8px 24px rgba(118,75,162,0.25)'
+            background: stats.avatar === 'girl'
+              ? 'linear-gradient(135deg, #f5576c 0%, #f093fb 30%, #764ba2 60%, #667eea 100%)'
+              : 'linear-gradient(135deg, #667eea 0%, #764ba2 40%, #f093fb 70%, #f5576c 100%)',
+            boxShadow: stats.avatar === 'girl'
+              ? '0 20px 60px rgba(245,87,108,0.35), 0 8px 24px rgba(118,75,162,0.25)'
+              : '0 20px 60px rgba(102,126,234,0.35), 0 8px 24px rgba(118,75,162,0.25)'
           }}>
             {/* Decorative shimmer */}
             <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(ellipse at 20% 50%, rgba(255,255,255,0.3) 0%, transparent 60%)' }} />
