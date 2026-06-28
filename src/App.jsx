@@ -1342,14 +1342,21 @@ function App() {
       )}
 
       {isAssigningTasks && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex flex-col items-center justify-center space-y-4">
+        <div 
+          className="fixed inset-0 backdrop-blur-md z-[9999] flex flex-col items-center justify-center space-y-4"
+          style={{ backgroundColor: 'rgba(9, 13, 22, 0.92)' }}
+        >
           <div className="relative">
             <div className="w-16 h-16 border-4 border-violet-500/20 border-t-violet-500 rounded-full animate-spin"></div>
-            <Sparkles className="absolute inset-0 m-auto h-6 w-6 text-violet-400 animate-pulse" />
+            <Sparkles className="absolute inset-0 m-auto h-6 w-6 text-amber-400 animate-pulse" style={{ filter: 'drop-shadow(0 0 8px rgba(251, 191, 36, 0.6))' }} />
           </div>
-          <div className="text-center space-y-2">
-            <h3 className="text-lg font-black text-white tracking-wider">正在指派冒險任務...</h3>
-            <p className="text-xs text-slate-400 font-bold">冒險者公會正在為英雄們準備新的挑戰，請稍候 ⚔️</p>
+          <div className="text-center space-y-2 px-4">
+            <h3 className="text-xl font-black text-amber-400 tracking-wider animate-pulse" style={{ textShadow: '0 0 12px rgba(251, 191, 36, 0.4)' }}>
+              正在指派冒險任務...
+            </h3>
+            <p className="text-xs text-slate-300 font-bold max-w-sm leading-relaxed">
+              冒險者公會正在為英雄們準備新的挑戰，請稍候 ⚔️
+            </p>
           </div>
         </div>
       )}
