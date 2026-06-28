@@ -71,108 +71,125 @@ export const getTasks = async (req, res) => {
 // 2. Add Task (Parent only)
 export const addTask = async (req, res) => {
   const familyId = req.user.family_id;
-  const { 
-    name, description, type, difficulty, 
-    expReward, goldReward, ticketReward, 
-    attributeReward, period, assignedTo, status,
-    force, swapCount
-  } = req.body;
+  const isBatch = Array.isArray(req.body);
+  const tasksData = isBatch ? req.body : [req.body];
 
-  if (!name || !type || !difficulty) {
-    return res.status(400).json({ message: getMessage('TASK_REQUIRED_FIELDS') });
+  if (tasksData.length === 0) {
+    return res.status(400).json({ message: '無效的任務數據。' });
   }
-
-  // Length validation
-  const nameErr = validateTextField(name, '任務名稱', { required: true, maxLength: 100 });
-  if (nameErr) return res.status(400).json({ message: nameErr });
-  const descErr = validateTextField(description, '任務描述', { maxLength: 1000 });
-  if (descErr) return res.status(400).json({ message: descErr });
 
   // Permission check: kids can only assign tasks to themselves
   if (req.user.role === 'kid') {
-    if (!assignedTo || assignedTo !== req.user.child_id) {
-      return res.status(403).json({ message: getMessage('INSUFFICIENT_PERMISSION', { role: 'parent' }) });
+    for (const task of tasksData) {
+      if (!task.assignedTo || task.assignedTo !== req.user.child_id) {
+        return res.status(403).json({ message: getMessage('INSUFFICIENT_PERMISSION', { role: 'parent' }) });
+      }
     }
   } else if (req.user.role !== 'parent') {
     return res.status(403).json({ message: getMessage('INSUFFICIENT_PERMISSION', { role: 'parent' }) });
   }
 
-  // If assignedTo is 'general' or empty, save as NULL in PostgreSQL
-  const dbAssignedTo = (assignedTo === 'general' || !assignedTo) ? null : assignedTo;
-  
-  // Set initial status: if child is assigned, it starts as '進行中'; else '未指派'
-  const initialStatus = status || (dbAssignedTo ? '進行中' : '未指派');
-
-  const isForce = force === true || force === 'true';
-  let isRepeated = false;
-
   try {
-    if (dbAssignedTo) {
-      const recentCompleted = await pool.query(
-        `SELECT id FROM tasks 
-         WHERE assigned_to = $1 
-           AND LOWER(TRIM(name)) = LOWER(TRIM($2)) 
-           AND status = '已完成' 
-           AND COALESCE(completed_at, created_at) >= CURRENT_TIMESTAMP - INTERVAL '30 days'
-         LIMIT 1`,
-        [dbAssignedTo, name]
-      );
-      if (recentCompleted.rows.length > 0) {
-        if (!isForce) {
-          return res.status(409).json({
-            code: 'TASK_COOLDOWN_WARNING',
-            message: `該孩子在 30 天內已完成過此任務（名稱：${name}），確定要再次指派嗎？`
-          });
-        } else {
-          isRepeated = true;
-        }
+    await pool.query('BEGIN');
+    const createdTasks = [];
+
+    for (const task of tasksData) {
+      const { 
+        name, description, type, difficulty, 
+        expReward, goldReward, ticketReward, 
+        attributeReward, period, assignedTo, status,
+        force, swapCount
+      } = task;
+
+      if (!name || !type || !difficulty) {
+        throw new Error(getMessage('TASK_REQUIRED_FIELDS'));
       }
+
+      // Length validation
+      const nameErr = validateTextField(name, '任務名稱', { required: true, maxLength: 100 });
+      if (nameErr) throw new Error(nameErr);
+      const descErr = validateTextField(description, '任務描述', { maxLength: 1000 });
+      if (descErr) throw new Error(descErr);
+
+      const dbAssignedTo = (assignedTo === 'general' || !assignedTo) ? null : assignedTo;
+      const initialStatus = status || (dbAssignedTo ? '進行中' : '未指派');
+      const isForce = force === true || force === 'true';
+      let isRepeated = false;
+
+      if (dbAssignedTo && !isForce) {
+        const recentCompleted = await pool.query(
+          `SELECT id FROM tasks 
+           WHERE assigned_to = $1 
+             AND LOWER(TRIM(name)) = LOWER(TRIM($2)) 
+             AND status = '已完成' 
+             AND COALESCE(completed_at, created_at) >= CURRENT_TIMESTAMP - INTERVAL '30 days'
+           LIMIT 1`,
+          [dbAssignedTo, name]
+        );
+        if (recentCompleted.rows.length > 0) {
+          isRepeated = true; // Auto-flag repeat for batch imports rather than 409 error blocking
+        }
+      } else if (isForce) {
+        isRepeated = true;
+      }
+
+      const result = await pool.query(
+        `INSERT INTO tasks (
+           family_id, assigned_to, name, description, type, difficulty, 
+           exp_reward, gold_reward, ticket_reward, attribute_reward, period, status, is_repeated, swap_count
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+         RETURNING *`,
+        [
+          familyId, dbAssignedTo, name, description || '', type, difficulty,
+          expReward || 100, goldReward || 50, ticketReward || 1, attributeReward || null,
+          period || '每日', initialStatus, isRepeated, swapCount || 0
+        ]
+      );
+
+      const row = result.rows[0];
+      createdTasks.push({
+        id: row.id,
+        familyId: row.family_id,
+        assignedTo: row.assigned_to,
+        name: row.name,
+        description: row.description,
+        type: row.type,
+        difficulty: row.difficulty,
+        expReward: row.exp_reward,
+        goldReward: row.gold_reward,
+        ticketReward: row.ticket_reward,
+        attributeReward: row.attribute_reward,
+        period: row.period,
+        status: row.status,
+        rejectionReason: row.rejection_reason,
+        submission: row.submission,
+        dateCreated: row.date_created,
+        createdAt: row.created_at,
+        completedAt: row.completed_at,
+        isRepeated: row.is_repeated,
+        swapCount: row.swap_count
+      });
     }
 
-    const result = await pool.query(
-      `INSERT INTO tasks (
-         family_id, assigned_to, name, description, type, difficulty, 
-         exp_reward, gold_reward, ticket_reward, attribute_reward, period, status, is_repeated, swap_count
-       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
-       RETURNING *`,
-      [
-        familyId, dbAssignedTo, name, description || '', type, difficulty,
-        expReward || 100, goldReward || 50, ticketReward || 1, attributeReward || null,
-        period || '每日', initialStatus, isRepeated, swapCount || 0
-      ]
-    );
+    await pool.query('COMMIT');
 
-    const row = result.rows[0];
-    const createdTask = {
-      id: row.id,
-      familyId: row.family_id,
-      assignedTo: row.assigned_to,
-      name: row.name,
-      description: row.description,
-      type: row.type,
-      difficulty: row.difficulty,
-      expReward: row.exp_reward,
-      goldReward: row.gold_reward,
-      ticketReward: row.ticket_reward,
-      attributeReward: row.attribute_reward,
-      period: row.period,
-      status: row.status,
-      rejectionReason: row.rejection_reason,
-      submission: row.submission,
-      dateCreated: row.date_created,
-      createdAt: row.created_at,
-      completedAt: row.completed_at,
-      isRepeated: row.is_repeated,
-      swapCount: row.swap_count
-    };
-
-    res.status(201).json({
-      message: getMessage('ADD_TASK_SUCCESS', { name }),
-      task: createdTask
-    });
+    if (isBatch) {
+      res.status(201).json({
+        message: `成功指派了 ${createdTasks.length} 個任務！`,
+        tasks: createdTasks
+      });
+    } else {
+      res.status(201).json({
+        message: getMessage('ADD_TASK_SUCCESS', { name: createdTasks[0].name }),
+        task: createdTasks[0]
+      });
+    }
   } catch (error) {
+    await pool.query('ROLLBACK');
     console.error('addTask error:', error);
-    res.status(500).json({ message: getMessage('CREATE_TASK_ERROR') });
+    res.status(error.message.includes('欄位') || error.message.includes('必填') ? 400 : 500).json({ 
+      message: error.message || getMessage('CREATE_TASK_ERROR') 
+    });
   }
 };
 

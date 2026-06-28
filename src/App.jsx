@@ -135,6 +135,7 @@ function App() {
   // --- Toast State ---
   const [toasts, setToasts] = useState([]);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [isAssigningTasks, setIsAssigningTasks] = useState(false);
 
   const showToast = (message, type = 'info') => {
     const id = Date.now() + Math.random().toString();
@@ -550,12 +551,14 @@ function App() {
 
   // --- Task Operations ---
   const handleAddTask = async (newTaskOrTasks, taskIdToSwap, force = false) => {
+    setIsAssigningTasks(true);
     try {
       const isArray = Array.isArray(newTaskOrTasks);
-      const tasksToAdd = isArray ? newTaskOrTasks : [newTaskOrTasks];
+      let createdTasks = [];
 
-      const promises = tasksToAdd.map(task => {
-        const apiTaskData = {
+      if (isArray) {
+        // Send a single batch request
+        const apiTasksData = newTaskOrTasks.map(task => ({
           name: task.name,
           description: task.description,
           type: task.type,
@@ -569,33 +572,54 @@ function App() {
           status: task.status,
           force: force,
           swapCount: task.swapCount || 0
-        };
-        return api.addTask(apiTaskData);
-      });
+        }));
 
-      const results = await Promise.all(promises);
-      const createdTasks = results.map(r => r.task);
+        const res = await api.addTask(apiTasksData);
+        createdTasks = res.tasks || [];
+      } else {
+        // Single task
+        const apiTaskData = {
+          name: newTaskOrTasks.name,
+          description: newTaskOrTasks.description,
+          type: newTaskOrTasks.type,
+          difficulty: newTaskOrTasks.difficulty,
+          expReward: newTaskOrTasks.expReward,
+          goldReward: newTaskOrTasks.goldReward,
+          ticketReward: newTaskOrTasks.ticketReward,
+          attributeReward: newTaskOrTasks.attributeReward,
+          period: newTaskOrTasks.period,
+          assignedTo: newTaskOrTasks.assignedTo || activeChildId,
+          status: newTaskOrTasks.status,
+          force: force,
+          swapCount: newTaskOrTasks.swapCount || 0
+        };
+
+        const res = await api.addTask(apiTaskData);
+        createdTasks = res.task ? [res.task] : [];
+      }
 
       if (role === 'kid') {
-        if (isArray && tasksToAdd.length > 0) {
+        if (isArray && newTaskOrTasks.length > 0) {
           const newDrawnIds = createdTasks.map(t => t.id);
           setDrawnTasksMap(prev => {
             const existingIds = prev[activeChildId] || [];
             const merged = Array.from(new Set([...existingIds, ...newDrawnIds])).slice(-5);
             return { ...prev, [activeChildId]: merged };
           });
-          if (tasksToAdd.length === 5) {
+          if (newTaskOrTasks.length === 5) {
             showToast('🎉 抽選成功！德、智、體、群、美各 1 張任務已加入你的冒險任務庫。', 'success');
           } else {
-            showToast(`🎉 成功補充 ${tasksToAdd.length} 個任務！`, 'success');
+            showToast(`🎉 成功補充 ${newTaskOrTasks.length} 個任務！`, 'success');
           }
         } else if (taskIdToSwap) {
-          const realNewId = createdTasks[0].id;
-          setDrawnTasksMap(prev => {
-            const currentIds = prev[activeChildId] || [];
-            const updatedIds = currentIds.map(id => id === taskIdToSwap ? realNewId : id);
-            return { ...prev, [activeChildId]: updatedIds };
-          });
+          const realNewId = createdTasks[0]?.id;
+          if (realNewId) {
+            setDrawnTasksMap(prev => {
+              const currentIds = prev[activeChildId] || [];
+              const updatedIds = currentIds.map(id => id === taskIdToSwap ? realNewId : id);
+              return { ...prev, [activeChildId]: updatedIds };
+            });
+          }
 
           // Delete the old swapped task from database to prevent clutter
           try {
@@ -605,7 +629,11 @@ function App() {
           }
         }
       } else {
-        showToast('任務指派成功！', 'success');
+        if (isArray) {
+          showToast(`成功指派了 ${newTaskOrTasks.length} 個任務！`, 'success');
+        } else {
+          showToast('任務指派成功！', 'success');
+        }
       }
 
       await fetchAllData();
@@ -629,6 +657,8 @@ function App() {
       }
       showToast(error.message || '任務指派失敗。', 'error');
       return false;
+    } finally {
+      setIsAssigningTasks(false);
     }
   };
 
@@ -1309,6 +1339,19 @@ function App() {
           currentUser={currentUser}
           showToast={showToast}
         />
+      )}
+
+      {isAssigningTasks && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex flex-col items-center justify-center space-y-4">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-violet-500/20 border-t-violet-500 rounded-full animate-spin"></div>
+            <Sparkles className="absolute inset-0 m-auto h-6 w-6 text-violet-400 animate-pulse" />
+          </div>
+          <div className="text-center space-y-2">
+            <h3 className="text-lg font-black text-white tracking-wider">正在指派冒險任務...</h3>
+            <p className="text-xs text-slate-400 font-bold">冒險者公會正在為英雄們準備新的挑戰，請稍候 ⚔️</p>
+          </div>
+        </div>
       )}
     </div>
   );

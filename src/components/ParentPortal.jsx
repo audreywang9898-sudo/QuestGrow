@@ -787,6 +787,7 @@ function ParentPortal({
   };
 
   const addTemplateTask = (template) => {
+    const tasksToAdd = [];
     if (importAssignedTo === 'all') {
       children.forEach(child => {
         const newTask = {
@@ -804,7 +805,7 @@ function ParentPortal({
           assignedTo: child.id,
           dateCreated: new Date().toISOString().split('T')[0]
         };
-        onAddTask(newTask);
+        tasksToAdd.push(newTask);
       });
     } else if (importAssignedTo === 'general') {
       const newTask = {
@@ -822,7 +823,7 @@ function ParentPortal({
         assignedTo: 'general',
         dateCreated: new Date().toISOString().split('T')[0]
       };
-      onAddTask(newTask);
+      tasksToAdd.push(newTask);
     } else {
       const child = children.find(c => c.id === importAssignedTo);
       if (child) {
@@ -841,14 +842,20 @@ function ParentPortal({
           assignedTo: child.id,
           dateCreated: new Date().toISOString().split('T')[0]
         };
-        onAddTask(newTask);
+        tasksToAdd.push(newTask);
       }
+    }
+
+    if (tasksToAdd.length > 0) {
+      onAddTask(tasksToAdd);
     }
   };
 
   const importAllCategoryTasks = (type) => {
     const group = TASK_TEMPLATES.filter(t => t.type === type);
     if (group.length === 0) return;
+
+    const tasksToAdd = [];
 
     if (importAssignedTo === 'all') {
       children.forEach(child => {
@@ -868,7 +875,7 @@ function ParentPortal({
             assignedTo: child.id,
             dateCreated: new Date().toISOString().split('T')[0]
           };
-          onAddTask(newTask);
+          tasksToAdd.push(newTask);
         });
       });
     } else if (importAssignedTo === 'general') {
@@ -888,7 +895,7 @@ function ParentPortal({
           assignedTo: 'general',
           dateCreated: new Date().toISOString().split('T')[0]
         };
-        onAddTask(newTask);
+        tasksToAdd.push(newTask);
       });
     } else {
       const child = children.find(c => c.id === importAssignedTo);
@@ -909,9 +916,13 @@ function ParentPortal({
             assignedTo: child.id,
             dateCreated: new Date().toISOString().split('T')[0]
           };
-          onAddTask(newTask);
+          tasksToAdd.push(newTask);
         });
       }
+    }
+
+    if (tasksToAdd.length > 0) {
+      onAddTask(tasksToAdd);
     }
   };
 
