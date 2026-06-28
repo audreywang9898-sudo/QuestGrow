@@ -1,4 +1,4 @@
-const CACHE_NAME = 'questgrow-v2-cache';
+const CACHE_NAME = 'questgrow-v3-cache';
 const ASSETS = [
   '/',
   '/index.html',
@@ -17,21 +17,49 @@ self.addEventListener('install', (e) => {
 });
 
 self.addEventListener('activate', (e) => {
-  e.waitUntil(self.clients.claim());
+  e.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
+        })
+      );
+    }).then(() => self.clients.claim())
+  );
 });
 
 self.addEventListener('fetch', (e) => {
-  // Let the browser default handle non-GET or cross-domain requests
-  if (e.request.method !== 'GET') return;
+  // Let the browser default handle non-GET or API requests
+  if (e.request.method !== 'GET' || e.request.url.includes('/api/')) return;
   
+  // Network-First for HTML/root page to ensure we always get the latest Vite asset hashes
+  const isHtml = e.request.headers.get('accept')?.includes('text/html') || e.request.url === self.location.origin + '/';
+  
+  if (isHtml) {
+    e.respondWith(
+      fetch(e.request)
+        .then((response) => {
+          if (response.status === 200) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(e.request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
+  // Cache-First for other static assets (js, css, images)
   e.respondWith(
     caches.match(e.request).then((cachedResponse) => {
       if (cachedResponse) {
         return cachedResponse;
       }
       return fetch(e.request).then((networkResponse) => {
-        // Cache dynamic assets if they are from the same origin
-        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+        if (networkResponse && networkResponse.status === 200) {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(e.request, responseToCache);
@@ -39,7 +67,6 @@ self.addEventListener('fetch', (e) => {
         }
         return networkResponse;
       }).catch(() => {
-        // Fallback for offline API request or asset
         return new Response('Offline content', { status: 503, statusText: 'Service Unavailable' });
       });
     })
