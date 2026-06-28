@@ -566,16 +566,22 @@ function App() {
 
   // --- Task Operations ---
   const handleAddTask = async (newTaskOrTasks, taskIdToSwap, force = false) => {
-    setIsAssigningTasks(true);
-    setTaskAssignProgress(0);
+    const isArray = Array.isArray(newTaskOrTasks);
+    const isBatch = isArray && newTaskOrTasks.length > 1;
 
-    const progressInterval = setInterval(() => {
-      setTaskAssignProgress(prev => {
-        if (prev >= 92) return prev;
-        const increment = Math.floor(Math.random() * 8) + 3;
-        return Math.min(prev + increment, 92);
-      });
-    }, 120);
+    let progressInterval;
+    if (isBatch) {
+      setIsAssigningTasks(true);
+      setTaskAssignProgress(0);
+
+      progressInterval = setInterval(() => {
+        setTaskAssignProgress(prev => {
+          if (prev >= 92) return prev;
+          const increment = Math.floor(Math.random() * 8) + 3;
+          return Math.min(prev + increment, 92);
+        });
+      }, 120);
+    }
 
     try {
       const isArray = Array.isArray(newTaskOrTasks);
@@ -654,21 +660,23 @@ function App() {
           }
         }
       } else {
-        if (isArray) {
+        if (isBatch) {
           showToast(`成功指派了 ${newTaskOrTasks.length} 個任務！`, 'success');
         } else {
           showToast('任務指派成功！', 'success');
         }
       }
 
-      clearInterval(progressInterval);
-      setTaskAssignProgress(100);
-      await new Promise(resolve => setTimeout(resolve, 400));
+      if (isBatch) {
+        if (progressInterval) clearInterval(progressInterval);
+        setTaskAssignProgress(100);
+        await new Promise(resolve => setTimeout(resolve, 400));
+      }
 
       await fetchAllData();
       return createdTasks;
     } catch (error) {
-      clearInterval(progressInterval);
+      if (progressInterval) clearInterval(progressInterval);
       if (error.code === 'TASK_DUPLICATE_WARNING') {
         return new Promise((resolve) => {
           setTaskConflict({
@@ -683,7 +691,7 @@ function App() {
             },
             onReplace: async () => {
               setTaskConflict(null);
-              setIsAssigningTasks(true);
+              if (isBatch) setIsAssigningTasks(true);
               try {
                 // Delete duplicate task first
                 await api.deleteTask(error.conflictingTaskId);
@@ -695,7 +703,7 @@ function App() {
                 showToast(e.message || '取代任務失敗。', 'error');
                 resolve(false);
               } finally {
-                setIsAssigningTasks(false);
+                if (isBatch) setIsAssigningTasks(false);
               }
             },
             onCancel: () => {
@@ -726,7 +734,7 @@ function App() {
       showToast(error.message || '任務指派失敗。', 'error');
       return false;
     } finally {
-      clearInterval(progressInterval);
+      if (progressInterval) clearInterval(progressInterval);
       setIsAssigningTasks(false);
     }
   };
