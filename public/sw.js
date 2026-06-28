@@ -1,19 +1,7 @@
-const CACHE_NAME = 'questgrow-v3-cache';
-const ASSETS = [
-  '/',
-  '/index.html',
-  '/src/main.jsx',
-  '/src/App.jsx',
-  '/src/index.css',
-  '/src/utils/mockData.js'
-];
+const CACHE_NAME = 'questgrow-v4-cache';
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS).catch(() => {});
-    })
-  );
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (e) => {
@@ -21,9 +9,7 @@ self.addEventListener('activate', (e) => {
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
+          return caches.delete(key);
         })
       );
     }).then(() => self.clients.claim())
@@ -31,46 +17,8 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  // Let the browser default handle non-GET or API requests
-  if (e.request.method !== 'GET' || e.request.url.includes('/api/')) return;
-  
-  // Network-First for HTML/root page to ensure we always get the latest Vite asset hashes
-  const isHtml = e.request.headers.get('accept')?.includes('text/html') || e.request.url === self.location.origin + '/';
-  
-  if (isHtml) {
-    e.respondWith(
-      fetch(e.request)
-        .then((response) => {
-          if (response.status === 200) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(e.request, copy));
-          }
-          return response;
-        })
-        .catch(() => caches.match(e.request))
-    );
-    return;
-  }
-
-  // Cache-First for other static assets (js, css, images)
-  e.respondWith(
-    caches.match(e.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(e.request).then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200) {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(e.request, responseToCache);
-          });
-        }
-        return networkResponse;
-      }).catch(() => {
-        return new Response('Offline content', { status: 503, statusText: 'Service Unavailable' });
-      });
-    })
-  );
+  // Pass-through: Let the browser handle all fetches directly to prevent cached asset mismatches
+  return;
 });
 
 // ── Web Push Event Listeners ──────────────────────────────────────────
