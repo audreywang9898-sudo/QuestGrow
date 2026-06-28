@@ -585,9 +585,10 @@ function App() {
 
     try {
       const isArray = Array.isArray(newTaskOrTasks);
+      const isActuallyBatch = isArray && newTaskOrTasks.length > 1;
       let createdTasks = [];
 
-      if (isArray) {
+      if (isActuallyBatch) {
         // Send a single batch request
         const apiTasksData = newTaskOrTasks.map(task => ({
           name: task.name,
@@ -608,21 +609,22 @@ function App() {
         const res = await api.addTask(apiTasksData);
         createdTasks = res.tasks || [];
       } else {
-        // Single task
+        // Single task (or array of length 1)
+        const singleTask = isArray ? newTaskOrTasks[0] : newTaskOrTasks;
         const apiTaskData = {
-          name: newTaskOrTasks.name,
-          description: newTaskOrTasks.description,
-          type: newTaskOrTasks.type,
-          difficulty: newTaskOrTasks.difficulty,
-          expReward: newTaskOrTasks.expReward,
-          goldReward: newTaskOrTasks.goldReward,
-          ticketReward: newTaskOrTasks.ticketReward,
-          attributeReward: newTaskOrTasks.attributeReward,
-          period: newTaskOrTasks.period,
-          assignedTo: newTaskOrTasks.assignedTo || activeChildId,
-          status: newTaskOrTasks.status,
+          name: singleTask.name,
+          description: singleTask.description,
+          type: singleTask.type,
+          difficulty: singleTask.difficulty,
+          expReward: singleTask.expReward,
+          goldReward: singleTask.goldReward,
+          ticketReward: singleTask.ticketReward,
+          attributeReward: singleTask.attributeReward,
+          period: singleTask.period,
+          assignedTo: singleTask.assignedTo || activeChildId,
+          status: singleTask.status,
           force: force,
-          swapCount: newTaskOrTasks.swapCount || 0
+          swapCount: singleTask.swapCount || 0
         };
 
         const res = await api.addTask(apiTaskData);
