@@ -136,6 +136,7 @@ function App() {
   const [toasts, setToasts] = useState([]);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [isAssigningTasks, setIsAssigningTasks] = useState(false);
+  const [taskAssignProgress, setTaskAssignProgress] = useState(0);
 
   const showToast = (message, type = 'info') => {
     const id = Date.now() + Math.random().toString();
@@ -552,6 +553,16 @@ function App() {
   // --- Task Operations ---
   const handleAddTask = async (newTaskOrTasks, taskIdToSwap, force = false) => {
     setIsAssigningTasks(true);
+    setTaskAssignProgress(0);
+
+    const progressInterval = setInterval(() => {
+      setTaskAssignProgress(prev => {
+        if (prev >= 92) return prev;
+        const increment = Math.floor(Math.random() * 8) + 3;
+        return Math.min(prev + increment, 92);
+      });
+    }, 120);
+
     try {
       const isArray = Array.isArray(newTaskOrTasks);
       let createdTasks = [];
@@ -636,9 +647,14 @@ function App() {
         }
       }
 
+      clearInterval(progressInterval);
+      setTaskAssignProgress(100);
+      await new Promise(resolve => setTimeout(resolve, 400));
+
       await fetchAllData();
       return createdTasks;
     } catch (error) {
+      clearInterval(progressInterval);
       if (error.code === 'TASK_COOLDOWN_WARNING') {
         return new Promise((resolve) => {
           setCooldownWarning({
@@ -658,6 +674,7 @@ function App() {
       showToast(error.message || '任務指派失敗。', 'error');
       return false;
     } finally {
+      clearInterval(progressInterval);
       setIsAssigningTasks(false);
     }
   };
@@ -1357,6 +1374,19 @@ function App() {
             <p className="text-xs text-slate-300 font-bold max-w-sm leading-relaxed">
               冒險者公會正在為英雄們準備新的挑戰，請稍候 ⚔️
             </p>
+            
+            {/* Progress Bar */}
+            <div className="flex flex-col items-center gap-1.5 mt-4">
+              <div className="w-64 bg-white/10 h-2.5 rounded-full overflow-hidden border border-white/5 shadow-inner">
+                <div 
+                  className="bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-300 h-full rounded-full transition-all duration-300 ease-out shadow-[0_0_8px_rgba(251,191,36,0.6)]"
+                  style={{ width: `${taskAssignProgress}%` }}
+                ></div>
+              </div>
+              <div className="text-[10px] text-amber-400 font-black tracking-wider animate-pulse">
+                {taskAssignProgress}%
+              </div>
+            </div>
           </div>
         </div>
       )}
