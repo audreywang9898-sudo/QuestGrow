@@ -137,6 +137,20 @@ function App() {
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [isAssigningTasks, setIsAssigningTasks] = useState(false);
   const [taskAssignProgress, setTaskAssignProgress] = useState(0);
+  const [showLongWaitMessage, setShowLongWaitMessage] = useState(false);
+
+  useEffect(() => {
+    let timer;
+    if (isAssigningTasks) {
+      setShowLongWaitMessage(false);
+      timer = setTimeout(() => {
+        setShowLongWaitMessage(true);
+      }, 10000);
+    } else {
+      setShowLongWaitMessage(false);
+    }
+    return () => clearTimeout(timer);
+  }, [isAssigningTasks]);
 
   const showToast = (message, type = 'info') => {
     const id = Date.now() + Math.random().toString();
@@ -1456,6 +1470,12 @@ function App() {
               <div className="text-[10px] text-amber-400 font-black tracking-wider animate-pulse">
                 {taskAssignProgress}%
               </div>
+
+              {showLongWaitMessage && (
+                <div className="text-[11px] text-amber-400 font-black tracking-normal animate-bounce mt-4 max-w-xs bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-lg">
+                  ✨ 快要完成了！感謝您的等候 ✨
+                </div>
+              )}
             </div>
           </div>
         </div>
