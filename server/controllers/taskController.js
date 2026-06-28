@@ -89,6 +89,55 @@ export const addTask = async (req, res) => {
     return res.status(403).json({ message: getMessage('INSUFFICIENT_PERMISSION', { role: 'parent' }) });
   }
 
+  // Single-task conflict management validation checks (before database transaction)
+  if (!isBatch && tasksData.length > 0) {
+    const task = tasksData[0];
+    const { name, assignedTo, force } = task;
+    const dbAssignedTo = (assignedTo === 'general' || !assignedTo) ? null : assignedTo;
+    const isForce = force === true || force === 'true';
+
+    if (dbAssignedTo && !isForce) {
+      try {
+        // 1. Check for currently active duplicate task (in progress or pending)
+        const activeDuplicate = await pool.query(
+          `SELECT id FROM tasks 
+           WHERE assigned_to = $1 
+             AND LOWER(TRIM(name)) = LOWER(TRIM($2)) 
+             AND status IN ('進行中', '未指派')
+           LIMIT 1`,
+          [dbAssignedTo, name]
+        );
+        if (activeDuplicate.rows.length > 0) {
+          return res.status(409).json({
+            code: 'TASK_DUPLICATE_WARNING',
+            message: `該孩子目前已存在此進行中任務（名稱：${name}）。`,
+            conflictingTaskId: activeDuplicate.rows[0].id
+          });
+        }
+
+        // 2. Check for recently completed task (cooldown validation)
+        const recentCompleted = await pool.query(
+          `SELECT id FROM tasks 
+           WHERE assigned_to = $1 
+             AND LOWER(TRIM(name)) = LOWER(TRIM($2)) 
+             AND status = '已完成' 
+             AND COALESCE(completed_at, created_at) >= CURRENT_TIMESTAMP - INTERVAL '30 days'
+           LIMIT 1`,
+          [dbAssignedTo, name]
+        );
+        if (recentCompleted.rows.length > 0) {
+          return res.status(409).json({
+            code: 'TASK_COOLDOWN_WARNING',
+            message: `該孩子在 30 天內已完成過此任務（名稱：${name}），確定要再次指派嗎？`
+          });
+        }
+      } catch (err) {
+        console.error('Pre-insert validation check error:', err);
+        return res.status(500).json({ message: getMessage('CREATE_TASK_ERROR') });
+      }
+    }
+  }
+
   try {
     await pool.query('BEGIN');
     const createdTasks = [];
@@ -117,6 +166,7 @@ export const addTask = async (req, res) => {
       let isRepeated = false;
 
       if (dbAssignedTo && !isForce) {
+        // This block is only reached for batch imports. Auto-flag repeat for batch templates.
         const recentCompleted = await pool.query(
           `SELECT id FROM tasks 
            WHERE assigned_to = $1 
@@ -127,7 +177,7 @@ export const addTask = async (req, res) => {
           [dbAssignedTo, name]
         );
         if (recentCompleted.rows.length > 0) {
-          isRepeated = true; // Auto-flag repeat for batch imports rather than 409 error blocking
+          isRepeated = true;
         }
       } else if (isForce) {
         isRepeated = true;
