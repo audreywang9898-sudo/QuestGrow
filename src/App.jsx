@@ -282,6 +282,17 @@ function App() {
     }
   }, [currentUser]);
 
+  // Listen for storage changes to handle multi-tab session synchronization
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'questgrow_jwt_token' || e.key === 'questgrow_current_user') {
+        window.location.reload();
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   useEffect(() => {
     localStorage.setItem('questgrow_active_child_id', activeChildId);
   }, [activeChildId]);
