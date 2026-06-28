@@ -1358,7 +1358,7 @@ function App() {
         <div className="fixed inset-0 bg-black/80 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
           <div className="glass-panel p-6 border border-amber-500/30 max-w-md w-full space-y-4 animate-scale-up">
             <div className="flex items-center gap-3 text-amber-500">
-              <AlertCircle className="h-6.5 w-6.5 text-amber-500 shrink-0" />
+              <AlertCircle className="h-6 w-6 text-amber-500 shrink-0" />
               <h3 className="text-lg font-black text-amber-500 animate-pulse">
                 {taskConflict.type === 'duplicate' 
                   ? (language === 'zh' ? '🛡️ 進行中任務衝突管理' : '🛡️ Active Task Conflict')
@@ -1366,31 +1366,31 @@ function App() {
                 }
               </h3>
             </div>
-            <p className="text-sm text-slate-350 leading-relaxed font-semibold">
+            <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed font-semibold">
               {taskConflict.message}
             </p>
             
-            <div className="border-t border-white/5 pt-4 space-y-2">
+            <div className="border-t border-slate-200/20 dark:border-white/5 pt-4 space-y-2">
               {taskConflict.type === 'duplicate' ? (
                 <>
                   <button
                     type="button"
                     onClick={taskConflict.onReplace}
-                    className="w-full px-4 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white shadow-lg shadow-red-900/20 transition-all hover:scale-[1.01]"
+                    className="w-full px-4 py-2.5 rounded-[4px] text-xs font-black bg-[#FF4747] text-white hover:bg-[#ff3030] transition-colors"
                   >
                     {language === 'zh' ? '取代舊任務 (刪除原本重複任務，改指派新任務)' : 'Replace (Delete Existing)'}
                   </button>
                   <button
                     type="button"
                     onClick={taskConflict.onConfirm}
-                    className="w-full px-4 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white shadow-lg shadow-amber-900/20 transition-all hover:scale-[1.01]"
+                    className="w-full px-4 py-2.5 rounded-[4px] text-xs font-black bg-[#3661FF] text-white hover:bg-[#4e75ff] transition-colors"
                   >
                     {language === 'zh' ? '重複指派 (增加為第二個進行中任務)' : 'Duplicate Assign (Keep Both)'}
                   </button>
                   <button
                     type="button"
                     onClick={taskConflict.onCancel}
-                    className="w-full px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-300 hover:text-white transition-all hover:scale-[1.01]"
+                    className="w-full px-4 py-2.5 rounded-[4px] text-xs font-bold bg-[#252529] border border-[#35363A] text-white hover:bg-[#35363a] transition-colors"
                   >
                     {language === 'zh' ? '取消指派' : 'Cancel Assignment'}
                   </button>
@@ -1400,14 +1400,14 @@ function App() {
                   <button
                     type="button"
                     onClick={taskConflict.onConfirm}
-                    className="px-4 py-2 rounded-lg text-xs font-black bg-amber-600 hover:bg-amber-500 text-white shadow-md shadow-amber-900/20 transition-all"
+                    className="px-4 py-2 rounded-[4px] text-xs font-black bg-[#3661FF] text-white hover:bg-[#4e75ff] transition-colors"
                   >
                     {language === 'zh' ? '確認強制指派' : 'Force Assign'}
                   </button>
                   <button
                     type="button"
                     onClick={taskConflict.onCancel}
-                    className="px-4 py-2 rounded-lg text-xs font-bold bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-300 hover:text-white transition-all"
+                    className="px-4 py-2 rounded-[4px] text-xs font-bold bg-[#252529] border border-[#35363A] text-white hover:bg-[#35363a] transition-colors"
                   >
                     {language === 'zh' ? '取消' : 'Cancel'}
                   </button>
