@@ -1358,16 +1358,16 @@ function KidPortal({
   })();
 
   return (
-    <div className="space-y-6 relative">
+    <div className="kid-portal-wrapper space-y-5 relative">
       
       {/* Read-only mode banner */}
       {isReadOnly && (
-        <div className="bg-amber-500/10 border border-amber-500/25 p-3.5 rounded-xl flex items-center justify-between text-xs text-amber-700 font-bold shadow-sm animate-success">
-          <span className="flex items-center gap-2">
-            <Eye className="h-4.5 w-4.5 text-amber-600 shrink-0" />
+        <div className="kid-readonly-banner p-4 flex items-center justify-between animate-success">
+          <span className="flex items-center gap-2.5 text-amber-800 font-bold text-sm">
+            <span className="text-2xl">👁️</span>
             <span>{t('readOnlyBanner', { name: stats.name })}</span>
           </span>
-          <span className="bg-amber-600 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded shadow-sm">
+          <span className="kid-readonly-banner-tag">
             {t('readOnlyTag')}
           </span>
         </div>
@@ -1404,7 +1404,7 @@ function KidPortal({
       )}
 
       {/* V2 Simulated FCM push notifications bell */}
-      <div className="flex justify-between items-center bg-white/5 border border-white/5 p-3 rounded-xl">
+      <div className="kid-notification-bar flex justify-between items-center">
         <div className="flex items-center gap-2">
           <div className="relative">
             <button 
@@ -1450,7 +1450,7 @@ function KidPortal({
 
       {/* ── Merged: Daily Encouragement + Family Goal Banner ── */}
       {(dailyProverb || maxPointsWish) && (
-        <div className="daily-goal-banner rounded-2xl overflow-hidden flex flex-col sm:flex-row">
+        <div className="kid-daily-banner overflow-hidden flex flex-col sm:flex-row">
 
           {/* Left: Daily Proverb */}
           {dailyProverb && (
@@ -1551,13 +1551,13 @@ function KidPortal({
 
       {/* FCM Notifications Panel */}
       {showNotifications && (
-        <div className="glass-panel p-4 border-indigo-500/30 bg-slate-950/90 space-y-3 max-w-md animate-success">
-          <div className="flex justify-between items-center border-b border-white/10 pb-2">
-            <h4 className="text-xs font-black text-indigo-300 uppercase tracking-widest flex items-center gap-1.5">
+        <div className="bg-white border border-indigo-100 rounded-2xl p-4 space-y-3 max-w-md animate-success shadow-lg" style={{ boxShadow: '0 8px 32px rgba(99,102,241,0.1)' }}>
+          <div className="flex justify-between items-center border-b border-indigo-50 pb-2">
+            <h4 className="text-xs font-black text-indigo-600 uppercase tracking-widest flex items-center gap-1.5">
               <Bell className="h-4 w-4" />
               {t('pushNotificationLogsTitle')}
             </h4>
-            <button onClick={() => setShowNotifications(false)} className="text-slate-400 hover:text-slate-200 text-xs font-bold">{t('close')}</button>
+            <button onClick={() => setShowNotifications(false)} className="text-slate-400 hover:text-slate-600 text-xs font-bold">{t('close')}</button>
           </div>
           {fcmNotifications.length === 0 ? (
             <p className="text-xs text-slate-400 text-center py-4">{t('noNotifications')}</p>
@@ -1578,74 +1578,62 @@ function KidPortal({
       )}
 
       {/* Tab Navigation */}
-      <div className="flex gap-2 p-1.5 bg-slate-950/60 border border-white/5 rounded-2xl overflow-x-auto mb-6 shadow-inner">
+      <div className="kid-tab-bar flex overflow-x-auto mb-4" style={{ scrollbarWidth: 'none' }}>
         <button
           onClick={() => setActiveSubTab('character')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap rounded-xl ${
-            activeSubTab === 'character' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_0_12px_rgba(54,97,255,0.4)] hover:scale-105' : 'text-[#b5b7bc] hover:text-white hover:bg-white/5'
-          } ${showTour && tourStep === 1 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse' : ''}`}
+          className={`kid-tab-btn ${activeSubTab === 'character' ? 'kid-tab-btn-char' : ''} ${showTour && tourStep === 1 ? 'kid-tour-ring' : ''}`}
         >
-          <User className={`h-4 w-4 ${activeSubTab === 'character' ? 'text-white' : 'text-[#3661FF]'}`} />
+          <User className="h-4 w-4 flex-shrink-0" />
           {t('tabChar')}
         </button>
         <button
           onClick={() => setActiveSubTab('tasks')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap rounded-xl ${
-            activeSubTab === 'tasks' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_0_12px_rgba(54,97,255,0.4)] hover:scale-105' : 'text-[#b5b7bc] hover:text-white hover:bg-white/5'
-          } ${showTour && tourStep === 2 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse' : ''}`}
+          className={`kid-tab-btn ${activeSubTab === 'tasks' ? 'kid-tab-btn-quests' : ''} ${showTour && tourStep === 2 ? 'kid-tour-ring' : ''}`}
         >
-          <Award className={`h-4 w-4 ${activeSubTab === 'tasks' ? 'text-white' : 'text-[#3661FF]'}`} />
+          <Award className="h-4 w-4 flex-shrink-0" />
           {t('tabQuests')}
           {activeTasksList.length > 0 && (
-            <span className="bg-[#FF4747] text-white px-1.5 py-0.5 rounded-full text-[10px] font-black shadow-sm">
+            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black shadow-sm ${activeSubTab === 'tasks' ? 'bg-white/30 text-white' : 'bg-rose-500 text-white'}`}>
               {activeTasksList.length}
             </span>
           )}
         </button>
         <button
           onClick={() => setActiveSubTab('gacha')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap rounded-xl ${
-            activeSubTab === 'gacha' ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-[0_0_12px_rgba(124,58,237,0.4)] hover:scale-105' : 'text-[#b5b7bc] hover:text-white hover:bg-white/5'
-          } ${showTour && tourStep === 3 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse' : ''}`}
+          className={`kid-tab-btn ${activeSubTab === 'gacha' ? 'kid-tab-btn-gacha' : ''} ${showTour && tourStep === 3 ? 'kid-tour-ring' : ''}`}
         >
-          <Sparkles className={`h-4 w-4 ${activeSubTab === 'gacha' ? 'text-white' : 'text-[#FF9F1C]'}`} />
+          <Sparkles className="h-4 w-4 flex-shrink-0" />
           {t('tabSummon')}
           {stats.tickets > 0 && (
-            <span className="bg-[#FF9F1C] text-[#111216] px-1.5 py-0.5 rounded-full text-[10px] font-black animate-pulse shadow-sm">
+            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black animate-pulse shadow-sm ${activeSubTab === 'gacha' ? 'bg-white/30 text-white' : 'bg-amber-400 text-amber-900'}`}>
               {stats.tickets}
             </span>
           )}
         </button>
         <button
           onClick={() => setActiveSubTab('backpack')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap rounded-xl ${
-            activeSubTab === 'backpack' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_0_12px_rgba(54,97,255,0.4)] hover:scale-105' : 'text-[#b5b7bc] hover:text-white hover:bg-white/5'
-          } ${showTour && tourStep === 4 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse' : ''}`}
+          className={`kid-tab-btn ${activeSubTab === 'backpack' ? 'kid-tab-btn-backpack' : ''} ${showTour && tourStep === 4 ? 'kid-tour-ring' : ''}`}
         >
-          <Package className={`h-4 w-4 ${activeSubTab === 'backpack' ? 'text-white' : 'text-[#3661FF]'}`} />
+          <Package className="h-4 w-4 flex-shrink-0" />
           {t('tabBackpack')}
           {inventory.filter(i => i.status === '未使用').length > 0 && (
-            <span className="bg-[#35363A] text-white px-1.5 py-0.5 rounded-full text-[10px] shadow-sm">
+            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold shadow-sm ${activeSubTab === 'backpack' ? 'bg-white/30 text-white' : 'bg-slate-200 text-slate-600'}`}>
               {inventory.filter(i => i.status === '未使用').length}
             </span>
           )}
         </button>
         <button
           onClick={() => setActiveSubTab('wishlist')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap rounded-xl ${
-            activeSubTab === 'wishlist' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-[#111216] shadow-[0_0_12px_rgba(245,158,11,0.4)] hover:scale-105' : 'text-[#b5b7bc] hover:text-white hover:bg-white/5'
-          } ${showTour && tourStep === 5 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse' : ''}`}
+          className={`kid-tab-btn ${activeSubTab === 'wishlist' ? 'kid-tab-btn-wishlist' : ''} ${showTour && tourStep === 5 ? 'kid-tour-ring' : ''}`}
         >
-          <Trophy className={`h-4 w-4 ${activeSubTab === 'wishlist' ? 'text-[#111216]' : 'text-[#FF9F1C]'}`} />
+          <Trophy className="h-4 w-4 flex-shrink-0" />
           {t('tabKidWishlist')}
         </button>
         <button
           onClick={() => setActiveSubTab('leaderboard')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap rounded-xl ${
-            activeSubTab === 'leaderboard' ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-[0_0_12px_rgba(244,63,94,0.4)] hover:scale-105' : 'text-[#b5b7bc] hover:text-white hover:bg-white/5'
-          } ${showTour && tourStep === 6 ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#111216] animate-pulse' : ''}`}
+          className={`kid-tab-btn ${activeSubTab === 'leaderboard' ? 'kid-tab-btn-leaderboard' : ''} ${showTour && tourStep === 6 ? 'kid-tour-ring' : ''}`}
         >
-          <Trophy className={`h-4 w-4 ${activeSubTab === 'leaderboard' ? 'text-white' : 'text-violet-400'}`} />
+          <Trophy className="h-4 w-4 flex-shrink-0" />
           {t('tabLeaderboard')}
         </button>
       </div>
@@ -1665,6 +1653,11 @@ function KidPortal({
           }}>
             {/* Decorative shimmer */}
             <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(ellipse at 20% 50%, rgba(255,255,255,0.3) 0%, transparent 60%)' }} />
+            {/* Floating star decorations */}
+            <span className="kid-hero-star text-2xl" style={{ top: '14%', right: '12%', '--duration': '2.8s', '--delay': '0s' }}>✨</span>
+            <span className="kid-hero-star text-base" style={{ top: '60%', right: '7%', '--duration': '3.4s', '--delay': '0.6s' }}>⭐</span>
+            <span className="kid-hero-star text-xl" style={{ top: '8%', left: '55%', '--duration': '2.2s', '--delay': '1.1s' }}>🌟</span>
+            <span className="kid-hero-star text-sm" style={{ bottom: '20%', right: '22%', '--duration': '4s', '--delay': '0.3s' }}>💫</span>
             
             <div className="relative z-10 p-6 flex items-center gap-6">
               {/* Avatar with glow ring */}
@@ -1711,49 +1704,37 @@ function KidPortal({
 
               {/* Currency chips */}
               <div className="shrink-0 flex flex-col gap-2">
-                <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-white/30">
-                  <span className="text-lg">🪙</span>
-                  <span className="text-white font-black text-sm">{stats.gold}</span>
+                <div className="kid-currency-chip">
+                  <span className="text-xl">🪙</span>
+                  <span>{stats.gold}</span>
                 </div>
-                <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-white/30">
-                  <span className="text-lg">🎫</span>
-                  <span className="text-white font-black text-sm">{stats.tickets}</span>
+                <div className="kid-currency-chip">
+                  <span className="text-xl">🎫</span>
+                  <span>{stats.tickets}</span>
                 </div>
               </div>
             </div>
 
             {/* HP & EXP bars inside banner */}
-            <div className="relative z-10 px-6 pb-5 space-y-2.5">
+            <div className="relative z-10 px-6 pb-5 space-y-3">
               {/* HP Bar */}
               <div>
-                <div className="flex justify-between text-[10px] font-black text-white/90 uppercase tracking-wider mb-1">
+                <div className="flex justify-between text-[11px] font-black text-white/95 uppercase tracking-wider mb-1.5">
                   <span>❤️ HP / Stamina</span>
                   <span>100 / 100 HP</span>
                 </div>
-                <div className="h-3 bg-white/20 rounded-full overflow-hidden border border-white/20">
-                  <div className="h-full rounded-full transition-all duration-700 relative overflow-hidden" style={{
-                    width: '100%',
-                    background: 'linear-gradient(90deg, #ff6b6b, #ff4b4b, #ff6b6b)',
-                    backgroundSize: '200% 100%',
-                    animation: 'shine-flow 2s infinite linear',
-                    boxShadow: '0 0 10px rgba(255,75,75,0.6)'
-                  }}></div>
+                <div className="kid-bar-track">
+                  <div className="kid-bar-hp" style={{ width: '100%' }} />
                 </div>
               </div>
               {/* EXP Bar */}
               <div>
-                <div className="flex justify-between text-[10px] font-black text-white/90 uppercase tracking-wider mb-1">
-                  <span>⚡ EXP / Progress</span>
-                  <span>Level {stats.level} ({stats.exp} / {stats.expNeeded} EXP)</span>
+                <div className="flex justify-between text-[11px] font-black text-white/95 uppercase tracking-wider mb-1.5">
+                  <span>⚡ EXP</span>
+                  <span>Lv.{stats.level} &nbsp;{stats.exp} / {stats.expNeeded}</span>
                 </div>
-                <div className="h-3 bg-white/20 rounded-full overflow-hidden border border-white/20">
-                  <div className="h-full rounded-full transition-all duration-700 relative overflow-hidden" style={{
-                    width: `${Math.min(100, (stats.exp / stats.expNeeded) * 100)}%`,
-                    background: 'linear-gradient(90deg, #a855f7, #8b5cf6, #c084fc)',
-                    backgroundSize: '200% 100%',
-                    animation: 'shine-flow 2.5s infinite linear',
-                    boxShadow: '0 0 10px rgba(168,85,247,0.6)'
-                  }}></div>
+                <div className="kid-bar-track">
+                  <div className="kid-bar-exp" style={{ width: `${Math.min(100, (stats.exp / stats.expNeeded) * 100)}%` }} />
                 </div>
               </div>
             </div>
@@ -1765,16 +1746,16 @@ function KidPortal({
             {/* Radar Chart Panel */}
             <div className="lg:col-span-2 rounded-3xl p-5 flex flex-col items-center gap-3" style={{
               background: stats.avatar === 'girl'
-                ? 'linear-gradient(135deg, #fffafb 0%, #fff1f2 100%)'
-                : 'linear-gradient(135deg, #f8faff 0%, #eef2ff 100%)',
+                ? 'linear-gradient(135deg, #ffffff 0%, #fff1f2 50%, #fce7f3 100%)'
+                : 'linear-gradient(135deg, #ffffff 0%, #eef2ff 50%, #ede9fe 100%)',
               border: stats.avatar === 'girl'
-                ? '1.5px solid rgba(244,63,94,0.15)'
-                : '1.5px solid rgba(99,102,241,0.15)',
+                ? '2px solid rgba(244,63,94,0.2)'
+                : '2px solid rgba(99,102,241,0.2)',
               boxShadow: stats.avatar === 'girl'
-                ? '0 8px 32px rgba(244,63,94,0.1)'
-                : '0 8px 32px rgba(99,102,241,0.1)'
+                ? '0 12px 40px rgba(244,63,94,0.12), 0 4px 12px rgba(244,63,94,0.06)'
+                : '0 12px 40px rgba(99,102,241,0.12), 0 4px 12px rgba(99,102,241,0.06)'
             }}>
-              <div className="text-xs font-black text-indigo-500 uppercase tracking-widest">⬡ 五大能力雷達圖</div>
+              <div className="text-xs font-black uppercase tracking-widest" style={{ color: stats.avatar === 'girl' ? '#db2777' : '#6366f1' }}>⬡ 五大能力雷達圖</div>
               <svg width="240" height="240" viewBox="-20 -20 240 240" className="w-full max-w-[240px]">
                 {/* Background polygons */}
                 {getGridPentagons().map((pts, i) => (
@@ -1830,7 +1811,9 @@ function KidPortal({
 
             {/* Attributes Panel */}
             <div className="lg:col-span-3 space-y-3">
-              <div className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">🏆 {t('rpgAttributes')}</div>
+              <div className="text-xs font-black text-indigo-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                🏆 {t('rpgAttributes')}
+              </div>
               {[
                 { name: "Wisdom",         nameFull: t('attrWisdomFull'),         val: stats.attributes?.Wisdom || 0,         desc: t('attrWisdomDesc'),         color: '#0284c7', bg: 'from-sky-50 to-blue-50',     border: 'border-sky-200',   icon: '🔮', barColor: '#0284c7' },
                 { name: "Responsibility", nameFull: t('attrResponsibilityFull'), val: stats.attributes?.Responsibility || 0, desc: t('attrResponsibilityDesc'), color: '#16a34a', bg: 'from-emerald-50 to-green-50', border: 'border-emerald-200', icon: '🛡️', barColor: '#16a34a' },
@@ -1841,23 +1824,23 @@ function KidPortal({
                 const maxVal = 50;
                 const pct = Math.min(100, (attr.val / maxVal) * 100);
                 return (
-                  <div key={attr.name} className={`flex items-center gap-3 p-3.5 rounded-2xl bg-gradient-to-r ${attr.bg} border ${attr.border} shadow-sm hover:shadow-md transition-all hover:scale-[1.01]`}>
+                  <div key={attr.name} className={`kid-attr-card flex items-center gap-3 p-4 bg-gradient-to-r ${attr.bg} border-2 ${attr.border}`}>
                     {/* Icon */}
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-xl shadow-sm" style={{ background: `${attr.color}18`, border: `1.5px solid ${attr.color}30` }}>
+                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 text-2xl shadow-md" style={{ background: `${attr.color}15`, border: `2px solid ${attr.color}30` }}>
                       {attr.icon}
                     </div>
                     {/* Label + Bar */}
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-baseline mb-1">
                         <span className="text-sm font-black" style={{ color: attr.color }}>{attr.nameFull}</span>
-                        <span className="text-lg font-black" style={{ color: attr.color }}>{attr.val}</span>
+                        <span className="text-2xl font-black tabular-nums" style={{ color: attr.color }}>{attr.val}</span>
                       </div>
-                      <div className="text-[10px] text-slate-400 mb-1.5">{attr.desc}</div>
-                      {/* Mini progress bar */}
-                      <div className="h-2 rounded-full bg-white border overflow-hidden" style={{ borderColor: `${attr.color}25` }}>
+                      <div className="text-[10px] text-slate-500 mb-2">{attr.desc}</div>
+                      {/* Upgraded progress bar */}
+                      <div className="h-3 rounded-full bg-white border-2 overflow-hidden" style={{ borderColor: `${attr.color}30` }}>
                         <div
                           className="h-full rounded-full transition-all duration-700"
-                          style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${attr.barColor}, ${attr.barColor}cc)`, boxShadow: `0 0 6px ${attr.barColor}50` }}
+                          style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${attr.barColor}dd, ${attr.barColor})`, boxShadow: `0 0 8px ${attr.barColor}60` }}
                         />
                       </div>
                     </div>
