@@ -1744,7 +1744,7 @@ function KidPortal({
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
 
             {/* Radar Chart Panel */}
-            <div className="lg:col-span-2 rounded-3xl p-5 flex flex-col items-center gap-3" style={{
+            <div className="lg:col-span-2 rounded-3xl p-5 flex flex-col items-center gap-4" style={{
               background: stats.avatar === 'girl'
                 ? 'linear-gradient(135deg, #ffffff 0%, #fff1f2 50%, #fce7f3 100%)'
                 : 'linear-gradient(135deg, #ffffff 0%, #eef2ff 50%, #ede9fe 100%)',
@@ -1755,58 +1755,169 @@ function KidPortal({
                 ? '0 12px 40px rgba(244,63,94,0.12), 0 4px 12px rgba(244,63,94,0.06)'
                 : '0 12px 40px rgba(99,102,241,0.12), 0 4px 12px rgba(99,102,241,0.06)'
             }}>
-              <div className="text-xs font-black uppercase tracking-widest" style={{ color: stats.avatar === 'girl' ? '#db2777' : '#6366f1' }}>⬡ 五大能力雷達圖</div>
-              <svg width="240" height="240" viewBox="-20 -20 240 240" className="w-full max-w-[240px]">
-                {/* Background polygons */}
-                {getGridPentagons().map((pts, i) => (
-                  <polygon key={i} points={pts} fill="none" stroke="rgba(99,102,241,0.15)" strokeWidth="1.5" />
+              <div className="text-sm font-black uppercase tracking-widest flex items-center gap-1.5" style={{ color: stats.avatar === 'girl' ? '#db2777' : '#6366f1' }}>
+                ⬡ 五大能力雷達圖
+              </div>
+              {(() => {
+                const CX = 120, CY = 120, R = 80;
+                const MAX_VAL = 40;
+                const safeAttr = stats.attributes || {};
+                const attrDefs = [
+                  { key: 'Wisdom',         label: '智', emoji: '🔮', val: safeAttr.Wisdom || 0,         color: '#0ea5e9', fill: 'rgba(14,165,233,0.15)',  glow: 'rgba(14,165,233,0.6)'  },
+                  { key: 'Responsibility', label: '德', emoji: '🛡️', val: safeAttr.Responsibility || 0, color: '#10b981', fill: 'rgba(16,185,129,0.15)', glow: 'rgba(16,185,129,0.6)' },
+                  { key: 'Empathy',        label: '群', emoji: '💖', val: safeAttr.Empathy || 0,        color: '#f43f5e', fill: 'rgba(244,63,94,0.15)',   glow: 'rgba(244,63,94,0.6)'   },
+                  { key: 'Creativity',     label: '美', emoji: '🎨', val: safeAttr.Creativity || 0,     color: '#8b5cf6', fill: 'rgba(139,92,246,0.15)',  glow: 'rgba(139,92,246,0.6)'  },
+                  { key: 'Courage',        label: '體', emoji: '⚡', val: safeAttr.Courage || 0,        color: '#f97316', fill: 'rgba(249,115,22,0.15)',  glow: 'rgba(249,115,22,0.6)'  },
+                ];
+                const N = 5;
+                const angle = (i) => (i * 2 * Math.PI / N) - Math.PI / 2;
+                // Grid ring points
+                const ringPoints = (frac) => attrDefs.map((_, i) => {
+                  const r = R * frac;
+                  return `${CX + r * Math.cos(angle(i))},${CY + r * Math.sin(angle(i))}`;
+                }).join(' ');
+                // Data polygon points (min 8% so tiny values still show a dot)
+                const dataPoints = attrDefs.map((a, i) => {
+                  const ratio = Math.min(MAX_VAL, Math.max(3, a.val)) / MAX_VAL;
+                  return `${CX + R * ratio * Math.cos(angle(i))},${CY + R * ratio * Math.sin(angle(i))}`;
+                }).join(' ');
+                // Vertex positions for dots + labels
+                const vertex = (i, extraR = 0) => ({
+                  x: CX + (R + extraR) * Math.cos(angle(i)),
+                  y: CY + (R + extraR) * Math.sin(angle(i)),
+                });
+                const dataVertex = (i) => {
+                  const ratio = Math.min(MAX_VAL, Math.max(3, attrDefs[i].val)) / MAX_VAL;
+                  return {
+                    x: CX + R * ratio * Math.cos(angle(i)),
+                    y: CY + R * ratio * Math.sin(angle(i)),
+                  };
+                };
+                const LEVELS = [0.2, 0.4, 0.6, 0.8, 1.0];
+                const RING_COLORS = ['#e2e8f0', '#cbd5e1', '#a5b4fc', '#818cf8', '#6366f1'];
+
+                return (
+                  <svg width="240" height="240" viewBox="0 0 240 240" className="w-full max-w-[280px] drop-shadow-sm">
+                    <defs>
+                      {/* Per-attribute glow filters */}
+                      {attrDefs.map((a, i) => (
+                        <filter key={i} id={`glow-${i}`} x="-50%" y="-50%" width="200%" height="200%">
+                          <feGaussianBlur stdDeviation="3" result="blur" />
+                          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                        </filter>
+                      ))}
+                      {/* Data area gradient */}
+                      <radialGradient id="dataFill" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stopColor={stats.avatar === 'girl' ? 'rgba(236,72,153,0.35)' : 'rgba(99,102,241,0.35)'} />
+                        <stop offset="100%" stopColor={stats.avatar === 'girl' ? 'rgba(236,72,153,0.08)' : 'rgba(99,102,241,0.08)'} />
+                      </radialGradient>
+                    </defs>
+
+                    {/* ── Ring levels ── */}
+                    {LEVELS.map((frac, li) => (
+                      <polygon
+                        key={li}
+                        points={ringPoints(frac)}
+                        fill={li === LEVELS.length - 1 ? 'rgba(99,102,241,0.03)' : 'none'}
+                        stroke={RING_COLORS[li]}
+                        strokeWidth={li === LEVELS.length - 1 ? '1.5' : '1'}
+                        strokeDasharray={li < 2 ? '4 3' : 'none'}
+                      />
+                    ))}
+
+                    {/* ── Axis lines (per-attribute color) ── */}
+                    {attrDefs.map((a, i) => {
+                      const v = vertex(i);
+                      return (
+                        <line key={i}
+                          x1={CX} y1={CY} x2={v.x} y2={v.y}
+                          stroke={a.color} strokeWidth="1.5" strokeOpacity="0.35"
+                          strokeDasharray="3 3"
+                        />
+                      );
+                    })}
+
+                    {/* ── Data polygon fill ── */}
+                    <polygon
+                      points={dataPoints}
+                      fill="url(#dataFill)"
+                      stroke="none"
+                    />
+
+                    {/* ── Data polygon stroke ── */}
+                    <polygon
+                      points={dataPoints}
+                      fill="none"
+                      stroke={stats.avatar === 'girl' ? '#ec4899' : '#6366f1'}
+                      strokeWidth="3"
+                      strokeLinejoin="round"
+                      style={{ filter: stats.avatar === 'girl' ? 'drop-shadow(0 0 5px rgba(236,72,153,0.55))' : 'drop-shadow(0 0 5px rgba(99,102,241,0.55))' }}
+                    />
+
+                    {/* ── Vertex dots (colored per attribute) ── */}
+                    {attrDefs.map((a, i) => {
+                      const dv = dataVertex(i);
+                      return (
+                        <g key={i}>
+                          {/* Outer glow ring */}
+                          <circle cx={dv.x} cy={dv.y} r="7" fill={a.color} fillOpacity="0.2" />
+                          {/* Main dot */}
+                          <circle cx={dv.x} cy={dv.y} r="5" fill={a.color}
+                            style={{ filter: `drop-shadow(0 0 4px ${a.glow})` }} />
+                          {/* White center */}
+                          <circle cx={dv.x} cy={dv.y} r="2" fill="#ffffff" fillOpacity="0.9" />
+                        </g>
+                      );
+                    })}
+
+                    {/* ── Outer badge labels ── */}
+                    {attrDefs.map((a, i) => {
+                      const lv = vertex(i, 26);
+                      return (
+                        <g key={i} style={{ cursor: 'default' }}>
+                          {/* Badge background */}
+                          <circle cx={lv.x} cy={lv.y} r="19"
+                            fill="#ffffff"
+                            stroke={a.color} strokeWidth="2.5"
+                            style={{ filter: `drop-shadow(0 2px 6px ${a.glow.replace('0.6', '0.25')})` }}
+                          />
+                          {/* Emoji icon */}
+                          <text x={lv.x} y={lv.y - 3}
+                            fontSize="12" textAnchor="middle" dominantBaseline="middle"
+                          >{a.emoji}</text>
+                          {/* Score */}
+                          <text x={lv.x} y={lv.y + 12}
+                            fontSize="10" fontWeight="900" textAnchor="middle"
+                            fill={a.color}
+                          >{a.val}</text>
+                        </g>
+                      );
+                    })}
+
+                    {/* ── Center dot ── */}
+                    <circle cx={CX} cy={CY} r="4"
+                      fill={stats.avatar === 'girl' ? '#ec4899' : '#6366f1'}
+                      fillOpacity="0.6"
+                    />
+                  </svg>
+                );
+              })()}
+
+              {/* Legend row */}
+              <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 px-2">
+                {[
+                  { label: '智', emoji: '🔮', color: '#0ea5e9' },
+                  { label: '德', emoji: '🛡️', color: '#10b981' },
+                  { label: '群', emoji: '💖', color: '#f43f5e' },
+                  { label: '美', emoji: '🎨', color: '#8b5cf6' },
+                  { label: '體', emoji: '⚡', color: '#f97316' },
+                ].map(({ label, emoji, color }) => (
+                  <span key={label} className="flex items-center gap-1 text-[10px] font-bold" style={{ color }}>
+                    <span>{emoji}</span>
+                    <span>{label}</span>
+                  </span>
                 ))}
-                {/* Axis lines */}
-                {[0, 1, 2, 3, 4].map(i => {
-                  const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
-                  const x = 100 + 65 * Math.cos(angle);
-                  const y = 100 + 65 * Math.sin(angle);
-                  return <line key={i} x1="100" y1="100" x2={x} y2={y} stroke="rgba(99,102,241,0.12)" strokeWidth="1.5" />;
-                })}
-                {/* Data polygon */}
-                <polygon
-                  points={getRadarPoints()}
-                  fill={stats.avatar === 'girl' ? 'rgba(236,72,153,0.15)' : 'rgba(99,102,241,0.15)'}
-                  stroke={stats.avatar === 'girl' ? '#ec4899' : '#6366f1'}
-                  strokeWidth="2.5"
-                  strokeLinejoin="round"
-                  style={{
-                    filter: stats.avatar === 'girl'
-                      ? 'drop-shadow(0 0 6px rgba(236,72,153,0.4))'
-                      : 'drop-shadow(0 0 6px rgba(99,102,241,0.4))'
-                  }}
-                />
-                {/* Labels */}
-                {(() => {
-                  const safeAttr = stats.attributes || {};
-                  const scores = [
-                    safeAttr.Wisdom || 0,
-                    safeAttr.Responsibility || 0,
-                    safeAttr.Empathy || 0,
-                    safeAttr.Creativity || 0,
-                    safeAttr.Courage || 0
-                  ];
-                  const colors = ["#0284c7", "#16a34a", "#db2777", "#7c3aed", "#ea580c"];
-                  const bgColors = ["#dbeafe", "#dcfce7", "#fce7f3", "#ede9fe", "#ffedd5"];
-                  return ['智', '德', '群', '美', '體'].map((label, i) => {
-                    const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
-                    const x = 100 + 88 * Math.cos(angle);
-                    const y = 100 + 88 * Math.sin(angle);
-                    return (
-                      <g key={i}>
-                        <circle cx={x} cy={y} r="16" fill={bgColors[i]} stroke={colors[i]} strokeWidth="1.5" opacity="0.9" />
-                        <text x={x} y={y - 4} fill={colors[i]} fontSize="11" fontWeight="900" textAnchor="middle">{translateType(label)}</text>
-                        <text x={x} y={y + 8} fill={colors[i]} fontSize="10" fontWeight="700" textAnchor="middle">{scores[i]}</text>
-                      </g>
-                    );
-                  });
-                })()}
-              </svg>
+              </div>
             </div>
 
             {/* Attributes Panel */}
