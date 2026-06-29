@@ -411,15 +411,16 @@ function ParentPortal({
   }, [familyNickname]);
 
   const handleSaveSettingsNickname = async () => {
-    if (!settingsNickname.trim()) {
+    const nameToSave = settingsNickname || '';
+    if (!nameToSave.trim()) {
       setNicknameWarning(language === 'zh' ? '家庭暱稱不能為空。' : 'Nickname cannot be empty.');
       return;
     }
-    if (settingsNickname.length > 20) {
+    if (nameToSave.length > 20) {
       setNicknameWarning(language === 'zh' ? '家庭暱稱最多 20 個字元。' : 'Family nickname cannot exceed 20 characters.');
       return;
     }
-    const success = await onUpdateFamilyNickname(settingsNickname);
+    const success = await onUpdateFamilyNickname(nameToSave);
     if (success) {
       setNicknameWarning('');
     }
@@ -3383,9 +3384,9 @@ function ParentPortal({
                   className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 pr-12 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#FF9F1C] transition-all"
                 />
                 <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold tabular-nums pointer-events-none ${
-                  settingsNickname.length >= 18 ? 'text-rose-500' : 'text-slate-500'
+                  (settingsNickname || '').length >= 18 ? 'text-rose-500' : 'text-slate-500'
                 }`}>
-                  {settingsNickname.length}/20
+                  {(settingsNickname || '').length}/20
                 </span>
               </div>
               <button

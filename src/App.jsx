@@ -201,7 +201,16 @@ function App() {
           setGachaPool(GACHA_POOL);
         }
         if (familyData.settings) {
-          setFamilySettings(familyData.settings);
+          let parsedSettings = familyData.settings;
+          if (typeof familyData.settings === 'string') {
+            try {
+              parsedSettings = JSON.parse(familyData.settings);
+            } catch (e) {
+              console.error("Failed to parse familyData.settings:", e);
+              parsedSettings = { zhuyinUnder8: true };
+            }
+          }
+          setFamilySettings(parsedSettings || { zhuyinUnder8: true });
         } else {
           setFamilySettings({ zhuyinUnder8: true });
         }
