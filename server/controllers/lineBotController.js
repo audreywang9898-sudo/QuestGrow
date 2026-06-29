@@ -7,8 +7,17 @@ import { validateSignature } from '../utils/lineBot.js';
  */
 export const handleWebhook = async (req, res) => {
   // 1. Verify LINE signature
-  const signature = req.headers['x-line-signature'];
-  const rawBody = req.rawBody; // set by express raw-body middleware in lineBotRoutes
+  const signature = req.headers['x-line-signature'] || req.headers['X-Line-Signature'] || req.headers['x-line-signature'];
+  const rawBody = req.rawBody;
+
+  const botSecret = process.env.LINE_BOT_CHANNEL_SECRET || '';
+  const loginSecret = process.env.LINE_CHANNEL_SECRET || '';
+  
+  console.log(`[lineBotWebhook] Received header keys:`, Object.keys(req.headers));
+  console.log(`[lineBotWebhook] Signature: ${signature}`);
+  console.log(`[lineBotWebhook] rawBody length: ${rawBody ? rawBody.length : 0}`);
+  console.log(`[lineBotWebhook] rawBody snippet:`, rawBody ? rawBody.substring(0, 200) : 'empty');
+  console.log(`[lineBotWebhook] Secrets status: LINE_BOT_CHANNEL_SECRET len=${botSecret.length}, LINE_CHANNEL_SECRET len=${loginSecret.length}`);
 
   if (!validateSignature(rawBody, signature)) {
     console.warn('[lineBotController] Invalid LINE signature — request rejected.');
