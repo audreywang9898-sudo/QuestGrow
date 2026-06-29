@@ -23,6 +23,57 @@ function LoginPortal({ onLogin, googleClientId, onOpenFeedback }) {
   const [isSandboxFirstTime, setIsSandboxFirstTime] = useState(false);
 
   const [googleScriptLoaded, setGoogleScriptLoaded] = useState(false);
+  const [isLineLoading, setIsLineLoading] = useState(false);
+  const [lineError, setLineError] = useState('');
+
+  // Listen to LINE OAuth callback code
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const error = params.get('error');
+
+    if (error === 'line_canceled' || error === 'access_denied') {
+      setLineError(language === 'zh' ? '❌ 已取消 LINE 登入。' : '❌ LINE login canceled.');
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
+
+    if (code) {
+      setIsLineLoading(true);
+      setLineError('');
+      
+      const getFallbackApiUrl = () => {
+        if (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')) {
+          return '/api';
+        }
+        return 'http://localhost:5000/api';
+      };
+      const apiBaseUrl = import.meta.env.VITE_API_URL || getFallbackApiUrl();
+
+      fetch(`${apiBaseUrl}/auth/line`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+      })
+      .then(async (res) => {
+        const data = await res.json();
+        if (res.ok && data.token) {
+          onLogin({ token: data.token, user: data.user, isLine: true });
+        } else {
+          setLineError(data.message || (language === 'zh' ? 'LINE 驗證失敗' : 'LINE verification failed'));
+          setIsLineLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error('LINE auth error:', err);
+        setLineError(language === 'zh' ? '❌ 網路錯誤，無法與伺服器連線。' : '❌ Network error connecting to server.');
+        setIsLineLoading(false);
+      })
+      .finally(() => {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      });
+    }
+  }, [onLogin, language]);
 
   // Poll for window.google availability in case script loads asynchronously
   useEffect(() => {
@@ -81,6 +132,21 @@ function LoginPortal({ onLogin, googleClientId, onOpenFeedback }) {
     } finally {
       setDiagnosing(false);
     }
+  };
+
+  const triggerLineLogin = () => {
+    const channelId = import.meta.env.VITE_LINE_CHANNEL_ID || '2006240212';
+    const getCallbackUrl = () => {
+      if (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')) {
+        return window.location.origin + '/';
+      }
+      return 'http://localhost:5173/';
+    };
+    const redirectUri = encodeURIComponent(import.meta.env.VITE_LINE_CALLBACK_URL || getCallbackUrl());
+    const state = Math.random().toString(36).substring(2, 15);
+    localStorage.setItem('questgrow_line_state', state);
+
+    window.location.href = `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${channelId}&redirect_uri=${redirectUri}&state=${state}&scope=profile%20openid%20email`;
   };
 
   // Preset quick login selector for instant testing
@@ -197,6 +263,22 @@ function LoginPortal({ onLogin, googleClientId, onOpenFeedback }) {
     setShowGoogleSandbox(false);
   };
 
+  if (isLineLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-900/90 backdrop-blur-sm z-[9999] fixed inset-0">
+        <div className="text-center space-y-4">
+          <div className="relative w-16 h-16 mx-auto">
+            <div className="w-16 h-16 border-4 border-[#06C755]/20 border-t-[#06C755] rounded-full animate-spin"></div>
+            <span className="absolute inset-0 m-auto flex items-center justify-center text-lg animate-pulse">💬</span>
+          </div>
+          <p className="text-sm font-bold text-slate-300 tracking-wide animate-pulse">
+            {language === 'zh' ? '正在與 LINE 進行安全連線驗證中，請稍候...' : 'Connecting securely with LINE, please wait...'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-[#EBF4FC] select-none">
       
@@ -251,6 +333,13 @@ function LoginPortal({ onLogin, googleClientId, onOpenFeedback }) {
             <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-700 text-xs font-bold rounded-xl flex items-center gap-2">
               <AlertCircle className="h-4 w-4 shrink-0" />
               <span>{errorMsg}</span>
+            </div>
+          )}
+
+          {lineError && (
+            <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-700 text-xs font-bold rounded-xl flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{lineError}</span>
             </div>
           )}
 
@@ -393,6 +482,20 @@ function LoginPortal({ onLogin, googleClientId, onOpenFeedback }) {
           
           {/* Google Official GSI Button Container */}
           <div id="google-gsi-btn-container" className="min-h-[40px] flex justify-center w-full"></div>
+
+          {/* LINE Official Login Button */}
+          <button
+            onClick={triggerLineLogin}
+            type="button"
+            className="w-full max-w-[320px] flex items-center justify-center gap-2.5 py-2 px-4 rounded-lg text-xs font-black text-white transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-lg cursor-pointer"
+            style={{ backgroundColor: '#06C755' }}
+          >
+            {/* LINE logo SVG bubble */}
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+              <path d="M22 10.5C22 6.36 17.52 3 12 3S2 6.36 2 10.5C2 14.23 5.61 17.34 10.5 17.93C10.83 17.97 10.43 18.73 10.33 19.16C10.22 19.64 9.9 20.9 10.85 20.35C11.8 19.8 15.35 17.7 17.2 16.27C19.98 14.99 22 12.89 22 10.5ZM19 12.35H17.85V10.15H19V12.35ZM16.35 12.35H15.2V11.2L14 12.35H12.85V10.15H14V11.3L15.2 10.15H16.35V12.35ZM11.35 12.35H10.2V10.15H11.35V12.35ZM8.85 12.35H7.7V10.15H8.85V12.35Z"/>
+            </svg>
+            <span>{language === 'zh' ? '使用 LINE 帳號登入' : 'Sign in with LINE'}</span>
+          </button>
 
           {/* iOS / Mobile Browser Helper Tip */}
           <div className="mt-1 text-left bg-indigo-50/50 border border-indigo-100/60 p-3.5 rounded-xl text-[10px] text-slate-500 leading-relaxed space-y-1.5 max-w-[320px]">

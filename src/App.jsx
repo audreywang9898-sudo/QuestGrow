@@ -335,10 +335,22 @@ function App() {
 
   // --- Auth Handlers ---
   const handleLogin = async (authData) => {
-    const { email, password, name, role: selectedRole, isRegister, isGoogle, credential, avatar } = authData;
+    const { email, password, name, role: selectedRole, isRegister, isGoogle, credential, avatar, isLine, token } = authData;
     setIsLoggingIn(true);
 
     try {
+      if (isLine) {
+        localStorage.setItem('questgrow_jwt_token', token);
+        const mappedUser = {
+          ...authData.user,
+          childId: authData.user.childId || authData.user.child_id
+        };
+        setCurrentUser(mappedUser);
+        setRole(authData.user.role);
+        showToast(`歡迎回來，${authData.user.name}！`, 'success');
+        return true;
+      }
+
       if (isRegister) {
         await api.register(email, password, name, avatar);
         showToast('註冊成功，請登入！', 'success');

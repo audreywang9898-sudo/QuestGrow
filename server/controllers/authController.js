@@ -398,3 +398,132 @@ export const completeOnboarding = async (req, res) => {
     res.status(500).json({ message: '完成引導設定失敗。' });
   }
 };
+
+// 8. LINE Sign-In / Sign-Up
+export const lineLogin = async (req, res) => {
+  const { code } = req.body;
+
+  if (!code) {
+    return res.status(400).json({ message: 'LINE authorization code is missing.' });
+  }
+
+  try {
+    // 1. Exchange code for Access Token & ID Token using global fetch
+    const params = new URLSearchParams();
+    params.append('grant_type', 'authorization_code');
+    params.append('code', code);
+    params.append('redirect_uri', process.env.LINE_CALLBACK_URL || 'http://localhost:5173/');
+    params.append('client_id', process.env.LINE_CHANNEL_ID);
+    params.append('client_secret', process.env.LINE_CHANNEL_SECRET);
+
+    const tokenRes = await fetch('https://api.line.me/oauth2/v2.1/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString()
+    });
+
+    if (!tokenRes.ok) {
+      const errBody = await tokenRes.text();
+      console.error('Failed token exchange with LINE:', errBody);
+      return res.status(400).json({ message: '與 LINE 伺服器連線驗證失敗。' });
+    }
+
+    const tokenData = await tokenRes.json();
+    const { id_token } = tokenData;
+    if (!id_token) {
+      return res.status(400).json({ message: 'LINE OIDC ID Token is missing.' });
+    }
+
+    // 2. Decode ID Token (JWT format containing user info)
+    const decoded = jwt.decode(id_token);
+    if (!decoded) {
+      return res.status(400).json({ message: '解密 LINE ID Token 失敗。' });
+    }
+
+    const lineId = decoded.sub; // LINE User ID
+    const email = decoded.email?.toLowerCase(); // May be undefined if user didn't consent
+    const name = decoded.name || 'LINE 用戶';
+    const avatar = decoded.picture || 'girl';
+
+    if (!lineId) {
+      return res.status(400).json({ message: '無法取得 LINE 用戶識別碼。' });
+    }
+
+    const defaultEmail = email || `${lineId.substring(0, 15)}@line.questgrow.com`;
+
+    // 3. Check if user already exists
+    const findUser = await pool.query(
+      'SELECT id, family_id, email, name, role, avatar, line_id, child_id, onboarding_completed FROM users WHERE line_id = $1 OR email = $2',
+      [lineId, defaultEmail]
+    );
+
+    if (findUser.rows.length > 0) {
+      let user = findUser.rows[0];
+
+      // If email matched but line_id wasn't linked, link it now
+      if (!user.line_id) {
+        const updateResult = await pool.query(
+          'UPDATE users SET line_id = $1 WHERE id = $2 RETURNING id, family_id, email, name, role, avatar, child_id, onboarding_completed',
+          [lineId, user.id]
+        );
+        user = updateResult.rows[0];
+      }
+
+      user.childId = user.child_id;
+      user.onboardingCompleted = user.onboarding_completed;
+      const token = generateToken(user);
+
+      await checkFirstLoginAndNotify(user.id);
+
+      return res.json({
+        message: 'LINE 登入成功！',
+        token,
+        user
+      });
+    }
+
+    // 4. Register new user with LINE login (create Family + User)
+    const randomPassword = Math.random().toString(36).substring(2, 11);
+    const salt = bcrypt.genSaltSync(10);
+    const passwordHash = bcrypt.hashSync(randomPassword, salt);
+
+    await pool.query('BEGIN');
+
+    // Create a new Family
+    const familyName = `${name}的家庭`;
+    const newFamily = await pool.query(
+      'INSERT INTO families (name) VALUES ($1) RETURNING id',
+      [familyName]
+    );
+    const familyId = newFamily.rows[0].id;
+
+    // Create User account (parent by default)
+    const newUser = await pool.query(
+      `INSERT INTO users (family_id, email, password_hash, name, role, avatar, line_id) 
+       VALUES ($1, $2, $3, $4, 'parent', $5, $6) RETURNING id, family_id, email, name, role, avatar, child_id, onboarding_completed`,
+      [familyId, defaultEmail, passwordHash, name, 'girl', lineId]
+    );
+
+    await pool.query('COMMIT');
+
+    const user = {
+      ...newUser.rows[0],
+      childId: null,
+      onboardingCompleted: false
+    };
+    const token = generateToken(user);
+
+    await checkFirstLoginAndNotify(user.id);
+
+    res.status(201).json({
+      message: 'LINE 帳號註冊暨登入成功！',
+      token,
+      user
+    });
+
+  } catch (error) {
+    await pool.query('ROLLBACK');
+    console.error('LINE login controller error:', error);
+    res.status(500).json({ message: 'LINE 登入時伺服器發生意外錯誤。' });
+  }
+};
