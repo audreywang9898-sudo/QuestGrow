@@ -489,14 +489,23 @@ function LoginPortal({ onLogin, googleClientId, lineChannelId, onOpenFeedback })
           <button
             onClick={triggerLineLogin}
             type="button"
-            className="w-full max-w-[320px] flex items-center justify-center gap-2.5 py-2 px-4 rounded-lg text-xs font-black text-white transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-lg cursor-pointer"
-            style={{ backgroundColor: '#06C755' }}
+            className="relative flex items-center justify-center font-medium text-white transition-all hover:brightness-105 active:scale-[0.99] cursor-pointer"
+            style={{
+              backgroundColor: '#06C755',
+              width: '320px',
+              height: '40px',
+              borderRadius: '4px',
+              fontSize: '14px',
+              border: 'none',
+              boxShadow: '0 1px 1px 0 rgba(65,69,73,0.3), 0 1px 3px 1px rgba(65,69,73,0.15)',
+              fontFamily: 'Roboto, arial, sans-serif'
+            }}
           >
-            {/* LINE logo SVG bubble */}
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            {/* LINE logo SVG bubble positioned identically to Google logo */}
+            <svg className="absolute left-[12px]" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
               <path d="M22 10.5C22 6.36 17.52 3 12 3S2 6.36 2 10.5C2 14.23 5.61 17.34 10.5 17.93C10.83 17.97 10.43 18.73 10.33 19.16C10.22 19.64 9.9 20.9 10.85 20.35C11.8 19.8 15.35 17.7 17.2 16.27C19.98 14.99 22 12.89 22 10.5ZM19 12.35H17.85V10.15H19V12.35ZM16.35 12.35H15.2V11.2L14 12.35H12.85V10.15H14V11.3L15.2 10.15H16.35V12.35ZM11.35 12.35H10.2V10.15H11.35V12.35ZM8.85 12.35H7.7V10.15H8.85V12.35Z"/>
             </svg>
-            <span>{language === 'zh' ? '使用 LINE 帳號登入' : 'Sign in with LINE'}</span>
+            <span className="font-semibold">{language === 'zh' ? '使用 LINE 帳號登入' : 'Sign in with LINE'}</span>
           </button>
 
           {/* iOS / Mobile Browser Helper Tip */}
