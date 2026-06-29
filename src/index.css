@@ -1461,20 +1461,16 @@ th[class*="bg-white/5"] {
 .kid-bar-exp {
   height: 100%;
   border-radius: 99px;
-  background: linear-gradient(90deg, #c084fc, #a855f7, #ec4899, #a855f7);
-  background-size: 300% 100%;
-  animation: kid-shimmer 3s infinite linear, kid-bar-glow 2s ease-in-out infinite;
-  box-shadow: 0 0 12px rgba(168,85,247,0.7), inset 0 1px 1px rgba(255,255,255,0.4);
+  background: linear-gradient(90deg, #c084fc, #a855f7, #ec4899);
+  box-shadow: 0 0 10px rgba(168,85,247,0.5), inset 0 1px 1px rgba(255,255,255,0.4);
   transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
 }
 
 .kid-bar-hp {
   height: 100%;
   border-radius: 99px;
-  background: linear-gradient(90deg, #fb7185, #f43f5e, #fb923c, #f43f5e);
-  background-size: 300% 100%;
-  animation: kid-shimmer 2.5s infinite linear;
-  box-shadow: 0 0 12px rgba(244,63,94,0.6), inset 0 1px 1px rgba(255,255,255,0.4);
+  background: linear-gradient(90deg, #fb7185, #f43f5e, #fb923c);
+  box-shadow: 0 0 10px rgba(244,63,94,0.45), inset 0 1px 1px rgba(255,255,255,0.4);
   transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
 }
 
