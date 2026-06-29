@@ -14,7 +14,10 @@ const isProductionDb = process.env.DATABASE_URL && (
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: isProductionDb ? { rejectUnauthorized: false } : false
+  ssl: isProductionDb ? { rejectUnauthorized: false } : false,
+  max: 5, // Limit connection count to respect free-tier database limits
+  idleTimeoutMillis: 3000, // Recycle idle connections quickly to prevent leaks
+  connectionTimeoutMillis: 2000
 });
 
 pool.on('connect', () => {
