@@ -402,7 +402,7 @@ export const completeOnboarding = async (req, res) => {
 
 // 8. LINE Sign-In / Sign-Up
 export const lineLogin = async (req, res) => {
-  const { code } = req.body;
+  const { code, redirectUri } = req.body;
 
   if (!code) {
     return res.status(400).json({ message: 'LINE authorization code is missing.' });
@@ -413,7 +413,7 @@ export const lineLogin = async (req, res) => {
     const params = new URLSearchParams();
     params.append('grant_type', 'authorization_code');
     params.append('code', code);
-    params.append('redirect_uri', process.env.LINE_CALLBACK_URL || 'http://localhost:5173/');
+    params.append('redirect_uri', redirectUri || process.env.LINE_CALLBACK_URL || 'http://localhost:5173/');
     params.append('client_id', process.env.LINE_CHANNEL_ID);
     params.append('client_secret', process.env.LINE_CHANNEL_SECRET);
 

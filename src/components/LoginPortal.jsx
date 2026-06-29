@@ -50,10 +50,12 @@ function LoginPortal({ onLogin, googleClientId, lineChannelId, onOpenFeedback })
       };
       const apiBaseUrl = import.meta.env.VITE_API_URL || getFallbackApiUrl();
 
+      const currentRedirectUri = window.location.origin + '/';
+
       fetch(`${apiBaseUrl}/auth/line`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code })
+        body: JSON.stringify({ code, redirectUri: currentRedirectUri })
       })
       .then(async (res) => {
         const data = await res.json();
