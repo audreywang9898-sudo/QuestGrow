@@ -144,7 +144,7 @@ function LoginPortal({ onLogin, googleClientId, lineChannelId, onOpenFeedback })
       }
       return 'http://localhost:5173/';
     };
-    const redirectUri = encodeURIComponent(import.meta.env.VITE_LINE_CALLBACK_URL || getCallbackUrl());
+    const redirectUri = encodeURIComponent(getCallbackUrl());
     const state = Math.random().toString(36).substring(2, 15);
     localStorage.setItem('questgrow_line_state', state);
 
