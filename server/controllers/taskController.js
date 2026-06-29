@@ -1,6 +1,8 @@
 import pool from '../config/db.js';
 import { getMessage } from '../utils/messageManager.js';
 import { validateTextField, safeErrorMessage } from '../utils/validation.js';
+import { sendTaskReviewRequest } from '../utils/lineBot.js';
+import { randomUUID } from 'crypto';
 
 const determineJobClass = (attrs) => {
   const mapping = {
@@ -449,6 +451,44 @@ export const submitTask = async (req, res) => {
        WHERE id = $2`,
       [JSON.stringify(submissionData), taskId]
     );
+
+    // --- LINE Bot: Push task review notification to parent(s) ---
+    try {
+      const reviewToken = randomUUID();
+      // Save review token so webhook controller can validate it
+      await pool.query(
+        `UPDATE tasks SET line_review_token = $1 WHERE id = $2`,
+        [reviewToken, taskId]
+      );
+
+      // Fetch task details + child name + all parents with LINE IDs in this family
+      const notifyRes = await pool.query(
+        `SELECT t.id, t.name, t.points, t.category,
+                c.name AS child_name,
+                u.line_id AS parent_line_id
+         FROM tasks t
+         JOIN children c ON c.id = $2
+         JOIN users u ON u.family_id = $3 AND u.role = 'parent' AND u.line_id IS NOT NULL
+         WHERE t.id = $1`,
+        [taskId, childId, familyId]
+      );
+
+      if (notifyRes.rows.length > 0) {
+        const { name, points, category, child_name } = notifyRes.rows[0];
+        const taskInfo = { id: taskId, name, points, category };
+        // Notify all parents who have LINE ID (may be multiple co-parents)
+        const uniqueParentIds = [...new Set(notifyRes.rows.map(r => r.parent_line_id).filter(Boolean))];
+        await Promise.all(
+          uniqueParentIds.map(lineId =>
+            sendTaskReviewRequest(lineId, taskInfo, child_name, reviewToken)
+          )
+        );
+      }
+    } catch (lineErr) {
+      // Non-critical: LINE notification failure should not block the response
+      console.error('[submitTask] LINE notification error (non-fatal):', lineErr.message);
+    }
+    // ---
 
     res.json({ message: getMessage('SUBMIT_TASK_SUCCESS') });
   } catch (error) {

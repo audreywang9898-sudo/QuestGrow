@@ -14,6 +14,8 @@ import adminRoutes from './routes/adminRoutes.js';
 import proverbRoutes from './routes/proverbRoutes.js';
 import feedbackRoutes from './routes/feedbackRoutes.js';
 import pushRoutes from './routes/pushRoutes.js';
+import lineBotRoutes from './routes/lineBotRoutes.js';
+
 import { getMessage, languageMiddleware } from './utils/messageManager.js';
 
 
@@ -108,6 +110,8 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/proverbs', proverbRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/push', pushRoutes);
+app.use('/api/line', lineBotRoutes);
+
 
 
 // ── 8. SPA Fallback ───────────────────────────────────────────────────

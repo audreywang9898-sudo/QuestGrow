@@ -1,6 +1,8 @@
 import pool from '../config/db.js';
 import { getMessage } from '../utils/messageManager.js';
 import { GACHA_POOL } from '../../src/utils/mockData.js';
+import { sendRedeemReviewRequest } from '../utils/lineBot.js';
+import { randomUUID } from 'crypto';
 
 const getExpirationDate = (rarity) => {
   let days = 9999;
@@ -306,10 +308,49 @@ export const requestRedeem = async (req, res) => {
       return res.status(400).json({ message: getMessage('REDEEM_REQUEST_CARD_EXPIRED') });
     }
 
+    const reviewToken = randomUUID();
     await pool.query(
-      'UPDATE inventory SET status = \'待核銷\' WHERE id = $1',
-      [inventoryId]
+      'UPDATE inventory SET status = \'待核銷\', line_review_token = $1 WHERE id = $2',
+      [reviewToken, inventoryId]
     );
+
+    // --- LINE Bot: Push redeem review notification to parent(s) ---
+    try {
+      const notifyRes = await pool.query(
+        `SELECT inv.id, inv.name, i.point_cost,
+                c.name AS child_name,
+                cs.current_points,
+                u.line_id AS parent_line_id
+         FROM inventory inv
+         LEFT JOIN items i ON inv.item_id = i.id
+         JOIN children c ON inv.child_id = c.id
+         LEFT JOIN child_stats cs ON cs.child_id = c.id
+         JOIN users u ON u.family_id = c.family_id AND u.role = 'parent' AND u.line_id IS NOT NULL
+         WHERE inv.id = $1`,
+        [inventoryId]
+      );
+
+      if (notifyRes.rows.length > 0) {
+        const firstRow = notifyRes.rows[0];
+        const itemInfo = {
+          inventoryId: inventoryId,
+          name: firstRow.name,
+          pointCost: firstRow.point_cost || 0
+        };
+        const childName = firstRow.child_name;
+        const currentPoints = firstRow.current_points || 0;
+
+        const uniqueParentIds = [...new Set(notifyRes.rows.map(r => r.parent_line_id).filter(Boolean))];
+        await Promise.all(
+          uniqueParentIds.map(lineId =>
+            sendRedeemReviewRequest(lineId, itemInfo, childName, currentPoints, reviewToken)
+          )
+        );
+      }
+    } catch (lineErr) {
+      console.error('[requestRedeem] LINE notification error (non-fatal):', lineErr.message);
+    }
+    // ---
 
     res.json({ message: getMessage('REDEEM_REQUEST_SUCCESS', { name: item.name }) });
   } catch (error) {
