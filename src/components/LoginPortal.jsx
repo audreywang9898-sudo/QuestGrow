@@ -137,7 +137,7 @@ function LoginPortal({ onLogin, googleClientId, onOpenFeedback }) {
   const triggerLineLogin = () => {
     const channelId = import.meta.env.VITE_LINE_CHANNEL_ID || '2006240212';
     const getCallbackUrl = () => {
-      if (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')) {
+      if (typeof window !== 'undefined') {
         return window.location.origin + '/';
       }
       return 'http://localhost:5173/';
