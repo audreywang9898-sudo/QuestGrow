@@ -1382,10 +1382,10 @@ function KidPortal({
               <p className="font-black text-indigo-900 dark:text-indigo-200">
                 {language === 'zh' ? '如何修改兒童資料？' : 'How to Edit Child Data?'}
               </p>
-              <p className="mt-0.5 text-indigo-700 dark:text-indigo-400 leading-relaxed">
+              <p className="mt-0.5 text-indigo-700 dark:text-indigo-400 leading-relaxed font-semibold">
                 {language === 'zh' 
-                  ? '目前為「唯讀模式」，您無法代表他/她完成任務、抽卡或兌換獎品。若要編輯該兒童的任務與點數，請點擊右上角「👨‍👩‍👧 切換家長模式」返回修改。' 
-                  : 'Currently in "Read-Only Mode". You cannot submit tasks or draw cards. To edit child tasks or points, please click "👨‍👩‍👧 Switch to Parent Mode" at the top right.'
+                  ? `目前為「唯讀模式」，您無法直接修改資料。該兒童的登入帳號為：${stats.email || '(無)'}。如需代表兒童提交任務、抽卡或兌換獎品，請登出並改用此兒童帳號登入；若要編輯該兒童的任務設定與獎勵點數，請點擊右上角「👨‍👩‍👧 切換家長模式」返回修改。`
+                  : `Currently in "Read-Only Mode". The child's login email is: ${stats.email || '(None)'}. To submit tasks, draw cards, or redeem awards on their behalf, please log out and sign in using this child's email; to edit task configurations or points, click "👨‍👩‍👧 Switch to Parent Mode" at the top right.`
                 }
               </p>
             </div>

@@ -26,7 +26,7 @@ export const getChildren = async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT c.id, c.user_id, c.name, c.age, c.birthday, c.avatar, c.level, c.exp, c.exp_needed, c.gold, c.tickets, c.job_class, c.attributes
+      `SELECT c.id, c.user_id, c.name, c.age, c.birthday, c.avatar, c.level, c.exp, c.exp_needed, c.gold, c.tickets, c.job_class, c.attributes, u.email AS email
        FROM children c
        JOIN users u ON c.user_id = u.id
        WHERE u.family_id = $1`,
