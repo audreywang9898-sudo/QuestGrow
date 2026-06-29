@@ -4,8 +4,8 @@ export const translations = {
   zh: {
     // Header
     tagline: "讓我們一起把成長變成一場冒險遊戲",
-    viewParentMode: "👩 查看家長模式",
-    viewKidMode: "👦 查看兒童模式",
+    viewParentMode: "👩 切換至「家長管理」",
+    viewKidMode: "👦 切換至「孩子視角」",
     logout: "登出系統",
     logoutSuccess: "已成功登出。",
     googleLinked: "🎉 成功連結 Google 帳戶！今後可使用 Google 快速登入。",
@@ -467,8 +467,8 @@ export const translations = {
   en: {
     // Header
     tagline: "Let's turn growth into an adventure game together",
-    viewParentMode: "👩 View Parent Mode",
-    viewKidMode: "👦 View Kid Mode",
+    viewParentMode: "👩 Switch to Parent Admin",
+    viewKidMode: "👦 Switch to Kid View",
     logout: "Sign Out",
     logoutSuccess: "Successfully signed out.",
     googleLinked: "🎉 Google Account successfully linked! You can now use Google to sign in.",
