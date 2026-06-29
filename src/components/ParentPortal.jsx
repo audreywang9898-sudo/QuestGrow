@@ -4169,16 +4169,21 @@ function ParentPortal({
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 glass-panel p-6 space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="lg:col-span-2 bg-white/95 border border-slate-100/90 rounded-2xl shadow-md p-6 space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 pb-4">
                   <div>
-                    <h3 className="text-lg font-bold text-slate-205">
+                    <h3 className="text-lg font-black text-slate-800">
                       {t('growthDashboardTitle')} - {reportData.name}
                     </h3>
-                    <p className="text-xs text-slate-450 mt-1">{t('growthDashboardDesc')}</p>
+                    <p className="text-xs text-slate-500 mt-1 font-semibold">{t('growthDashboardDesc')}</p>
                   </div>
                   {/* AI Rank Badge */}
-                  <div className={`px-4 py-1.5 rounded-full border text-[10px] font-black shrink-0 flex items-center gap-1.5 shadow-sm ${rank.color}`}>
+                  <div className={`px-4 py-1.5 rounded-full border text-[10px] font-black shrink-0 flex items-center gap-1.5 shadow-sm ${
+                    rank.title.includes('傳奇') ? 'text-amber-600 border-amber-200 bg-amber-50' :
+                    rank.title.includes('資深') ? 'text-slate-600 border-slate-200 bg-slate-50' :
+                    rank.title.includes('新手') ? 'text-orange-600 border-orange-200 bg-orange-50' :
+                    'text-emerald-600 border-emerald-200 bg-emerald-50'
+                  }`}>
                     <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
                     {rank.title}
                   </div>
@@ -4192,17 +4197,17 @@ function ParentPortal({
                       const circumference = 2 * Math.PI * radius; // ~138.2
                       const offset = circumference - (Math.min(100, Math.max(0, percentage)) / 100) * circumference;
                       return (
-                        <div className="flex items-center gap-4 p-4 bg-slate-900/60 border border-white/5 rounded-2xl shadow-lg transition-all hover:bg-slate-900/80">
+                        <div className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-100 rounded-2xl shadow-sm transition-all hover:bg-slate-100/50">
                           <div className="relative w-14 h-14 shrink-0">
                             <svg className="w-full h-full transform -rotate-90">
-                              <circle cx="28" cy="28" r={radius} fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="4.5" />
-                              <circle cx="28" cy="28" r={radius} fill="none" stroke="#00E5FF" strokeWidth="4.5" strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" className="transition-all duration-1000 ease-out" />
+                              <circle cx="28" cy="28" r={radius} fill="none" stroke="#E2E8F0" strokeWidth="4.5" />
+                              <circle cx="28" cy="28" r={radius} fill="none" stroke="#3661FF" strokeWidth="4.5" strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" className="transition-all duration-1000 ease-out" />
                             </svg>
-                            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-white">{percentage}%</span>
+                            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-slate-800">{percentage}%</span>
                           </div>
                           <div>
-                            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{t('weeklyCompletionRate')}</div>
-                            <div className="text-xl font-black text-[#00E5FF] mt-0.5">{percentage}%</div>
+                            <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{t('weeklyCompletionRate')}</div>
+                            <div className="text-xl font-black text-[#3661FF] mt-0.5">{percentage}%</div>
                           </div>
                         </div>
                       );
@@ -4214,63 +4219,199 @@ function ParentPortal({
                       const circumference = 2 * Math.PI * radius;
                       const offset = circumference - (Math.min(100, Math.max(0, percentage)) / 100) * circumference;
                       return (
-                        <div className="flex items-center gap-4 p-4 bg-slate-900/60 border border-white/5 rounded-2xl shadow-lg transition-all hover:bg-slate-900/80">
+                        <div className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-100 rounded-2xl shadow-sm transition-all hover:bg-slate-100/50">
                           <div className="relative w-14 h-14 shrink-0">
                             <svg className="w-full h-full transform -rotate-90">
-                              <circle cx="28" cy="28" r={radius} fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="4.5" />
+                              <circle cx="28" cy="28" r={radius} fill="none" stroke="#E2E8F0" strokeWidth="4.5" />
                               <circle cx="28" cy="28" r={radius} fill="none" stroke="#00E676" strokeWidth="4.5" strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" className="transition-all duration-1000 ease-out" />
                             </svg>
-                            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-white">{percentage}%</span>
+                            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-slate-800">{percentage}%</span>
                           </div>
                           <div>
-                            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{t('weeklyBalanceIndex')}</div>
-                            <div className="text-xl font-black text-[#00E676] mt-0.5">{percentage}%</div>
+                            <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{t('weeklyBalanceIndex')}</div>
+                            <div className="text-xl font-black text-[#00C851] mt-0.5">{percentage}%</div>
                           </div>
                         </div>
                       );
                     })()}
                   </div>
-                  <div className="glass-panel p-4 border-white/5 bg-slate-950/40 space-y-4">
-                    <div className="text-xs text-slate-400 font-bold uppercase text-center">{t('radarTitle')}</div>
+                  
+                  {/* SVG Radar Chart Implementation */}
+                  <div className="bg-slate-50/50 p-4 border border-slate-100 rounded-2xl flex flex-col items-center justify-center min-h-[220px]">
+                    <div className="text-[10px] text-slate-500 font-black uppercase text-center mb-3 tracking-widest">{t('radarTitle')}</div>
+                    {(() => {
+                      const attrs = reportData.attributes || { Wisdom: 10, Responsibility: 10, Empathy: 10, Creativity: 10, Courage: 10 };
+                      const keys = ['Wisdom', 'Responsibility', 'Empathy', 'Creativity', 'Courage'];
+                      const labels = {
+                        Wisdom: language === 'zh' ? '智' : 'Wis',
+                        Responsibility: language === 'zh' ? '責' : 'Resp',
+                        Empathy: language === 'zh' ? '同' : 'Emp',
+                        Creativity: language === 'zh' ? '創' : 'Cre',
+                        Courage: language === 'zh' ? '勇' : 'Cour'
+                      };
 
+                      const maxVal = Math.max(...keys.map(k => attrs[k] || 0), 10);
+                      const scaleMax = maxVal < 50 ? 50 : Math.ceil(maxVal / 10) * 10;
+
+                      const width = 180;
+                      const height = 180;
+                      const cx = width / 2;
+                      const cy = height / 2;
+                      const r = 55;
+
+                      const getCoordinates = (val, i) => {
+                        const angle = (Math.PI * 2 / 5) * i - Math.PI / 2;
+                        const distance = (val / scaleMax) * r;
+                        return {
+                          x: cx + Math.cos(angle) * distance,
+                          y: cy + Math.sin(angle) * distance
+                        };
+                      };
+
+                      const gridLevels = [0.25, 0.5, 0.75, 1.0];
+                      const gridPoints = gridLevels.map(level => {
+                        return keys.map((_, i) => {
+                          const angle = (Math.PI * 2 / 5) * i - Math.PI / 2;
+                          const x = cx + Math.cos(angle) * r * level;
+                          const y = cy + Math.sin(angle) * r * level;
+                          return `${x},${y}`;
+                        }).join(' ');
+                      });
+
+                      const dataPoints = keys.map((key, i) => {
+                        const coords = getCoordinates(attrs[key] || 0, i);
+                        return `${coords.x},${coords.y}`;
+                      }).join(' ');
+
+                      const axisLines = keys.map((_, i) => {
+                        const angle = (Math.PI * 2 / 5) * i - Math.PI / 2;
+                        return {
+                          x2: cx + Math.cos(angle) * r,
+                          y2: cy + Math.sin(angle) * r
+                        };
+                      });
+
+                      return (
+                        <svg width={width} height={height} className="overflow-visible mx-auto">
+                          <defs>
+                            <radialGradient id="radarGlow" cx="50%" cy="50%" r="50%">
+                              <stop offset="0%" stopColor="#3661FF" stopOpacity="0.3" />
+                              <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.05" />
+                            </radialGradient>
+                          </defs>
+                          
+                          {/* Concentration Grid Rings */}
+                          {gridPoints.map((points, idx) => (
+                            <polygon
+                              key={idx}
+                              points={points}
+                              fill="none"
+                              stroke="#CBD5E1"
+                              strokeWidth="0.75"
+                              strokeDasharray={idx < 3 ? "2,2" : "none"}
+                            />
+                          ))}
+
+                          {/* Axes */}
+                          {axisLines.map((line, idx) => (
+                            <line
+                              key={idx}
+                              x1={cx}
+                              y1={cy}
+                              x2={line.x2}
+                              y2={line.y2}
+                              stroke="#CBD5E1"
+                              strokeWidth="0.75"
+                            />
+                          ))}
+
+                          {/* Area Polygon */}
+                          <polygon
+                            points={dataPoints}
+                            fill="url(#radarGlow)"
+                            stroke="#3661FF"
+                            strokeWidth="2"
+                            strokeLinejoin="round"
+                          />
+
+                          {/* Labels and Vertices */}
+                          {keys.map((key, i) => {
+                            const val = attrs[key] || 0;
+                            const coords = getCoordinates(val, i);
+                            const labelAngle = (Math.PI * 2 / 5) * i - Math.PI / 2;
+                            const labelDistance = r + 13;
+                            const labelX = cx + Math.cos(labelAngle) * labelDistance;
+                            let labelY = cy + Math.sin(labelAngle) * labelDistance;
+                            if (i === 0) labelY -= 1;
+                            if (i === 2 || i === 3) labelY += 4;
+                            
+                            let textAnchor = "middle";
+                            if (i === 1 || i === 2) textAnchor = "start";
+                            if (i === 3 || i === 4) textAnchor = "end";
+
+                            return (
+                              <g key={key}>
+                                <circle
+                                  cx={coords.x}
+                                  cy={coords.y}
+                                  r="3"
+                                  fill="#ffffff"
+                                  stroke="#3661FF"
+                                  strokeWidth="1.5"
+                                />
+                                <text
+                                  x={labelX}
+                                  y={labelY}
+                                  textAnchor={textAnchor}
+                                  className="fill-slate-700 font-extrabold text-[9px]"
+                                >
+                                  {labels[key]}({val})
+                                </text>
+                              </g>
+                            );
+                          })}
+                        </svg>
+                      );
+                    })()}
                   </div>
                 </div>
 
                 {/* RPG Accumulated Stats Display */}
-                <div className="grid grid-cols-3 gap-3 text-center text-xs mt-3 pt-3 border-t border-white/5">
-                  <div className="bg-slate-900/60 p-3 rounded-xl border border-white/5 shadow-inner transition-all hover:bg-slate-900/80">
-                    <div className="text-slate-400 font-bold uppercase text-[9px] mb-1">{language === 'zh' ? '累計等級' : 'Total Level'}</div>
-                    <div className="text-white font-extrabold text-sm flex items-center justify-center gap-1">
-                      <span className="text-indigo-400">⚡</span>
+                <div className="grid grid-cols-3 gap-3 text-center text-xs mt-3 pt-4 border-t border-slate-100">
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 shadow-inner transition-all hover:bg-slate-100/50">
+                    <div className="text-slate-500 font-bold uppercase text-[9px] mb-1">{language === 'zh' ? '累計等級' : 'Total Level'}</div>
+                    <div className="text-slate-800 font-black text-sm flex items-center justify-center gap-1">
+                      <span className="text-indigo-500">⚡</span>
                       <span>Lv. {reportData.level}</span>
                     </div>
                   </div>
-                  <div className="bg-slate-900/60 p-3 rounded-xl border border-white/5 shadow-inner transition-all hover:bg-slate-900/80">
-                    <div className="text-slate-400 font-bold uppercase text-[9px] mb-1">{language === 'zh' ? '累計金幣' : 'Total Gold'}</div>
-                    <div className="text-amber-400 font-extrabold text-sm flex items-center justify-center gap-1">
-                      <span>🪙</span>
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 shadow-inner transition-all hover:bg-slate-100/50">
+                    <div className="text-slate-500 font-bold uppercase text-[9px] mb-1">{language === 'zh' ? '累計金幣' : 'Total Gold'}</div>
+                    <div className="text-slate-800 font-black text-sm flex items-center justify-center gap-1">
+                      <span className="text-amber-500">🪙</span>
                       <span>{reportData.gold}</span>
                     </div>
                   </div>
-                  <div className="bg-slate-900/60 p-3 rounded-xl border border-white/5 shadow-inner transition-all hover:bg-slate-900/80">
-                    <div className="text-slate-400 font-bold uppercase text-[9px] mb-1">{language === 'zh' ? '累計抽卡券' : 'Total Tickets'}</div>
-                    <div className="text-cyan-400 font-extrabold text-sm flex items-center justify-center gap-1">
-                      <span>🎫</span>
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 shadow-inner transition-all hover:bg-slate-100/50">
+                    <div className="text-slate-500 font-bold uppercase text-[9px] mb-1">{language === 'zh' ? '累計抽卡券' : 'Total Tickets'}</div>
+                    <div className="text-slate-800 font-black text-sm flex items-center justify-center gap-1">
+                      <span className="text-cyan-500">🎫</span>
                       <span>{reportData.tickets}</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="glass-panel border border-violet-500/20 bg-gradient-to-b from-violet-500/5 to-slate-900/60 p-6 flex flex-col justify-between min-h-[460px]">
+              {/* Right Column: AI Coach */}
+              <div className="bg-white/95 border border-violet-100 rounded-2xl shadow-md p-6 flex flex-col justify-between min-h-[460px] bg-gradient-to-b from-violet-50/10 to-white">
                 <div className="space-y-4">
                   {/* Card Header & Tabs */}
-                  <div className="flex items-center justify-between border-b border-white/5 pb-3">
-                    <h3 className="text-sm font-black text-violet-300 flex items-center gap-1.5 uppercase tracking-wider">
-                      <Sparkles className="h-4.5 w-4.5 text-violet-400 animate-float" />
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 className="text-sm font-black text-violet-700 flex items-center gap-1.5 uppercase tracking-wider">
+                      <Sparkles className="h-4.5 w-4.5 text-violet-500 animate-float" />
                       {t('aiCoachTitle')}
                     </h3>
-                    <div className="flex bg-slate-950/80 rounded-lg p-0.5 border border-white/5">
+                    <div className="flex bg-slate-100 rounded-lg p-0.5 border border-slate-200">
                       <button
                         type="button"
                         onClick={() => setAiCoachTab('diagnostic')}
@@ -4297,33 +4438,33 @@ function ParentPortal({
                   </div>
 
                   {aiCoachTab === 'diagnostic' ? (
-                    <div className="space-y-4 text-xs leading-relaxed text-slate-305">
-                      <div className="space-y-1 bg-slate-900/60 p-3.5 rounded-xl border border-white/5 border-l-4 border-l-emerald-500 shadow-sm transition-all hover:bg-slate-900/80">
-                        <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest block flex items-center gap-1">
+                    <div className="space-y-4 text-xs leading-relaxed text-slate-700">
+                      <div className="space-y-1 bg-emerald-50/60 p-3.5 rounded-xl border border-emerald-100/80 border-l-4 border-l-emerald-500 shadow-sm transition-all">
+                        <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest block flex items-center gap-1">
                           <span>🌟</span>
                           <span>{aiFeedback.highlight}</span>
                         </span>
-                        <p className="mt-1 text-slate-200 font-semibold">{aiFeedback.highlightDesc}</p>
+                        <p className="mt-1 text-slate-700 font-semibold">{aiFeedback.highlightDesc}</p>
                       </div>
-                      <div className="space-y-1 bg-slate-900/60 p-3.5 rounded-xl border border-white/5 border-l-4 border-l-cyan-500 shadow-sm transition-all hover:bg-slate-900/80">
-                        <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest block flex items-center gap-1">
+                      <div className="space-y-1 bg-cyan-50/60 p-3.5 rounded-xl border border-cyan-100/80 border-l-4 border-l-cyan-500 shadow-sm transition-all">
+                        <span className="text-[10px] font-black text-cyan-700 uppercase tracking-widest block flex items-center gap-1">
                           <span>📊</span>
                           <span>{aiFeedback.improve}</span>
                         </span>
-                        <p className="mt-1 text-slate-200 font-semibold">{aiFeedback.improveDesc}</p>
+                        <p className="mt-1 text-slate-700 font-semibold">{aiFeedback.improveDesc}</p>
                       </div>
-                      <div className="space-y-2 bg-indigo-500/5 p-3.5 rounded-xl border border-indigo-500/10 border-l-4 border-l-violet-500 shadow-sm">
-                        <span className="text-[10px] font-black text-purple-400 uppercase tracking-widest block flex items-center gap-1">
+                      <div className="space-y-2 bg-violet-50/60 p-3.5 rounded-xl border border-violet-100/80 border-l-4 border-l-violet-500 shadow-sm">
+                        <span className="text-[10px] font-black text-violet-700 uppercase tracking-widest block flex items-center gap-1">
                           <span>💡</span>
                           <span>{aiFeedback.suggest}</span>
                         </span>
-                        <p className="mt-1 text-slate-200 font-semibold leading-relaxed">{aiFeedback.suggestDesc}</p>
+                        <p className="mt-1 text-slate-700 font-semibold leading-relaxed">{aiFeedback.suggestDesc}</p>
                         
                         {/* Auto Quest Assignment Button */}
                         <button
                           type="button"
                           onClick={handleAiAssignQuest}
-                          className="w-full mt-2 py-2 px-3 bg-[#3661FF] hover:bg-[#254edb] active:scale-95 text-white font-extrabold text-[10px] rounded-lg transition-all flex items-center justify-center gap-1 shadow-md shadow-indigo-950/40"
+                          className="w-full mt-2 py-2 px-3 bg-[#3661FF] hover:bg-[#254edb] active:scale-95 text-white font-extrabold text-[10px] rounded-lg transition-all flex items-center justify-center gap-1 shadow-sm"
                         >
                           <span>🤖</span>
                           {language === 'zh' ? '一鍵 AI 指派推薦任務' : 'One-Click AI Assign Quest'}
@@ -4343,15 +4484,15 @@ function ParentPortal({
                             <div 
                               className={`max-w-[88%] p-2.5 rounded-xl text-[11px] leading-relaxed shadow-sm ${
                                 msg.sender === 'coach'
-                                  ? 'bg-slate-900/90 text-slate-350 border border-white/5 rounded-tl-none'
-                                  : 'bg-[#3661FF]/90 text-white rounded-tr-none'
+                                  ? 'bg-slate-50 text-slate-800 border border-slate-200 rounded-tl-none font-medium'
+                                  : 'bg-[#3661FF] text-white rounded-tr-none font-medium'
                               }`}
                             >
                               {/* Simple Markdown-like Renderer */}
                               {msg.content.split('\n\n').map((para, i) => (
                                 <p key={i} className={i > 0 ? 'mt-2' : ''}>
                                   {para.startsWith('###') ? (
-                                    <span className="font-extrabold text-violet-300 block mb-1 text-xs">
+                                    <span className="font-extrabold text-violet-700 block mb-1 text-xs">
                                       {para.replace('### ', '')}
                                     </span>
                                   ) : para.startsWith('- ') ? (
@@ -4370,10 +4511,10 @@ function ParentPortal({
                         ))}
                         {isAiThinking && (
                           <div className="flex justify-start">
-                            <div className="bg-slate-900/90 text-slate-400 p-2.5 rounded-xl border border-white/5 rounded-tl-none text-[10px] flex items-center gap-1.5 font-bold">
-                              <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce"></span>
-                              <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></span>
-                              <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></span>
+                            <div className="bg-slate-50 text-slate-500 p-2.5 rounded-xl border border-slate-200 rounded-tl-none text-[10px] flex items-center gap-1.5 font-bold">
+                              <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce"></span>
+                              <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></span>
+                              <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></span>
                               {language === 'zh' ? 'AI 教練思考中...' : 'AI Coach is thinking...'}
                             </div>
                           </div>
@@ -4381,7 +4522,7 @@ function ParentPortal({
                       </div>
 
                       {/* Chat Input & Suggestions */}
-                      <div className="space-y-2 pt-2 border-t border-white/5">
+                      <div className="space-y-2 pt-2 border-t border-slate-100">
                         {/* Quick Presets Pills */}
                         <div className="flex gap-1 overflow-x-auto pb-1 max-w-full">
                           {[
@@ -4394,7 +4535,7 @@ function ParentPortal({
                               type="button"
                               disabled={isAiThinking}
                               onClick={() => handleSendAiQuestion(preset)}
-                              className="px-2.5 py-1 bg-white/5 border border-white/5 text-[9px] font-bold text-violet-300 rounded-full hover:bg-[#3661FF]/10 hover:border-[#3661FF]/20 hover:text-white transition-all whitespace-nowrap"
+                              className="px-2.5 py-1 bg-slate-50 border border-slate-200 text-[9px] font-bold text-violet-600 rounded-full hover:bg-violet-50 hover:text-violet-700 transition-all whitespace-nowrap"
                             >
                               💡 {preset}
                             </button>
@@ -4415,7 +4556,7 @@ function ParentPortal({
                             disabled={isAiThinking}
                             onChange={(e) => setAiCoachInput(e.target.value)}
                             placeholder={language === 'zh' ? '輸入您的成長疑問...' : 'Ask the AI Coach...'}
-                            className="flex-1 bg-slate-900 border border-white/10 rounded-lg px-2.5 py-1.5 text-[11px] text-slate-205 focus:outline-none focus:ring-1 focus:ring-[#3661FF] disabled:opacity-50"
+                            className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-[11px] text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#3661FF] disabled:opacity-50"
                           />
                           <button
                             type="submit"
