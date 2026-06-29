@@ -349,7 +349,8 @@ export const linkGoogleAccount = async (req, res) => {
 // 5. Get Public Auth Configuration
 export const getAuthConfig = async (req, res) => {
   res.json({
-    googleClientId: process.env.GOOGLE_CLIENT_ID || ""
+    googleClientId: process.env.GOOGLE_CLIENT_ID || "",
+    lineChannelId: process.env.LINE_CHANNEL_ID || ""
   });
 };
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Shield, Sparkles, Key, Mail, User, AlertCircle, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { useLanguage } from './LanguageContext';
 
-function LoginPortal({ onLogin, googleClientId, onOpenFeedback }) {
+function LoginPortal({ onLogin, googleClientId, lineChannelId, onOpenFeedback }) {
   const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState('login'); // login, register, google_setup
   const [email, setEmail] = useState('');
@@ -135,7 +135,7 @@ function LoginPortal({ onLogin, googleClientId, onOpenFeedback }) {
   };
 
   const triggerLineLogin = () => {
-    const channelId = import.meta.env.VITE_LINE_CHANNEL_ID || '2006240212';
+    const channelId = lineChannelId || import.meta.env.VITE_LINE_CHANNEL_ID || '2006240212';
     const getCallbackUrl = () => {
       if (typeof window !== 'undefined') {
         return window.location.origin + '/';

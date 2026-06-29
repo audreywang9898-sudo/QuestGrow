@@ -51,6 +51,7 @@ function App() {
   });
 
   const [googleClientId, setGoogleClientId] = useState('');
+  const [lineChannelId, setLineChannelId] = useState('');
   const [isRestoringSession, setIsRestoringSession] = useState(true);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
@@ -58,11 +59,16 @@ function App() {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        // 1. Fetch Google Client ID
+        // 1. Fetch Google & LINE Client IDs
         try {
           const config = await api.getAuthConfig();
-          if (config && config.googleClientId) {
-            setGoogleClientId(config.googleClientId);
+          if (config) {
+            if (config.googleClientId) {
+              setGoogleClientId(config.googleClientId);
+            }
+            if (config.lineChannelId) {
+              setLineChannelId(config.lineChannelId);
+            }
           }
         } catch (error) {
           console.error('Failed to fetch auth config:', error);
@@ -1100,6 +1106,7 @@ function App() {
         <LoginPortal 
           onLogin={handleLogin} 
           googleClientId={googleClientId} 
+          lineChannelId={lineChannelId}
           onOpenFeedback={() => setShowFeedbackModal(true)} 
         />
         {showFeedbackModal && (
