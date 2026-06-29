@@ -9,7 +9,7 @@ const router = express.Router();
  */
 router.post(
   '/webhook',
-  express.raw({ type: 'application/json' }),
+  express.raw({ type: '*/*' }),
   (req, res, next) => {
     // Store raw body string before JSON parse overwrites it
     req.rawBody = req.body?.toString('utf8') || '';

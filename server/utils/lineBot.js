@@ -353,7 +353,7 @@ export const sendEncouragementToChild = async (childLineId, message, parentName)
  * @param {string} signature - X-Line-Signature header value
  */
 export const validateSignature = (rawBody, signature) => {
-  const channelSecret = process.env.LINE_CHANNEL_SECRET;
+  const channelSecret = process.env.LINE_BOT_CHANNEL_SECRET || process.env.LINE_CHANNEL_SECRET;
   if (!channelSecret) return false;
   return line.validateSignature(rawBody, channelSecret, signature);
 };
