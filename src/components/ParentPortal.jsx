@@ -404,6 +404,7 @@ function ParentPortal({
 
   // New onboarding, nickname & leaderboard states
   const [settingsNickname, setSettingsNickname] = useState(familyNickname || '');
+  const [nicknameWarning, setNicknameWarning] = useState(''); // REQUIRED: used in handleSaveSettingsNickname & common settings panel
   const [showChildWizardOnAudit, setShowChildWizardOnAudit] = useState(false);
 
   React.useEffect(() => {
