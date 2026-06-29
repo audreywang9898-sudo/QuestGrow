@@ -369,6 +369,9 @@ function KidPortal({
   const [showBackpackHistory, setShowBackpackHistory] = useState(false);
   const [swappingTaskId, setSwappingTaskId] = useState(null);
   const [selectedGridItem, setSelectedGridItem] = useState(null);
+  const [hideParentTip, setHideParentTip] = useState(() => {
+    return localStorage.getItem('questgrow_hide_readonly_parent_tip') === 'true';
+  });
 
   const handleSpeakTourStep = (stepNum) => {
     if (!('speechSynthesis' in window)) {
@@ -1367,6 +1370,36 @@ function KidPortal({
           <span className="bg-amber-600 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded shadow-sm">
             {t('readOnlyTag')}
           </span>
+        </div>
+      )}
+
+      {/* Parent modifying children data helper tip */}
+      {isReadOnly && currentUser?.role === 'parent' && !hideParentTip && (
+        <div className="bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/30 p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-indigo-700 dark:text-indigo-300 font-semibold shadow-sm animate-success">
+          <div className="flex items-start gap-2.5">
+            <span className="text-base shrink-0">💡</span>
+            <div>
+              <p className="font-black text-indigo-900 dark:text-indigo-200">
+                {language === 'zh' ? '如何修改兒童資料？' : 'How to Edit Child Data?'}
+              </p>
+              <p className="mt-0.5 text-indigo-700 dark:text-indigo-400 leading-relaxed">
+                {language === 'zh' 
+                  ? '目前為「唯讀模式」，您無法代表他/她完成任務、抽卡或兌換獎品。若要編輯該兒童的任務與點數，請點擊右上角「👨‍👩‍👧 切換家長模式」返回修改。' 
+                  : 'Currently in "Read-Only Mode". You cannot submit tasks or draw cards. To edit child tasks or points, please click "👨‍👩‍👧 Switch to Parent Mode" at the top right.'
+                }
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              localStorage.setItem('questgrow_hide_readonly_parent_tip', 'true');
+              setHideParentTip(true);
+            }}
+            className="shrink-0 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-[4px] text-[10px] font-black transition-all shadow-sm focus:outline-none"
+          >
+            {language === 'zh' ? '知道了，不再顯示' : 'Got it, don\'t show again'}
+          </button>
         </div>
       )}
 

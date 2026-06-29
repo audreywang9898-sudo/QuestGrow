@@ -1295,7 +1295,7 @@ function App() {
             onAddTask={handleAddTask}
             onEditTask={handleEditTask}
             onLinkGoogleAccount={handleLinkGoogleAccount}
-            isReadOnly={currentUser && currentUser.role === 'kid' && activeChildId !== currentUser.childId}
+            isReadOnly={(currentUser && currentUser.role === 'kid' && activeChildId !== currentUser.childId) || (currentUser && currentUser.role === 'parent' && role === 'kid')}
             googleClientId={googleClientId}
             onToggleEquip={handleToggleEquip}
             gachaPool={gachaPool}
