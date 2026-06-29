@@ -404,7 +404,6 @@ function ParentPortal({
 
   // New onboarding, nickname & leaderboard states
   const [settingsNickname, setSettingsNickname] = useState(familyNickname || '');
-  const [nicknameWarning, setNicknameWarning] = useState('');
   const [showChildWizardOnAudit, setShowChildWizardOnAudit] = useState(false);
 
   React.useEffect(() => {
@@ -432,12 +431,14 @@ function ParentPortal({
   const [editChildBirthday, setEditChildBirthday] = useState('');
   const [editChildEmail, setEditChildEmail] = useState('');
   const [editChildPassword, setEditChildPassword] = useState('');
-
-  // Multi-Parent Form States
+  const [editChildAvatar, setEditChildAvatar] = useState('boy');
   const [newParentName, setNewParentName] = useState('');
+
   const [newParentAvatar, setNewParentAvatar] = useState('girl');
   const [newParentEmail, setNewParentEmail] = useState('');
   const [newParentPassword, setNewParentPassword] = useState('password123');
+
+  // Multi-Parent Form States
 
   const [editingParentEmail, setEditingParentEmail] = useState(null);
   const [editParentName, setEditParentName] = useState('');
@@ -735,7 +736,8 @@ function ParentPortal({
       age: parseInt(editChildAge, 10) || 10,
       birthday: editChildBirthday || '',
       email: editChildEmail,
-      password: editChildPassword
+      password: editChildPassword,
+      avatar: editChildAvatar
     });
     if (success !== false) {
       setEditingChildId(null);
@@ -3196,6 +3198,7 @@ function ParentPortal({
                       </div>
                     </div>
 
+
                     {!isEditing ? (
                       <div className="flex gap-2 border-t border-white/5 pt-3">
                         <button
@@ -3205,7 +3208,7 @@ function ParentPortal({
                             setEditChildName(child.name);
                             setEditChildAge(child.age);
                             setEditChildBirthday(child.birthday || '');
-                            
+                            setEditChildAvatar(child.avatar || 'boy');
                             const childUser = usersDB?.find(u => (u.childId || u.child_id) === child.id);
                             setEditChildEmail(childUser ? childUser.email : '');
                             setEditChildPassword('');
@@ -3232,7 +3235,7 @@ function ParentPortal({
                         <h4 className="text-xs font-black text-cyan-300 uppercase tracking-widest flex items-center gap-1.5">
                           {t('editChildSettingsTitle', { name: child.name })}
                         </h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                           <div>
                             <label className="block text-[10px] text-slate-400 font-bold uppercase mb-1">{t('childNameLabel')}</label>
                             <input 
@@ -3254,6 +3257,17 @@ function ParentPortal({
                               placeholder="e.g. 10/24"
                               className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none"
                             />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] text-slate-400 font-bold uppercase mb-1">{language === 'zh' ? '兒童性別' : 'Child Gender'}</label>
+                            <select
+                              value={editChildAvatar}
+                              onChange={(e) => setEditChildAvatar(e.target.value)}
+                              className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none"
+                            >
+                              <option value="boy">{language === 'zh' ? '男孩子 👦' : 'Boy 👦'}</option>
+                              <option value="girl">{language === 'zh' ? '女孩子 👧' : 'Girl 👧'}</option>
+                            </select>
                           </div>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -4216,124 +4230,7 @@ function ParentPortal({
                   </div>
                   <div className="glass-panel p-4 border-white/5 bg-slate-950/40 space-y-4">
                     <div className="text-xs text-slate-400 font-bold uppercase text-center">{t('radarTitle')}</div>
-                    <div className="flex justify-center">
-                      <svg width="225" height="225" viewBox="-20 -20 240 240" className="w-[216px] h-[216px]">
-                        {/* Concentric grid lines - RPG Level pentagons */}
-                        {[0.2, 0.4, 0.6, 0.8, 1.0].map((level, i) => (
-                          <polygon 
-                            key={i} 
-                            points={[[0,0],[0,0],[0,0],[0,0],[0,0]].map((_, j) => {
-                              const angle = (j * 2 * Math.PI / 5) - Math.PI / 2;
-                              return `${100 + 65 * level * Math.cos(angle)},${100 + 65 * level * Math.sin(angle)}`;
-                            }).join(' ')} 
-                            fill={i % 2 === 0 ? "rgba(255, 255, 255, 0.01)" : "none"}
-                            stroke="rgba(255, 255, 255, 0.08)" 
-                            strokeWidth="1"
-                          />
-                        ))}
-                        {/* Radial guidelines */}
-                        {[0, 1, 2, 3, 4].map((j) => {
-                          const angle = (j * 2 * Math.PI / 5) - Math.PI / 2;
-                          return (
-                            <line 
-                              key={j}
-                              x1="100" 
-                              y1="100" 
-                              x2={100 + 65 * Math.cos(angle)} 
-                              y2={100 + 65 * Math.sin(angle)} 
-                              stroke="rgba(255, 255, 255, 0.15)" 
-                              strokeWidth="1" 
-                            />
-                          );
-                        })}
-                        {/* Active Radar Polygon */}
-                        <polygon 
-                          points={[
-                            reportData.attributes.Wisdom,
-                            reportData.attributes.Responsibility,
-                            reportData.attributes.Empathy,
-                            reportData.attributes.Creativity,
-                            reportData.attributes.Courage
-                          ].map((val, i) => {
-                            const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
-                            const maxVal = reportData.isSummary ? Math.max(40 * children.length, 100) : 40;
-                            const r = 65 * (Math.min(maxVal, Math.max(5, val)) / maxVal);
-                            return `${100 + r * Math.cos(angle)},${100 + r * Math.sin(angle)}`;
-                          }).join(' ')} 
-                          fill={children.find(c => c.id === reportsUserFilter)?.avatar === 'girl' ? "rgba(236, 72, 153, 0.22)" : "rgba(168, 85, 247, 0.22)"} 
-                          stroke={children.find(c => c.id === reportsUserFilter)?.avatar === 'girl' ? "#ec4899" : "#a855f7"} 
-                          strokeWidth="2.5" 
-                          style={{
-                            filter: children.find(c => c.id === reportsUserFilter)?.avatar === 'girl'
-                              ? 'drop-shadow(0px 0px 8px rgba(236, 72, 153, 0.5))'
-                              : 'drop-shadow(0px 0px 8px rgba(168, 85, 247, 0.5))'
-                          }}
-                        />
-                        {/* Active Radar Points Indicator Dots */}
-                        {[
-                          reportData.attributes.Wisdom,
-                          reportData.attributes.Responsibility,
-                          reportData.attributes.Empathy,
-                          reportData.attributes.Creativity,
-                          reportData.attributes.Courage
-                        ].map((val, i) => {
-                          const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
-                          const maxVal = reportData.isSummary ? Math.max(40 * children.length, 100) : 40;
-                          const r = 65 * (Math.min(maxVal, Math.max(5, val)) / maxVal);
-                          const x = 100 + r * Math.cos(angle);
-                          const y = 100 + r * Math.sin(angle);
-                          const color = children.find(c => c.id === reportsUserFilter)?.avatar === 'girl' ? "#ec4899" : "#a855f7";
-                          return (
-                            <circle
-                              key={i}
-                              cx={x}
-                              cy={y}
-                              r="3.5"
-                              fill={color}
-                              stroke="#ffffff"
-                              strokeWidth="1.2"
-                              style={{ filter: `drop-shadow(0 0 4px ${color})` }}
-                            />
-                          );
-                        })}
-                        {(() => {
-                          const scores = [
-                            reportData.attributes.Wisdom,
-                            reportData.attributes.Responsibility,
-                            reportData.attributes.Empathy,
-                            reportData.attributes.Creativity,
-                            reportData.attributes.Courage
-                          ];
-                          const colors = [
-                            "#0284c7", // 智 (Wisdom - Cyan)
-                            "#16a34a", // 德 (Responsibility - Green)
-                            "#db2777", // 群 (Empathy - Pink)
-                            "#7c3aed", // 美 (Creativity - Purple)
-                            "#ea580c"  // 體 (Courage - Orange)
-                          ];
-                          const radarLabels = [t('attrWisdom'), t('attrResponsibility'), t('attrEmpathy'), t('attrCreativity'), t('attrCourage')];
-                          return radarLabels.map((label, i) => {
-                            const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
-                            const x = 100 + 85 * Math.cos(angle);
-                            const y = 100 + 85 * Math.sin(angle);
-                            return (
-                              <text 
-                                key={i} 
-                                x={x} 
-                                y={y} 
-                                fill={colors[i]} 
-                                fontSize="14" 
-                                fontWeight="900" 
-                                textAnchor="middle" 
-                                dominantBaseline="middle"
-                              >
-                                {label}({scores[i]})
-                              </text>
-                            );
-                          });
-                        })()}
-                      </svg>
-                    </div>
+
                   </div>
                 </div>
 
