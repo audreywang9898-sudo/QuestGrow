@@ -4162,36 +4162,72 @@ function ParentPortal({
                     <p className="text-xs text-slate-450 mt-1">{t('growthDashboardDesc')}</p>
                   </div>
                   {/* AI Rank Badge */}
-                  <div className={`px-3 py-1.5 rounded-xl border text-[10px] font-black shrink-0 flex items-center gap-1.5 ${rank.color}`}>
+                  <div className={`px-4 py-1.5 rounded-full border text-[10px] font-black shrink-0 flex items-center gap-1.5 shadow-sm ${rank.color}`}>
+                    <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
                     {rank.title}
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                   <div className="space-y-4">
-                    <div className="p-4 bg-white/5 border border-white/5 rounded-xl">
-                      <div className="text-xs text-slate-400 font-bold uppercase">{t('weeklyCompletionRate')}</div>
-                      <div className="text-2xl font-black text-cyan-400 mt-1">{getCompletionRate(reportsUserFilter)}%</div>
-                    </div>
-                    <div className="p-4 bg-white/5 border border-white/5 rounded-xl">
-                      <div className="text-xs text-slate-400 font-bold uppercase">{t('weeklyBalanceIndex')}</div>
-                      <div className="text-2xl font-black text-emerald-400 mt-1">{getReportBalanceIndex(reportsUserFilter)}%</div>
-                    </div>
+                    {/* Weekly Completion Rate circular progress */}
+                    {(() => {
+                      const percentage = getCompletionRate(reportsUserFilter);
+                      const radius = 22;
+                      const circumference = 2 * Math.PI * radius; // ~138.2
+                      const offset = circumference - (Math.min(100, Math.max(0, percentage)) / 100) * circumference;
+                      return (
+                        <div className="flex items-center gap-4 p-4 bg-slate-900/60 border border-white/5 rounded-2xl shadow-lg transition-all hover:bg-slate-900/80">
+                          <div className="relative w-14 h-14 shrink-0">
+                            <svg className="w-full h-full transform -rotate-90">
+                              <circle cx="28" cy="28" r={radius} fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="4.5" />
+                              <circle cx="28" cy="28" r={radius} fill="none" stroke="#00E5FF" strokeWidth="4.5" strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" className="transition-all duration-1000 ease-out" />
+                            </svg>
+                            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-white">{percentage}%</span>
+                          </div>
+                          <div>
+                            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{t('weeklyCompletionRate')}</div>
+                            <div className="text-xl font-black text-[#00E5FF] mt-0.5">{percentage}%</div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                    {/* Weekly Balance Index circular progress */}
+                    {(() => {
+                      const percentage = getReportBalanceIndex(reportsUserFilter);
+                      const radius = 22;
+                      const circumference = 2 * Math.PI * radius;
+                      const offset = circumference - (Math.min(100, Math.max(0, percentage)) / 100) * circumference;
+                      return (
+                        <div className="flex items-center gap-4 p-4 bg-slate-900/60 border border-white/5 rounded-2xl shadow-lg transition-all hover:bg-slate-900/80">
+                          <div className="relative w-14 h-14 shrink-0">
+                            <svg className="w-full h-full transform -rotate-90">
+                              <circle cx="28" cy="28" r={radius} fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="4.5" />
+                              <circle cx="28" cy="28" r={radius} fill="none" stroke="#00E676" strokeWidth="4.5" strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" className="transition-all duration-1000 ease-out" />
+                            </svg>
+                            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-white">{percentage}%</span>
+                          </div>
+                          <div>
+                            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{t('weeklyBalanceIndex')}</div>
+                            <div className="text-xl font-black text-[#00E676] mt-0.5">{percentage}%</div>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                   <div className="glass-panel p-4 border-white/5 bg-slate-950/40 space-y-4">
                     <div className="text-xs text-slate-400 font-bold uppercase text-center">{t('radarTitle')}</div>
                     <div className="flex justify-center">
                       <svg width="225" height="225" viewBox="-20 -20 240 240" className="w-[216px] h-[216px]">
-                        {/* Concentric grid lines */}
-                        {[0.3, 0.6, 1.0].map((level, i) => (
+                        {/* Concentric grid lines - RPG Level pentagons */}
+                        {[0.2, 0.4, 0.6, 0.8, 1.0].map((level, i) => (
                           <polygon 
                             key={i} 
                             points={[[0,0],[0,0],[0,0],[0,0],[0,0]].map((_, j) => {
                               const angle = (j * 2 * Math.PI / 5) - Math.PI / 2;
                               return `${100 + 65 * level * Math.cos(angle)},${100 + 65 * level * Math.sin(angle)}`;
                             }).join(' ')} 
-                            fill="none" 
+                            fill={i % 2 === 0 ? "rgba(255, 255, 255, 0.01)" : "none"}
                             stroke="rgba(255, 255, 255, 0.08)" 
-                            strokeDasharray="3,3" 
                             strokeWidth="1"
                           />
                         ))}
@@ -4224,15 +4260,42 @@ function ParentPortal({
                             const r = 65 * (Math.min(maxVal, Math.max(5, val)) / maxVal);
                             return `${100 + r * Math.cos(angle)},${100 + r * Math.sin(angle)}`;
                           }).join(' ')} 
-                          fill={children.find(c => c.id === reportsUserFilter)?.avatar === 'girl' ? "rgba(236, 72, 153, 0.25)" : "rgba(168, 85, 247, 0.25)"} 
+                          fill={children.find(c => c.id === reportsUserFilter)?.avatar === 'girl' ? "rgba(236, 72, 153, 0.22)" : "rgba(168, 85, 247, 0.22)"} 
                           stroke={children.find(c => c.id === reportsUserFilter)?.avatar === 'girl' ? "#ec4899" : "#a855f7"} 
                           strokeWidth="2.5" 
                           style={{
                             filter: children.find(c => c.id === reportsUserFilter)?.avatar === 'girl'
-                              ? 'drop-shadow(0px 0px 6px rgba(236, 72, 153, 0.6))'
-                              : 'drop-shadow(0px 0px 6px rgba(168, 85, 247, 0.6))'
+                              ? 'drop-shadow(0px 0px 8px rgba(236, 72, 153, 0.5))'
+                              : 'drop-shadow(0px 0px 8px rgba(168, 85, 247, 0.5))'
                           }}
                         />
+                        {/* Active Radar Points Indicator Dots */}
+                        {[
+                          reportData.attributes.Wisdom,
+                          reportData.attributes.Responsibility,
+                          reportData.attributes.Empathy,
+                          reportData.attributes.Creativity,
+                          reportData.attributes.Courage
+                        ].map((val, i) => {
+                          const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
+                          const maxVal = reportData.isSummary ? Math.max(40 * children.length, 100) : 40;
+                          const r = 65 * (Math.min(maxVal, Math.max(5, val)) / maxVal);
+                          const x = 100 + r * Math.cos(angle);
+                          const y = 100 + r * Math.sin(angle);
+                          const color = children.find(c => c.id === reportsUserFilter)?.avatar === 'girl' ? "#ec4899" : "#a855f7";
+                          return (
+                            <circle
+                              key={i}
+                              cx={x}
+                              cy={y}
+                              r="3.5"
+                              fill={color}
+                              stroke="#ffffff"
+                              strokeWidth="1.2"
+                              style={{ filter: `drop-shadow(0 0 4px ${color})` }}
+                            />
+                          );
+                        })}
                         {(() => {
                           const scores = [
                             reportData.attributes.Wisdom,
@@ -4259,7 +4322,7 @@ function ParentPortal({
                                 x={x} 
                                 y={y} 
                                 fill={colors[i]} 
-                                fontSize="16" 
+                                fontSize="14" 
                                 fontWeight="900" 
                                 textAnchor="middle" 
                                 dominantBaseline="middle"
@@ -4275,18 +4338,27 @@ function ParentPortal({
                 </div>
 
                 {/* RPG Accumulated Stats Display */}
-                <div className="grid grid-cols-3 gap-2 text-center text-xs mt-3 pt-3 border-t border-white/5">
-                  <div className="bg-slate-900/50 p-2 rounded-lg border border-white/5">
-                    <div className="text-slate-400 font-bold uppercase text-[9px] mb-0.5">{language === 'zh' ? '累計等級' : 'Total Level'}</div>
-                    <div className="text-white font-extrabold text-sm">Lv. {reportData.level}</div>
+                <div className="grid grid-cols-3 gap-3 text-center text-xs mt-3 pt-3 border-t border-white/5">
+                  <div className="bg-slate-900/60 p-3 rounded-xl border border-white/5 shadow-inner transition-all hover:bg-slate-900/80">
+                    <div className="text-slate-400 font-bold uppercase text-[9px] mb-1">{language === 'zh' ? '累計等級' : 'Total Level'}</div>
+                    <div className="text-white font-extrabold text-sm flex items-center justify-center gap-1">
+                      <span className="text-indigo-400">⚡</span>
+                      <span>Lv. {reportData.level}</span>
+                    </div>
                   </div>
-                  <div className="bg-slate-900/50 p-2 rounded-lg border border-white/5">
-                    <div className="text-slate-400 font-bold uppercase text-[9px] mb-0.5">{language === 'zh' ? '累計金幣' : 'Total Gold'}</div>
-                    <div className="text-amber-400 font-extrabold text-sm">🪙 {reportData.gold}</div>
+                  <div className="bg-slate-900/60 p-3 rounded-xl border border-white/5 shadow-inner transition-all hover:bg-slate-900/80">
+                    <div className="text-slate-400 font-bold uppercase text-[9px] mb-1">{language === 'zh' ? '累計金幣' : 'Total Gold'}</div>
+                    <div className="text-amber-400 font-extrabold text-sm flex items-center justify-center gap-1">
+                      <span>🪙</span>
+                      <span>{reportData.gold}</span>
+                    </div>
                   </div>
-                  <div className="bg-slate-900/50 p-2 rounded-lg border border-white/5">
-                    <div className="text-slate-400 font-bold uppercase text-[9px] mb-0.5">{language === 'zh' ? '累計抽卡券' : 'Total Tickets'}</div>
-                    <div className="text-cyan-400 font-extrabold text-sm">🎫 {reportData.tickets}</div>
+                  <div className="bg-slate-900/60 p-3 rounded-xl border border-white/5 shadow-inner transition-all hover:bg-slate-900/80">
+                    <div className="text-slate-400 font-bold uppercase text-[9px] mb-1">{language === 'zh' ? '累計抽卡券' : 'Total Tickets'}</div>
+                    <div className="text-cyan-400 font-extrabold text-sm flex items-center justify-center gap-1">
+                      <span>🎫</span>
+                      <span>{reportData.tickets}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -4326,18 +4398,27 @@ function ParentPortal({
                   </div>
 
                   {aiCoachTab === 'diagnostic' ? (
-                    <div className="space-y-4 text-xs leading-relaxed text-slate-350">
-                      <div className="space-y-1 bg-white/5 p-3 rounded-xl border border-white/5">
-                        <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest block">{aiFeedback.highlight}</span>
-                        <p>{aiFeedback.highlightDesc}</p>
+                    <div className="space-y-4 text-xs leading-relaxed text-slate-305">
+                      <div className="space-y-1 bg-slate-900/60 p-3.5 rounded-xl border border-white/5 border-l-4 border-l-emerald-500 shadow-sm transition-all hover:bg-slate-900/80">
+                        <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest block flex items-center gap-1">
+                          <span>🌟</span>
+                          <span>{aiFeedback.highlight}</span>
+                        </span>
+                        <p className="mt-1 text-slate-200 font-semibold">{aiFeedback.highlightDesc}</p>
                       </div>
-                      <div className="space-y-1 bg-white/5 p-3 rounded-xl border border-white/5">
-                        <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest block">{aiFeedback.improve}</span>
-                        <p>{aiFeedback.improveDesc}</p>
+                      <div className="space-y-1 bg-slate-900/60 p-3.5 rounded-xl border border-white/5 border-l-4 border-l-cyan-500 shadow-sm transition-all hover:bg-slate-900/80">
+                        <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest block flex items-center gap-1">
+                          <span>📊</span>
+                          <span>{aiFeedback.improve}</span>
+                        </span>
+                        <p className="mt-1 text-slate-200 font-semibold">{aiFeedback.improveDesc}</p>
                       </div>
-                      <div className="space-y-2 bg-indigo-500/5 p-3 rounded-xl border border-indigo-500/10">
-                        <span className="text-[10px] font-black text-purple-400 uppercase tracking-widest block">{aiFeedback.suggest}</span>
-                        <p>{aiFeedback.suggestDesc}</p>
+                      <div className="space-y-2 bg-indigo-500/5 p-3.5 rounded-xl border border-indigo-500/10 border-l-4 border-l-violet-500 shadow-sm">
+                        <span className="text-[10px] font-black text-purple-400 uppercase tracking-widest block flex items-center gap-1">
+                          <span>💡</span>
+                          <span>{aiFeedback.suggest}</span>
+                        </span>
+                        <p className="mt-1 text-slate-200 font-semibold leading-relaxed">{aiFeedback.suggestDesc}</p>
                         
                         {/* Auto Quest Assignment Button */}
                         <button
