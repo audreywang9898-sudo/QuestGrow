@@ -201,6 +201,10 @@ async function approveTask(taskId, token, parentLineId) {
     }
 
     await client.query('COMMIT');
+    const tempClient = client;
+    client = null;
+    tempClient.release();
+
     console.log(`[lineBotController] Task ${taskId} approved via LINE by ${parentLineId}`);
 
     // Send confirmation message back to parent
@@ -208,10 +212,14 @@ async function approveTask(taskId, token, parentLineId) {
       expReward, goldReward, ticketReward, newLevel, levelUp: newLevel > (task.level || 1)
     });
   } catch (err) {
-    await client.query('ROLLBACK');
+    if (client) {
+      await client.query('ROLLBACK');
+    }
     console.error('[lineBotController] approveTask DB error:', err);
   } finally {
-    client.release();
+    if (client) {
+      client.release();
+    }
   }
 }
 
@@ -258,15 +266,23 @@ async function rejectTask(taskId, token, parentLineId) {
     );
 
     await client.query('COMMIT');
+    const tempClient = client;
+    client = null;
+    tempClient.release();
+
     console.log(`[lineBotController] Task ${taskId} rejected via LINE by ${parentLineId}`);
 
     // Send confirmation message back to parent
     await sendTaskReviewConfirmation(parentLineId, task.task_name, task.child_name, 'rejected', null);
   } catch (err) {
-    await client.query('ROLLBACK');
+    if (client) {
+      await client.query('ROLLBACK');
+    }
     console.error('[lineBotController] rejectTask DB error:', err);
   } finally {
-    client.release();
+    if (client) {
+      client.release();
+    }
   }
 }
 
@@ -321,15 +337,23 @@ async function approveRedeem(inventoryId, token, parentLineId) {
     );
 
     await client.query('COMMIT');
+    const tempClient = client;
+    client = null;
+    tempClient.release();
+
     console.log(`[lineBotController] Redeem ${inventoryId} approved via LINE by ${parentLineId}`);
 
     // Send confirmation message back to parent
     await sendRedeemReviewConfirmation(parentLineId, inv.item_name, inv.child_name, 'approved');
   } catch (err) {
-    await client.query('ROLLBACK');
+    if (client) {
+      await client.query('ROLLBACK');
+    }
     console.error('[lineBotController] approveRedeem DB error:', err);
   } finally {
-    client.release();
+    if (client) {
+      client.release();
+    }
   }
 }
 
@@ -370,14 +394,22 @@ async function rejectRedeem(inventoryId, token, parentLineId) {
     );
 
     await client.query('COMMIT');
+    const tempClient = client;
+    client = null;
+    tempClient.release();
+
     console.log(`[lineBotController] Redeem ${inventoryId} rejected via LINE by ${parentLineId}`);
 
     // Send confirmation message back to parent
     await sendRedeemReviewConfirmation(parentLineId, inv.item_name, inv.child_name, 'rejected');
   } catch (err) {
-    await client.query('ROLLBACK');
+    if (client) {
+      await client.query('ROLLBACK');
+    }
     console.error('[lineBotController] rejectRedeem DB error:', err);
   } finally {
-    client.release();
+    if (client) {
+      client.release();
+    }
   }
 }
