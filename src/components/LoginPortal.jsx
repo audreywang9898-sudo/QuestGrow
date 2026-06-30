@@ -482,9 +482,6 @@ function LoginPortal({ onLogin, googleClientId, lineChannelId, onOpenFeedback })
         {/* Social Authentication Area */}
         <div className="flex flex-col items-center gap-3">
           
-          {/* Google Official GSI Button Container */}
-          <div id="google-gsi-btn-container" className="min-h-[40px] flex justify-center w-full"></div>
-
           {/* LINE Official Login Button */}
           <button
             onClick={triggerLineLogin}
@@ -507,6 +504,9 @@ function LoginPortal({ onLogin, googleClientId, lineChannelId, onOpenFeedback })
             </svg>
             <span className="font-semibold">{language === 'zh' ? '使用 LINE 帳號登入' : 'Sign in with LINE'}</span>
           </button>
+
+          {/* Google Official GSI Button Container */}
+          <div id="google-gsi-btn-container" className="min-h-[40px] flex justify-center w-full"></div>
 
           {/* iOS / Mobile Browser Helper Tip */}
           <div className="mt-1 text-left bg-indigo-50/50 border border-indigo-100/60 p-3.5 rounded-xl text-[10px] text-slate-500 leading-relaxed space-y-1.5 max-w-[320px]">
