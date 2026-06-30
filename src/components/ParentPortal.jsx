@@ -1087,7 +1087,7 @@ function ParentPortal({
             </div>
           </div>
           <a
-            href="https://line.me/R/ti/p/@QuestGrow"
+            href="https://line.me/R/ti/p/@494ebzej"
             target="_blank"
             rel="noopener noreferrer"
             className="w-full sm:w-auto px-4 py-2 bg-[#06C755] hover:bg-[#05b34c] text-white font-extrabold text-xs rounded-xl text-center transition-all shadow-md active:scale-95 duration-150 flex items-center justify-center gap-1.5 shrink-0"
