@@ -70,48 +70,55 @@ export const addChild = async (req, res) => {
     const salt = bcrypt.genSaltSync(10);
     const passwordHash = bcrypt.hashSync(password, salt);
 
-    await pool.query('BEGIN');
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
 
-    // Create the Kid User
-    const newUser = await pool.query(
-      `INSERT INTO users (family_id, email, password_hash, name, role, avatar) 
-       VALUES ($1, $2, $3, $4, 'kid', $5) RETURNING id`,
-      [familyId, dbEmail, passwordHash, name, avatar || 'boy']
-    );
-    const userId = newUser.rows[0].id;
+      // Create the Kid User
+      const newUser = await client.query(
+        `INSERT INTO users (family_id, email, password_hash, name, role, avatar) 
+         VALUES ($1, $2, $3, $4, 'kid', $5) RETURNING id`,
+        [familyId, dbEmail, passwordHash, name, avatar || 'boy']
+      );
+      const userId = newUser.rows[0].id;
 
-    // Create the Child Character Stats
-    const defaultAttributes = JSON.stringify({
-      Wisdom: 0,
-      Responsibility: 0,
-      Courage: 0,
-      Empathy: 0,
-      Creativity: 0
-    });
-    const newChild = await pool.query(
-      `INSERT INTO children (user_id, name, age, birthday, avatar, level, exp, exp_needed, gold, tickets, job_class, attributes) 
-       VALUES ($1, $2, $3, $4, $5, 1, 0, 400, 0, 0, 'Explorer (探索者) ⚔️', $6) RETURNING id`,
-      [userId, name, age || 10, birthday || '10/24', avatar || 'boy', defaultAttributes]
-    );
-    const childId = newChild.rows[0].id;
+      // Create the Child Character Stats
+      const defaultAttributes = JSON.stringify({
+        Wisdom: 0,
+        Responsibility: 0,
+        Courage: 0,
+        Empathy: 0,
+        Creativity: 0
+      });
+      const newChild = await client.query(
+        `INSERT INTO children (user_id, name, age, birthday, avatar, level, exp, exp_needed, gold, tickets, job_class, attributes) 
+         VALUES ($1, $2, $3, $4, $5, 1, 0, 400, 0, 0, 'Explorer (探索者) ⚔️', $6) RETURNING id`,
+        [userId, name, age || 10, birthday || '10/24', avatar || 'boy', defaultAttributes]
+      );
+      const childId = newChild.rows[0].id;
 
-    // Update user's backreference child_id
-    await pool.query('UPDATE users SET child_id = $1 WHERE id = $2', [childId, userId]);
+      // Update user's backreference child_id
+      await client.query('UPDATE users SET child_id = $1 WHERE id = $2', [childId, userId]);
 
-    await pool.query('COMMIT');
+      await client.query('COMMIT');
 
-    // Return the created child details
-    const childDetails = await pool.query(
-      'SELECT id, user_id, name, age, birthday, avatar, level, exp, exp_needed, gold, tickets, job_class, attributes FROM children WHERE id = $1',
-      [childId]
-    );
+      // Return the created child details
+      const childDetails = await pool.query(
+        'SELECT id, user_id, name, age, birthday, avatar, level, exp, exp_needed, gold, tickets, job_class, attributes FROM children WHERE id = $1',
+        [childId]
+      );
 
-    res.status(201).json({
-      message: getMessage('ADD_CHILD_SUCCESS', { name }),
-      child: childDetails.rows[0]
-    });
+      res.status(201).json({
+        message: getMessage('ADD_CHILD_SUCCESS', { name }),
+        child: childDetails.rows[0]
+      });
+    } catch (txError) {
+      await client.query('ROLLBACK');
+      throw txError;
+    } finally {
+      client.release();
+    }
   } catch (error) {
-    await pool.query('ROLLBACK');
     console.error('addChild error:', error);
     res.status(500).json({ message: getMessage('ADD_CHILD_ERROR') });
   }
@@ -147,16 +154,11 @@ export const deleteChild = async (req, res) => {
       return res.status(400).json({ message: getMessage('MIN_CHILDREN_LIMIT') });
     }
 
-    await pool.query('BEGIN');
-
     // Deleting the user account cascades and deletes the child profile, tasks, and inventory
     await pool.query('DELETE FROM users WHERE id = $1', [userId]);
 
-    await pool.query('COMMIT');
-
     res.json({ message: getMessage('DELETE_CHILD_SUCCESS') });
   } catch (error) {
-    await pool.query('ROLLBACK');
     console.error('deleteChild error:', error);
     res.status(500).json({ message: getMessage('DELETE_CHILD_ERROR') });
   }
@@ -207,71 +209,79 @@ export const updateChildProfile = async (req, res) => {
       }
     }
 
-    await pool.query('BEGIN');
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
 
-    // 1. Update Children Stats Table
-    const updateChildFields = [];
-    const childParams = [];
-    let childIndex = 1;
+      // 1. Update Children Stats Table
+      const updateChildFields = [];
+      const childParams = [];
+      let childIndex = 1;
 
-    // Parents can update all stats; kids can only update display fields
-    const childAllowedFields = isKid
-      ? ['name', 'age', 'birthday', 'avatar']
-      : ['name', 'age', 'birthday', 'avatar', 'level', 'exp', 'exp_needed', 'gold', 'tickets', 'job_class', 'attributes'];
+      // Parents can update all stats; kids can only update display fields
+      const childAllowedFields = isKid
+        ? ['name', 'age', 'birthday', 'avatar']
+        : ['name', 'age', 'birthday', 'avatar', 'level', 'exp', 'exp_needed', 'gold', 'tickets', 'job_class', 'attributes'];
 
-    childAllowedFields.forEach(field => {
-      if (data[field] !== undefined) {
-        updateChildFields.push(`${field} = $${childIndex}`);
-        childParams.push(field === 'attributes' ? JSON.stringify(data[field]) : data[field]);
-        childIndex++;
+      childAllowedFields.forEach(field => {
+        if (data[field] !== undefined) {
+          updateChildFields.push(`${field} = $${childIndex}`);
+          childParams.push(field === 'attributes' ? JSON.stringify(data[field]) : data[field]);
+          childIndex++;
+        }
+      });
+
+      if (updateChildFields.length > 0) {
+        childParams.push(childId);
+        await client.query(
+          `UPDATE children SET ${updateChildFields.join(', ')} WHERE id = $${childIndex}`,
+          childParams
+        );
       }
-    });
 
-    if (updateChildFields.length > 0) {
-      childParams.push(childId);
-      await pool.query(
-        `UPDATE children SET ${updateChildFields.join(', ')} WHERE id = $${childIndex}`,
-        childParams
-      );
-    }
+      // 2. Update User Account Table (e.g. name, avatar, email, password)
+      const updateUserFields = [];
+      const userParams = [];
+      let userIndex = 1;
 
-    // 2. Update User Account Table (e.g. name, avatar, email, password)
-    const updateUserFields = [];
-    const userParams = [];
-    let userIndex = 1;
+      if (data.name) {
+        updateUserFields.push(`name = $${userIndex}`);
+        userParams.push(data.name);
+        userIndex++;
+      }
+      if (data.avatar) {
+        updateUserFields.push(`avatar = $${userIndex}`);
+        userParams.push(data.avatar);
+        userIndex++;
+      }
+      if (data.email) {
+        updateUserFields.push(`email = $${userIndex}`);
+        userParams.push(data.email.toLowerCase());
+        userIndex++;
+      }
+      if (data.password) {
+        const salt = bcrypt.genSaltSync(10);
+        const passwordHash = bcrypt.hashSync(data.password, salt);
+        updateUserFields.push(`password_hash = $${userIndex}`);
+        userParams.push(passwordHash);
+        userIndex++;
+      }
 
-    if (data.name) {
-      updateUserFields.push(`name = $${userIndex}`);
-      userParams.push(data.name);
-      userIndex++;
-    }
-    if (data.avatar) {
-      updateUserFields.push(`avatar = $${userIndex}`);
-      userParams.push(data.avatar);
-      userIndex++;
-    }
-    if (data.email) {
-      updateUserFields.push(`email = $${userIndex}`);
-      userParams.push(data.email.toLowerCase());
-      userIndex++;
-    }
-    if (data.password) {
-      const salt = bcrypt.genSaltSync(10);
-      const passwordHash = bcrypt.hashSync(data.password, salt);
-      updateUserFields.push(`password_hash = $${userIndex}`);
-      userParams.push(passwordHash);
-      userIndex++;
-    }
+      if (updateUserFields.length > 0) {
+        userParams.push(userId);
+        await client.query(
+          `UPDATE users SET ${updateUserFields.join(', ')} WHERE id = $${userIndex}`,
+          userParams
+        );
+      }
 
-    if (updateUserFields.length > 0) {
-      userParams.push(userId);
-      await pool.query(
-        `UPDATE users SET ${updateUserFields.join(', ')} WHERE id = $${userIndex}`,
-        userParams
-      );
+      await client.query('COMMIT');
+    } catch (txError) {
+      await client.query('ROLLBACK');
+      throw txError;
+    } finally {
+      client.release();
     }
-
-    await pool.query('COMMIT');
 
     // Get updated child stats
     const updatedStats = await pool.query(
@@ -284,7 +294,6 @@ export const updateChildProfile = async (req, res) => {
       child: updatedStats.rows[0]
     });
   } catch (error) {
-    await pool.query('ROLLBACK');
     console.error('updateChildProfile error:', error);
     res.status(500).json({ message: getMessage('UPDATE_CHILD_ERROR') });
   }
@@ -445,17 +454,18 @@ export const updateParent = async (req, res) => {
 export const clearAllFamilyData = async (req, res) => {
   const familyId = req.user.family_id;
 
+  const client = await pool.connect();
   try {
-    await pool.query('BEGIN');
-
+    await client.query('BEGIN');
     // Clear all associated users, children, tasks, etc. by deleting the family entry
-    await pool.query('DELETE FROM families WHERE id = $1', [familyId]);
-
-    await pool.query('COMMIT');
+    await client.query('DELETE FROM families WHERE id = $1', [familyId]);
+    await client.query('COMMIT');
     res.json({ message: getMessage('DESTROY_DATA_SUCCESS') });
   } catch (error) {
-    await pool.query('ROLLBACK');
+    await client.query('ROLLBACK');
     console.error('clearAllFamilyData error:', error);
     res.status(500).json({ message: getMessage('DESTROY_DATA_ERROR') });
+  } finally {
+    client.release();
   }
 };

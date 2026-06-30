@@ -78,27 +78,35 @@ export const registerParent = async (req, res) => {
     const salt = bcrypt.genSaltSync(10);
     const passwordHash = bcrypt.hashSync(password, salt);
 
-    // Start Transaction to create Family and User
-    await pool.query('BEGIN');
+    const client = await pool.connect();
+    let user;
+    try {
+      await client.query('BEGIN');
 
-    // Create a new Family
-    const familyName = `${name}的家庭`;
-    const newFamily = await pool.query(
-      'INSERT INTO families (name) VALUES ($1) RETURNING id',
-      [familyName]
-    );
-    const familyId = newFamily.rows[0].id;
+      // Create a new Family
+      const familyName = `${name}的家庭`;
+      const newFamily = await client.query(
+        'INSERT INTO families (name) VALUES ($1) RETURNING id',
+        [familyName]
+      );
+      const familyId = newFamily.rows[0].id;
 
-    // Create the Parent User
-    const newUser = await pool.query(
-      `INSERT INTO users (family_id, email, password_hash, name, role, avatar) 
-       VALUES ($1, $2, $3, $4, 'parent', $5) RETURNING id, email, name, role, avatar, family_id, child_id, onboarding_completed`,
-      [familyId, dbEmail, passwordHash, name, avatar || 'girl']
-    );
+      // Create the Parent User
+      const newUser = await client.query(
+        `INSERT INTO users (family_id, email, password_hash, name, role, avatar) 
+         VALUES ($1, $2, $3, $4, 'parent', $5) RETURNING id, email, name, role, avatar, family_id, child_id, onboarding_completed`,
+        [familyId, dbEmail, passwordHash, name, avatar || 'girl']
+      );
 
-    await pool.query('COMMIT');
+      await client.query('COMMIT');
+      user = newUser.rows[0];
+    } catch (txError) {
+      await client.query('ROLLBACK');
+      throw txError;
+    } finally {
+      client.release();
+    }
 
-    const user = newUser.rows[0];
     user.childId = user.child_id;
     user.onboardingCompleted = user.onboarding_completed;
     const token = generateToken(user);
@@ -111,7 +119,6 @@ export const registerParent = async (req, res) => {
       user
     });
   } catch (error) {
-    await pool.query('ROLLBACK');
     console.error('Registration error:', error);
     res.status(500).json({ message: getMessage('REGISTRATION_ERROR') });
   }
@@ -242,42 +249,51 @@ export const googleLogin = async (req, res) => {
     const salt = bcrypt.genSaltSync(10);
     const passwordHash = bcrypt.hashSync(randomPassword, salt);
 
-    await pool.query('BEGIN');
+    const client = await pool.connect();
+    let newUserRow, childId = null;
+    try {
+      await client.query('BEGIN');
 
-    // Create a new Family
-    const familyName = `${name}的家庭`;
-    const newFamily = await pool.query(
-      'INSERT INTO families (name) VALUES ($1) RETURNING id',
-      [familyName]
-    );
-    const familyId = newFamily.rows[0].id;
-
-    // Create Google User
-    const newUser = await pool.query(
-      `INSERT INTO users (family_id, email, password_hash, name, role, avatar, google_id) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, family_id, email, name, role, avatar, child_id, onboarding_completed`,
-      [familyId, dbEmail, passwordHash, name, targetRole, avatar, googleId]
-    );
-    const userId = newUser.rows[0].id;
-
-    let childId = null;
-    if (targetRole === 'kid') {
-      const newChild = await pool.query(
-        `INSERT INTO children (user_id, name, age, birthday, avatar, level, exp, exp_needed, gold, tickets, job_class) 
-         VALUES ($1, $2, 10, '10/24', $3, 1, 0, 400, 0, 0, 'Explorer (探索者) ⚔️') RETURNING id`,
-        [userId, name, avatar || 'boy']
+      // Create a new Family
+      const familyName = `${name}的家庭`;
+      const newFamily = await client.query(
+        'INSERT INTO families (name) VALUES ($1) RETURNING id',
+        [familyName]
       );
-      childId = newChild.rows[0].id;
-      await pool.query('UPDATE users SET child_id = $1 WHERE id = $2', [childId, userId]);
+      const familyId = newFamily.rows[0].id;
+
+      // Create Google User
+      const newUser = await client.query(
+        `INSERT INTO users (family_id, email, password_hash, name, role, avatar, google_id) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, family_id, email, name, role, avatar, child_id, onboarding_completed`,
+        [familyId, dbEmail, passwordHash, name, targetRole, avatar, googleId]
+      );
+      newUserRow = newUser.rows[0];
+      const userId = newUserRow.id;
+
+      if (targetRole === 'kid') {
+        const newChild = await client.query(
+          `INSERT INTO children (user_id, name, age, birthday, avatar, level, exp, exp_needed, gold, tickets, job_class) 
+           VALUES ($1, $2, 10, '10/24', $3, 1, 0, 400, 0, 0, 'Explorer (探索者) ⚔️') RETURNING id`,
+          [userId, name, avatar || 'boy']
+        );
+        childId = newChild.rows[0].id;
+        await client.query('UPDATE users SET child_id = $1 WHERE id = $2', [childId, userId]);
+      }
+
+      await client.query('COMMIT');
+    } catch (txError) {
+      await client.query('ROLLBACK');
+      throw txError;
+    } finally {
+      client.release();
     }
 
-    await pool.query('COMMIT');
-
     const user = {
-      ...newUser.rows[0],
+      ...newUserRow,
       child_id: childId,
       childId: childId,
-      onboardingCompleted: newUser.rows[0].onboarding_completed
+      onboardingCompleted: newUserRow.onboarding_completed
     };
     const token = generateToken(user);
 
@@ -289,7 +305,6 @@ export const googleLogin = async (req, res) => {
       user
     });
   } catch (error) {
-    await pool.query('ROLLBACK');
     console.error('Google login error:', error);
     res.status(500).json({ message: getMessage('GOOGLE_LOGIN_ERROR') });
   }
@@ -488,27 +503,37 @@ export const lineLogin = async (req, res) => {
     const salt = bcrypt.genSaltSync(10);
     const passwordHash = bcrypt.hashSync(randomPassword, salt);
 
-    await pool.query('BEGIN');
+    const client = await pool.connect();
+    let newUserRow;
+    try {
+      await client.query('BEGIN');
 
-    // Create a new Family
-    const familyName = `${name}的家庭`;
-    const newFamily = await pool.query(
-      'INSERT INTO families (name) VALUES ($1) RETURNING id',
-      [familyName]
-    );
-    const familyId = newFamily.rows[0].id;
+      // Create a new Family
+      const familyName = `${name}的家庭`;
+      const newFamily = await client.query(
+        'INSERT INTO families (name) VALUES ($1) RETURNING id',
+        [familyName]
+      );
+      const familyId = newFamily.rows[0].id;
 
-    // Create User account (parent by default)
-    const newUser = await pool.query(
-      `INSERT INTO users (family_id, email, password_hash, name, role, avatar, line_id) 
-       VALUES ($1, $2, $3, $4, 'parent', $5, $6) RETURNING id, family_id, email, name, role, avatar, child_id, onboarding_completed`,
-      [familyId, defaultEmail, passwordHash, name, 'girl', lineId]
-    );
+      // Create User account (parent by default)
+      const newUser = await client.query(
+        `INSERT INTO users (family_id, email, password_hash, name, role, avatar, line_id) 
+         VALUES ($1, $2, $3, $4, 'parent', $5, $6) RETURNING id, family_id, email, name, role, avatar, child_id, onboarding_completed`,
+        [familyId, defaultEmail, passwordHash, name, 'girl', lineId]
+      );
+      newUserRow = newUser.rows[0];
 
-    await pool.query('COMMIT');
+      await client.query('COMMIT');
+    } catch (txError) {
+      await client.query('ROLLBACK');
+      throw txError;
+    } finally {
+      client.release();
+    }
 
     const user = {
-      ...newUser.rows[0],
+      ...newUserRow,
       childId: null,
       onboardingCompleted: false
     };
@@ -523,7 +548,6 @@ export const lineLogin = async (req, res) => {
     });
 
   } catch (error) {
-    await pool.query('ROLLBACK');
     console.error('LINE login controller error:', error);
     res.status(500).json({ message: 'LINE 登入時伺服器發生意外錯誤。' });
   }

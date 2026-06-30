@@ -140,8 +140,9 @@ export const addTask = async (req, res) => {
     }
   }
 
+  const client = await pool.connect();
   try {
-    await pool.query('BEGIN');
+    await client.query('BEGIN');
     const createdTasks = [];
 
     for (const task of tasksData) {
@@ -169,7 +170,7 @@ export const addTask = async (req, res) => {
 
       if (dbAssignedTo && !isForce) {
         // This block is only reached for batch imports. Auto-flag repeat for batch templates.
-        const recentCompleted = await pool.query(
+        const recentCompleted = await client.query(
           `SELECT id FROM tasks 
            WHERE assigned_to = $1 
              AND LOWER(TRIM(name)) = LOWER(TRIM($2)) 
@@ -185,7 +186,7 @@ export const addTask = async (req, res) => {
         isRepeated = true;
       }
 
-      const result = await pool.query(
+      const result = await client.query(
         `INSERT INTO tasks (
            family_id, assigned_to, name, description, type, difficulty, 
            exp_reward, gold_reward, ticket_reward, attribute_reward, period, status, is_repeated, swap_count
@@ -223,7 +224,7 @@ export const addTask = async (req, res) => {
       });
     }
 
-    await pool.query('COMMIT');
+    await client.query('COMMIT');
 
     if (isBatch) {
       res.status(201).json({
@@ -237,11 +238,13 @@ export const addTask = async (req, res) => {
       });
     }
   } catch (error) {
-    await pool.query('ROLLBACK');
+    await client.query('ROLLBACK');
     console.error('addTask error:', error);
     res.status(error.message.includes('欄位') || error.message.includes('必填') ? 400 : 500).json({ 
       message: error.message || getMessage('CREATE_TASK_ERROR') 
     });
+  } finally {
+    client.release();
   }
 };
 
@@ -548,78 +551,88 @@ export const reviewTask = async (req, res) => {
       const attrPoints = difficultyAttrMap[task.difficulty] || 1;
       const familyScoreAdd = difficultyFamilyScoreMap[task.difficulty] || 25;
 
-      await pool.query('BEGIN');
+      const reviewClient = await pool.connect();
+      let updatedChild;
+      try {
+        await reviewClient.query('BEGIN');
 
-      // 1. Fetch child stats
-      const childResult = await pool.query(
-        'SELECT id, name, level, exp, exp_needed, gold, tickets, attributes FROM children WHERE id = $1',
-        [childId]
-      );
+        // 1. Fetch child stats
+        const childResult = await reviewClient.query(
+          'SELECT id, name, level, exp, exp_needed, gold, tickets, attributes FROM children WHERE id = $1',
+          [childId]
+        );
 
-      if (childResult.rows.length === 0) {
-        throw new Error(getMessage('CHILD_STATS_NOT_FOUND'));
+        if (childResult.rows.length === 0) {
+          throw new Error(getMessage('CHILD_STATS_NOT_FOUND'));
+        }
+
+        const child = childResult.rows[0];
+
+        // Calculate EXP level-up
+        const expReward = task.exp_reward || 100;
+        let newExp = child.exp + expReward;
+        let newLevel = child.level;
+        let expNeeded = child.exp_needed;
+
+        while (newExp >= expNeeded) {
+          newExp -= expNeeded;
+          newLevel += 1;
+          expNeeded = newLevel * 300 + 400;
+        }
+
+        // Update Attributes
+        const attributes = child.attributes;
+        if (task.attribute_reward && attributes[task.attribute_reward] !== undefined) {
+          attributes[task.attribute_reward] += attrPoints;
+        }
+
+        const jobClass = determineJobClass(attributes);
+        const goldReward = task.gold_reward || 50;
+        const ticketReward = task.ticket_reward || 1;
+
+        // 2. Update Child
+        await reviewClient.query(
+          `UPDATE children 
+           SET level = $1, exp = $2, exp_needed = $3, gold = gold + $4, tickets = tickets + $5, job_class = $6, attributes = $7 
+           WHERE id = $8`,
+          [
+            newLevel, newExp, expNeeded, 
+            goldReward, ticketReward, 
+            jobClass, JSON.stringify(attributes), 
+            childId
+          ]
+        );
+
+        // 3. Update Family Score
+        await reviewClient.query(
+          'UPDATE families SET growth_score = growth_score + $1 WHERE id = $2',
+          [familyScoreAdd, familyId]
+        );
+
+        // 4. Update Task Status
+        await reviewClient.query(
+          'UPDATE tasks SET status = \'已完成\', completed_at = CURRENT_TIMESTAMP WHERE id = $1',
+          [taskId]
+        );
+
+        await reviewClient.query('COMMIT');
+
+        // Fetch the updated child details to return
+        const updatedChildResult = await pool.query(
+          'SELECT id, name, level, exp, exp_needed, gold, tickets, job_class, attributes FROM children WHERE id = $1',
+          [childId]
+        );
+        updatedChild = updatedChildResult.rows[0];
+      } catch (txError) {
+        await reviewClient.query('ROLLBACK');
+        throw txError;
+      } finally {
+        reviewClient.release();
       }
-
-      const child = childResult.rows[0];
-
-      // Calculate EXP level-up
-      const expReward = task.exp_reward || 100;
-      let newExp = child.exp + expReward;
-      let newLevel = child.level;
-      let expNeeded = child.exp_needed;
-
-      while (newExp >= expNeeded) {
-        newExp -= expNeeded;
-        newLevel += 1;
-        expNeeded = newLevel * 300 + 400;
-      }
-
-      // Update Attributes
-      const attributes = child.attributes;
-      if (task.attribute_reward && attributes[task.attribute_reward] !== undefined) {
-        attributes[task.attribute_reward] += attrPoints;
-      }
-
-      const jobClass = determineJobClass(attributes);
-      const goldReward = task.gold_reward || 50;
-      const ticketReward = task.ticket_reward || 1;
-
-      // 2. Update Child
-      await pool.query(
-        `UPDATE children 
-         SET level = $1, exp = $2, exp_needed = $3, gold = gold + $4, tickets = tickets + $5, job_class = $6, attributes = $7 
-         WHERE id = $8`,
-        [
-          newLevel, newExp, expNeeded, 
-          goldReward, ticketReward, 
-          jobClass, JSON.stringify(attributes), 
-          childId
-        ]
-      );
-
-      // 3. Update Family Score
-      await pool.query(
-        'UPDATE families SET growth_score = growth_score + $1 WHERE id = $2',
-        [familyScoreAdd, familyId]
-      );
-
-      // 4. Update Task Status
-      await pool.query(
-        'UPDATE tasks SET status = \'已完成\', completed_at = CURRENT_TIMESTAMP WHERE id = $1',
-        [taskId]
-      );
-
-      await pool.query('COMMIT');
-
-      // Fetch the updated child details to return
-      const updatedChildResult = await pool.query(
-        'SELECT id, name, level, exp, exp_needed, gold, tickets, job_class, attributes FROM children WHERE id = $1',
-        [childId]
-      );
 
       return res.json({
         message: getMessage('APPROVE_TASK_SUCCESS', { name: task.name }),
-        child: updatedChildResult.rows[0],
+        child: updatedChild,
         familyScoreAdd
       });
     }

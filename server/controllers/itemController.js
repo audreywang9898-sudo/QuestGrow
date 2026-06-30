@@ -148,11 +148,12 @@ export const drawGachaCard = async (req, res) => {
   }
   // ── End Validation ───────────────────────────────────────────────────
 
+  const gachaClient = await pool.connect();
   try {
-    await pool.query('BEGIN');
+    await gachaClient.query('BEGIN');
 
     // 1. Verify child has enough tickets
-    const childResult = await pool.query(
+    const childResult = await gachaClient.query(
       'SELECT id, name, tickets, gold, level, exp, exp_needed FROM children WHERE id = $1',
       [childId]
     );
@@ -166,7 +167,7 @@ export const drawGachaCard = async (req, res) => {
     }
 
     // 1.5. Server-side 7-day cooldown validation with downgrade fallback
-    const familyResult = await pool.query('SELECT gacha_pool FROM families WHERE id = $1', [familyId]);
+    const familyResult = await gachaClient.query('SELECT gacha_pool FROM families WHERE id = $1', [familyId]);
     const familyGachaPool = (familyResult.rows.length > 0 && familyResult.rows[0].gacha_pool)
       ? familyResult.rows[0].gacha_pool
       : GACHA_POOL;
@@ -176,7 +177,7 @@ export const drawGachaCard = async (req, res) => {
     const rarityCardIds = rarityPool.map(c => c.id);
 
     // Find which of these card IDs have been acquired by this child in the last 7 days
-    const recentDrawsResult = await pool.query(
+    const recentDrawsResult = await gachaClient.query(
       `SELECT DISTINCT card_template_id 
        FROM inventory 
        WHERE child_id = $1 AND card_template_id = ANY($2) AND date_acquired >= CURRENT_DATE - 7`,
@@ -189,7 +190,7 @@ export const drawGachaCard = async (req, res) => {
       // Check if there is at least one card in this rarity that is NOT on cooldown
       const hasAvailableCards = rarityCardIds.some(id => !recentDrawnIds.has(id));
       if (hasAvailableCards) {
-        throw new Error('該獎勵卡片在 7 天內已獲得過，不能重複獲得。 | This reward card is on cooldown and cannot be drawn again.');
+        throw new Error('該獎勵卡片在7 天內已獲得過，不能重複獲得。 | This reward card is on cooldown and cannot be drawn again.');
       }
     }
 
@@ -217,7 +218,7 @@ export const drawGachaCard = async (req, res) => {
         }
       }
       if (card.value?.growthScore) {
-        await pool.query(
+        await gachaClient.query(
           'UPDATE families SET growth_score = growth_score + $1 WHERE id = $2',
           [card.value.growthScore, familyId]
         );
@@ -225,7 +226,7 @@ export const drawGachaCard = async (req, res) => {
     }
 
     // Update child stats in database
-    await pool.query(
+    await gachaClient.query(
       `UPDATE children 
        SET tickets = $1, gold = $2, exp = $3, level = $4, exp_needed = $5 
        WHERE id = $6`,
@@ -236,7 +237,7 @@ export const drawGachaCard = async (req, res) => {
     let newItem = null;
     const status = card.type === "資源卡" ? "已使用" : "未使用";
     const expireAt = card.type === "資源卡" ? null : getExpirationDate(card.rarity);
-    const insertResult = await pool.query(
+    const insertResult = await gachaClient.query(
       `INSERT INTO inventory (child_id, card_template_id, name, type, rarity, description, status, expire_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING id, child_id, card_template_id, name, type, rarity, description, status, date_acquired, expire_at`,
@@ -256,7 +257,7 @@ export const drawGachaCard = async (req, res) => {
       expireAt: row.expire_at ? row.expire_at.toISOString().split('T')[0] : null
     };
 
-    await pool.query('COMMIT');
+    await gachaClient.query('COMMIT');
 
     // Get updated child profile to send back
     const updatedChildResult = await pool.query(
@@ -270,9 +271,11 @@ export const drawGachaCard = async (req, res) => {
       item: newItem
     });
   } catch (error) {
-    await pool.query('ROLLBACK');
+    await gachaClient.query('ROLLBACK');
     console.error('drawGachaCard error:', error);
     res.status(500).json({ message: error.message || getMessage('GACHA_DRAW_ERROR') });
+  } finally {
+    gachaClient.release();
   }
 };
 
@@ -407,33 +410,40 @@ export const reviewRedeem = async (req, res) => {
         return res.status(400).json({ message: getMessage('REVIEW_REDEEM_EXPIRED') });
       }
 
-      await pool.query('BEGIN');
+      const redeemClient = await pool.connect();
+      try {
+        await redeemClient.query('BEGIN');
 
-      // Set status to '已使用'
-      await pool.query(
-        'UPDATE inventory SET status = \'已使用\' WHERE id = $1',
-        [inventoryId]
-      );
+        // Set status to '已使用'
+        await redeemClient.query(
+          'UPDATE inventory SET status = \'\u5df2\u4f7f\u7528\' WHERE id = $1',
+          [inventoryId]
+        );
 
-      // Create redeem log
-      await pool.query(
-        `INSERT INTO redeem_logs (family_id, card_name, kid_name, date_redeemed, status, reviewer)
-         VALUES ($1, $2, $3, CURRENT_DATE, '已核銷', $4)`,
-        [familyId, item.name, item.kid_name, `${parentName} (審核)`]
-      );
+        // Create redeem log
+        await redeemClient.query(
+          `INSERT INTO redeem_logs (family_id, card_name, kid_name, date_redeemed, status, reviewer)
+           VALUES ($1, $2, $3, CURRENT_DATE, '已核銷', $4)`,
+          [familyId, item.name, item.kid_name, `${parentName} (審核)`]
+        );
 
-      // Family growth score + 50
-      await pool.query(
-        'UPDATE families SET growth_score = growth_score + 50 WHERE id = $1',
-        [familyId]
-      );
+        // Family growth score + 50
+        await redeemClient.query(
+          'UPDATE families SET growth_score = growth_score + 50 WHERE id = $1',
+          [familyId]
+        );
 
-      await pool.query('COMMIT');
+        await redeemClient.query('COMMIT');
+      } catch (txError) {
+        await redeemClient.query('ROLLBACK');
+        throw txError;
+      } finally {
+        redeemClient.release();
+      }
 
       return res.json({ message: getMessage('REVIEW_REDEEM_APPROVE_SUCCESS', { name: item.name }) });
     }
   } catch (error) {
-    await pool.query('ROLLBACK');
     console.error('reviewRedeem error:', error);
     res.status(500).json({ message: getMessage('REVIEW_REDEEM_ERROR') });
   }
@@ -477,29 +487,36 @@ export const toggleEquipItem = async (req, res) => {
     const currentStatus = item.status;
     let newStatus = '未使用';
 
-    await pool.query('BEGIN');
+    const equipClient = await pool.connect();
+    try {
+      await equipClient.query('BEGIN');
 
-    if (currentStatus === '未使用') {
-      newStatus = '已使用';
-      await pool.query(
-        "UPDATE inventory SET status = '未使用' WHERE child_id = $1 AND type = '收藏卡' AND status = '已使用'",
-        [item.child_id]
+      if (currentStatus === '未使用') {
+        newStatus = '已使用';
+        await equipClient.query(
+          "UPDATE inventory SET status = '\u672a\u4f7f\u7528' WHERE child_id = $1 AND type = '\u6536\u85cf\u5361' AND status = '\u5df2\u4f7f\u7528'",
+          [item.child_id]
+        );
+      }
+
+      await equipClient.query(
+        'UPDATE inventory SET status = $1 WHERE id = $2',
+        [newStatus, inventoryId]
       );
+
+      await equipClient.query('COMMIT');
+    } catch (txError) {
+      await equipClient.query('ROLLBACK');
+      throw txError;
+    } finally {
+      equipClient.release();
     }
-
-    await pool.query(
-      'UPDATE inventory SET status = $1 WHERE id = $2',
-      [newStatus, inventoryId]
-    );
-
-    await pool.query('COMMIT');
 
     res.json({
       message: newStatus === '已使用' ? '已成功配戴徽章！ | Badge equipped successfully!' : '已成功取下徽章。 | Badge unequipped successfully!',
       status: newStatus
     });
   } catch (error) {
-    await pool.query('ROLLBACK');
     console.error('toggleEquipItem error:', error);
     res.status(500).json({ message: '配戴徽章失敗，請稍後再試。 | Failed to equip badge.' });
   }
@@ -515,11 +532,12 @@ export const buyTicketWithGold = async (req, res) => {
     return res.status(403).json({ message: '此操作僅限小孩帳號執行。 | This operation is only allowed for kid accounts.' });
   }
 
+  const ticketClient = await pool.connect();
   try {
-    await pool.query('BEGIN');
+    await ticketClient.query('BEGIN');
 
     // 1. Fetch child status
-    const childResult = await pool.query(
+    const childResult = await ticketClient.query(
       'SELECT id, name, tickets, gold FROM children WHERE id = $1',
       [childId]
     );
@@ -537,13 +555,13 @@ export const buyTicketWithGold = async (req, res) => {
     const newTickets = child.tickets + 1;
 
     // 2. Update child status in DB
-    await pool.query(
+    await ticketClient.query(
       'UPDATE children SET gold = $1, tickets = $2 WHERE id = $3',
       [newGold, newTickets, childId]
     );
 
     // 3. Write event log for telemetry
-    await pool.query(
+    await ticketClient.query(
       `INSERT INTO event_logs (family_id, user_id, event_type, metadata)
        VALUES ($1, $2, $3, $4)`,
       [
@@ -558,7 +576,7 @@ export const buyTicketWithGold = async (req, res) => {
       ]
     );
 
-    await pool.query('COMMIT');
+    await ticketClient.query('COMMIT');
 
     // Fetch updated child profile to send back
     const updatedChildResult = await pool.query(
@@ -571,9 +589,11 @@ export const buyTicketWithGold = async (req, res) => {
       child: updatedChildResult.rows[0]
     });
   } catch (error) {
-    await pool.query('ROLLBACK');
+    await ticketClient.query('ROLLBACK');
     console.error('buyTicketWithGold error:', error);
     res.status(400).json({ message: error.message || '兌換失敗，請稍後再試。' });
+  } finally {
+    ticketClient.release();
   }
 };
 

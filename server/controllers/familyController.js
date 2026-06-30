@@ -147,12 +147,13 @@ export const redeemWishlist = async (req, res) => {
   const familyId = req.user.family_id;
   const { id } = req.params;
 
+  const redeemClient = await pool.connect();
   try {
-    await pool.query('BEGIN');
+    await redeemClient.query('BEGIN');
 
     // Fetch family score and wishlist cost
-    const familyResult = await pool.query('SELECT growth_score FROM families WHERE id = $1', [familyId]);
-    const wishResult = await pool.query('SELECT points_needed, is_redeemed, title FROM wishlist WHERE id = $1 AND family_id = $2', [id, familyId]);
+    const familyResult = await redeemClient.query('SELECT growth_score FROM families WHERE id = $1', [familyId]);
+    const wishResult = await redeemClient.query('SELECT points_needed, is_redeemed, title FROM wishlist WHERE id = $1 AND family_id = $2', [id, familyId]);
 
     if (familyResult.rows.length === 0 || wishResult.rows.length === 0) {
       throw new Error('找不到對應的家庭或願望項目。');
@@ -170,23 +171,25 @@ export const redeemWishlist = async (req, res) => {
     }
 
     // Deduct points from family
-    await pool.query(
+    await redeemClient.query(
       'UPDATE families SET growth_score = growth_score - $1 WHERE id = $2',
       [wish.points_needed, familyId]
     );
 
     // Set wishlist to redeemed
-    await pool.query(
+    await redeemClient.query(
       'UPDATE wishlist SET is_redeemed = true WHERE id = $1',
       [id]
     );
 
-    await pool.query('COMMIT');
+    await redeemClient.query('COMMIT');
     res.json({ message: getMessage('REDEEM_WISH_SUCCESS', { title: wish.title }) });
   } catch (error) {
-    await pool.query('ROLLBACK');
+    await redeemClient.query('ROLLBACK');
     console.error('redeemWishlist error:', error);
     res.status(500).json({ message: safeErrorMessage(error, getMessage('REDEEM_WISH_ERROR')) });
+  } finally {
+    redeemClient.release();
   }
 };
 
@@ -247,11 +250,12 @@ export const updateGoalProgress = async (req, res) => {
     return res.status(400).json({ message: getMessage('GOAL_PROGRESS_INVALID') });
   }
 
+  const goalClient = await pool.connect();
   try {
-    await pool.query('BEGIN');
+    await goalClient.query('BEGIN');
 
     // Fetch existing progress
-    const goalResult = await pool.query(
+    const goalResult = await goalClient.query(
       'SELECT progress, title FROM parent_goals WHERE id = $1 AND family_id = $2',
       [id, familyId]
     );
@@ -265,7 +269,7 @@ export const updateGoalProgress = async (req, res) => {
     const newStatus = progress >= 100 ? '已達成' : '進行中';
 
     // Update goal
-    await pool.query(
+    await goalClient.query(
       'UPDATE parent_goals SET progress = $1, status = $2 WHERE id = $3',
       [progress, newStatus, id]
     );
@@ -275,18 +279,20 @@ export const updateGoalProgress = async (req, res) => {
       const diff = progress - prevProgress;
       const scoreAdd = Math.round(diff * 2);
 
-      await pool.query(
+      await goalClient.query(
         'UPDATE families SET growth_score = growth_score + $1 WHERE id = $2',
         [scoreAdd, familyId]
       );
     }
 
-    await pool.query('COMMIT');
+    await goalClient.query('COMMIT');
     res.json({ message: getMessage('UPDATE_GOAL_SUCCESS') });
   } catch (error) {
-    await pool.query('ROLLBACK');
+    await goalClient.query('ROLLBACK');
     console.error('updateGoalProgress error:', error);
     res.status(500).json({ message: safeErrorMessage(error, getMessage('UPDATE_GOAL_ERROR')) });
+  } finally {
+    goalClient.release();
   }
 };
 
