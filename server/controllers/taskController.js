@@ -466,19 +466,20 @@ export const submitTask = async (req, res) => {
 
       // Fetch task details + child name + all parents with LINE IDs in this family
       const notifyRes = await pool.query(
-        `SELECT t.id, t.name, t.points, t.category,
+        `SELECT t.id, t.name, t.exp_reward, t.gold_reward, t.ticket_reward, t.type AS task_type,
                 c.name AS child_name,
-                u.line_id AS parent_line_id
+                pu.line_id AS parent_line_id
          FROM tasks t
-         JOIN children c ON c.id = $2
-         JOIN users u ON u.family_id = $3 AND u.role = 'parent' AND u.line_id IS NOT NULL
+         JOIN children c ON c.id = t.assigned_to
+         JOIN users cu ON cu.id = c.user_id
+         JOIN users pu ON pu.family_id = cu.family_id AND pu.role = 'parent' AND pu.line_id IS NOT NULL
          WHERE t.id = $1`,
-        [taskId, childId, familyId]
+        [taskId]
       );
 
       if (notifyRes.rows.length > 0) {
-        const { name, points, category, child_name } = notifyRes.rows[0];
-        const taskInfo = { id: taskId, name, points, category };
+        const { name, exp_reward, gold_reward, ticket_reward, task_type, child_name } = notifyRes.rows[0];
+        const taskInfo = { id: taskId, name, points: exp_reward, expReward: exp_reward, goldReward: gold_reward, ticketReward: ticket_reward, category: task_type };
         // Notify all parents who have LINE ID (may be multiple co-parents)
         const uniqueParentIds = [...new Set(notifyRes.rows.map(r => r.parent_line_id).filter(Boolean))];
         await Promise.all(

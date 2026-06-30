@@ -320,15 +320,13 @@ export const requestRedeem = async (req, res) => {
     // --- LINE Bot: Push redeem review notification to parent(s) ---
     try {
       const notifyRes = await pool.query(
-        `SELECT inv.id, inv.name, i.point_cost,
-                c.name AS child_name,
-                cs.current_points,
-                u.line_id AS parent_line_id
+        `SELECT inv.id, inv.name AS item_name,
+                c.name AS child_name, c.gold, c.tickets,
+                pu.line_id AS parent_line_id
          FROM inventory inv
-         LEFT JOIN items i ON inv.item_id = i.id
          JOIN children c ON inv.child_id = c.id
-         LEFT JOIN child_stats cs ON cs.child_id = c.id
-         JOIN users u ON u.family_id = c.family_id AND u.role = 'parent' AND u.line_id IS NOT NULL
+         JOIN users cu ON cu.id = c.user_id
+         JOIN users pu ON pu.family_id = cu.family_id AND pu.role = 'parent' AND pu.line_id IS NOT NULL
          WHERE inv.id = $1`,
         [inventoryId]
       );
@@ -337,16 +335,16 @@ export const requestRedeem = async (req, res) => {
         const firstRow = notifyRes.rows[0];
         const itemInfo = {
           inventoryId: inventoryId,
-          name: firstRow.name,
-          pointCost: firstRow.point_cost || 0
+          name: firstRow.item_name,
+          pointCost: 0  // Gacha cards don't have a point cost — they cost tickets
         };
         const childName = firstRow.child_name;
-        const currentPoints = firstRow.current_points || 0;
+        const currentTickets = firstRow.tickets || 0;
 
         const uniqueParentIds = [...new Set(notifyRes.rows.map(r => r.parent_line_id).filter(Boolean))];
         await Promise.all(
           uniqueParentIds.map(lineId =>
-            sendRedeemReviewRequest(lineId, itemInfo, childName, currentPoints, reviewToken)
+            sendRedeemReviewRequest(lineId, itemInfo, childName, currentTickets, reviewToken)
           )
         );
       }
