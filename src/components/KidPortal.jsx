@@ -1307,7 +1307,7 @@ function KidPortal({
     setTimeout(() => {
       onSubmitTask(taskId, {
         notes: submissionNotes || "我已經完成此任務了！請爸媽核准！",
-        photo: submissionPhoto || "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&q=80"
+        photo: submissionPhoto || ""
       });
       setIsSubmittingApi(false);
       setSubmittingTaskId(null);

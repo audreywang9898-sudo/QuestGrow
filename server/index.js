@@ -89,7 +89,12 @@ app.use('/api', generalLimiter);
 
 
 // ── 4. Body Parsing & i18n ────────────────────────────────────────────
-app.use(express.json({ limit: '10mb' })); // Cap request body to 10MB
+app.use(express.json({ 
+  limit: '10mb',
+  verify: (req, res, buf) => {
+    req.rawBody = buf.toString('utf8');
+  }
+})); // Cap request body to 10MB
 app.use(languageMiddleware);
 
 // ── 5. Static Files ───────────────────────────────────────────────────
