@@ -324,6 +324,7 @@ function KidPortal({
   const [submissionNotes, setSubmissionNotes] = useState('');
   const [submissionPhoto, setSubmissionPhoto] = useState('');
   const [photoError, setPhotoError] = useState('');
+  const [notesError, setNotesError] = useState('');
   
   // V2 Button disabled / loading states
   const [isSubmittingApi, setIsSubmittingApi] = useState(false);
@@ -1294,6 +1295,12 @@ function KidPortal({
   // Submit task with simulated network latency to test disabled spinner states
   const handleTaskSubmit = (taskId) => {
     if (isSubmittingApi) return;
+
+    if (!submissionNotes || submissionNotes.trim() === '') {
+      setNotesError(language === 'zh' ? '❌ 請填寫留言給爸爸媽媽！' : '❌ Please leave a note for your parents!');
+      return;
+    }
+    setNotesError('');
     
     // Check if the submitted task is a boss quest
     const task = tasks.find(t => t.id === taskId);
@@ -1306,7 +1313,7 @@ function KidPortal({
     // Simulate API delay
     setTimeout(() => {
       onSubmitTask(taskId, {
-        notes: submissionNotes || "我已經完成此任務了！請爸媽核准！",
+        notes: submissionNotes,
         photo: submissionPhoto || ""
       });
       setIsSubmittingApi(false);
@@ -1314,6 +1321,7 @@ function KidPortal({
       setSubmissionNotes('');
       setSubmissionPhoto('');
       setPhotoError('');
+      setNotesError('');
     }, 850);
   };
 
@@ -2260,10 +2268,19 @@ function KidPortal({
                                         <input 
                                           type="text"
                                           value={submissionNotes}
-                                          onChange={(e) => setSubmissionNotes(e.target.value)}
+                                          onChange={(e) => {
+                                            setSubmissionNotes(e.target.value);
+                                            if (e.target.value.trim() !== '') setNotesError('');
+                                          }}
                                           placeholder={language === 'zh' ? "e.g. 我已經整理好了喔，乾乾淨淨！" : "e.g. I have cleaned it up!"}
                                           className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-700 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-400/30"
                                         />
+                                        {notesError && (
+                                          <p className="text-[10px] text-rose-600 font-bold mt-1.5 flex items-center gap-1">
+                                            <AlertTriangle className="h-3 w-3 shrink-0" />
+                                            {notesError}
+                                          </p>
+                                        )}
                                       </div>
 
                                       {/* V2 Real HTML5 File Validation Input */}
@@ -2305,6 +2322,7 @@ function KidPortal({
                                             setSubmissionNotes('');
                                             setSubmissionPhoto('');
                                             setPhotoError('');
+                                            setNotesError('');
                                           }}
                                           className="px-3 py-1.5 rounded-[4px] text-xs font-bold bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white transition-colors"
                                         >
