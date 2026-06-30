@@ -105,6 +105,7 @@ function ParentPortal({
   const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState('audit');
   const [showHistoryLogs, setShowHistoryLogs] = useState(false);
+  const [showLineBanner, setShowLineBanner] = useState(() => localStorage.getItem('questgrow_show_line_banner') !== 'false');
 
   // Onboarding Tour state
   const [showTour, setShowTour] = useState(() => {
@@ -1051,6 +1052,50 @@ function ParentPortal({
           </button>
         </div>
       </div>
+
+      {/* ── LINE Official Account Banner ── */}
+      {showLineBanner && (
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gradient-to-r from-emerald-550/15 via-[#06C755]/10 to-indigo-500/5 border border-emerald-500/20 p-4 rounded-2xl relative overflow-hidden group shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="absolute top-[-30px] right-[-30px] w-24 h-24 bg-[#06C755]/10 rounded-full blur-xl pointer-events-none group-hover:scale-125 transition-transform duration-500"></div>
+          <button
+            type="button"
+            onClick={() => {
+              setShowLineBanner(false);
+              localStorage.setItem('questgrow_show_line_banner', 'false');
+            }}
+            className="absolute top-2 right-2.5 text-slate-400 hover:text-slate-200 transition-colors text-sm font-bold w-5 h-5 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10"
+            title="關閉"
+          >
+            &times;
+          </button>
+          
+          <div className="flex items-center gap-3 pr-4">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#06C755] text-white shadow-md shadow-emerald-950/20 group-hover:rotate-6 transition-transform shrink-0">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                <path d="M22 10.5C22 6.36 17.52 3 12 3S2 6.36 2 10.5C2 14.23 5.61 17.34 10.5 17.93C10.83 17.97 10.43 18.73 10.33 19.16C10.22 19.64 9.9 20.9 10.85 20.35C11.8 19.8 15.35 17.7 17.2 16.27C19.98 14.99 22 12.89 22 10.5Z"/>
+              </svg>
+            </div>
+            <div className="space-y-0.5">
+              <h4 className="text-xs font-black text-slate-100 flex items-center gap-1.5 uppercase tracking-wider">
+                💬 {language === 'zh' ? '訂閱 LINE 一鍵審核通知' : 'Subscribe to LINE Review Alerts'}
+              </h4>
+              <p className="text-[10px] text-slate-400 font-bold leading-normal">
+                {language === 'zh' 
+                  ? '加入官方帳號並在個人設定中完成綁定，即可隨時在 LINE 上直接批准/拒絕任務與兌換！' 
+                  : 'Join our Official Account and link it to approve/reject tasks instantly in chat!'}
+              </p>
+            </div>
+          </div>
+          <a
+            href="https://line.me/R/ti/p/@QuestGrow"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full sm:w-auto px-4 py-2 bg-[#06C755] hover:bg-[#05b34c] text-white font-extrabold text-xs rounded-xl text-center transition-all shadow-md active:scale-95 duration-150 flex items-center justify-center gap-1.5 shrink-0"
+          >
+            <span>{language === 'zh' ? '➕ 加入好友' : '➕ Add Friend'}</span>
+          </a>
+        </div>
+      )}
 
       {/* ── Merged: Daily Encouragement + Family Goal Banner ── */}
       {(dailyProverb || maxPointsWish) && (
