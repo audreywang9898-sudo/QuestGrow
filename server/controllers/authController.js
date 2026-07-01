@@ -91,10 +91,10 @@ export const registerParent = async (req, res) => {
       );
       const familyId = newFamily.rows[0].id;
 
-      // Create the Parent User
+      // Create the Parent Parent User
       const newUser = await client.query(
         `INSERT INTO users (family_id, email, password_hash, name, role, avatar) 
-         VALUES ($1, $2, $3, $4, 'parent', $5) RETURNING id, email, name, role, avatar, family_id, child_id, onboarding_completed`,
+         VALUES ($1, $2, $3, $4, 'parent', $5) RETURNING id, email, name, role, avatar, family_id, child_id, onboarding_completed, google_id, line_id`,
         [familyId, dbEmail, passwordHash, name, avatar || 'girl']
       );
 
@@ -109,6 +109,7 @@ export const registerParent = async (req, res) => {
 
     user.childId = user.child_id;
     user.onboardingCompleted = user.onboarding_completed;
+    user.googleId = user.google_id;
     const token = generateToken(user);
 
     await checkFirstLoginAndNotify(user.id);
@@ -135,7 +136,7 @@ export const login = async (req, res) => {
   try {
     const dbEmail = email.toLowerCase();
     const result = await pool.query(
-      `SELECT u.id, u.family_id, u.email, u.password_hash, u.name, u.role, u.avatar, u.child_id, u.onboarding_completed
+      `SELECT u.id, u.family_id, u.email, u.password_hash, u.name, u.role, u.avatar, u.child_id, u.onboarding_completed, u.google_id, u.line_id
        FROM users u
        WHERE u.email = $1`,
       [dbEmail]
@@ -155,6 +156,7 @@ export const login = async (req, res) => {
     delete user.password_hash;
     user.childId = user.child_id;
     user.onboardingCompleted = user.onboarding_completed;
+    user.googleId = user.google_id;
     const token = generateToken(user);
 
     await checkFirstLoginAndNotify(user.id);
@@ -212,7 +214,7 @@ export const googleLogin = async (req, res) => {
     const dbEmail = email.toLowerCase();
     // 1. Search by Google ID or email
     const findUser = await pool.query(
-      'SELECT id, family_id, email, name, role, avatar, google_id, child_id, onboarding_completed FROM users WHERE google_id = $1 OR email = $2',
+      'SELECT id, family_id, email, name, role, avatar, google_id, line_id, child_id, onboarding_completed FROM users WHERE google_id = $1 OR email = $2',
       [googleId, dbEmail]
     );
 
@@ -222,7 +224,7 @@ export const googleLogin = async (req, res) => {
       // If email matched but google_id wasn't linked, link it now
       if (!user.google_id) {
         const updateResult = await pool.query(
-          'UPDATE users SET google_id = $1 WHERE id = $2 RETURNING id, family_id, email, name, role, avatar, child_id, onboarding_completed',
+          'UPDATE users SET google_id = $1 WHERE id = $2 RETURNING id, family_id, email, name, role, avatar, google_id, line_id, child_id, onboarding_completed',
           [googleId, user.id]
         );
         user = updateResult.rows[0];
@@ -230,6 +232,7 @@ export const googleLogin = async (req, res) => {
 
       user.childId = user.child_id;
       user.onboardingCompleted = user.onboarding_completed;
+      user.googleId = user.google_id;
       const token = generateToken(user);
 
       await checkFirstLoginAndNotify(user.id);
@@ -265,7 +268,7 @@ export const googleLogin = async (req, res) => {
       // Create Google User
       const newUser = await client.query(
         `INSERT INTO users (family_id, email, password_hash, name, role, avatar, google_id) 
-         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, family_id, email, name, role, avatar, child_id, onboarding_completed`,
+         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, family_id, email, name, role, avatar, google_id, line_id, child_id, onboarding_completed`,
         [familyId, dbEmail, passwordHash, name, targetRole, avatar, googleId]
       );
       newUserRow = newUser.rows[0];
@@ -293,7 +296,8 @@ export const googleLogin = async (req, res) => {
       ...newUserRow,
       child_id: childId,
       childId: childId,
-      onboardingCompleted: newUserRow.onboarding_completed
+      onboardingCompleted: newUserRow.onboarding_completed,
+      googleId: newUserRow.google_id
     };
     const token = generateToken(user);
 
@@ -373,7 +377,7 @@ export const getAuthConfig = async (req, res) => {
 export const getMe = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT id, family_id, email, name, role, avatar, child_id, google_id, onboarding_completed
+      `SELECT id, family_id, email, name, role, avatar, child_id, google_id, line_id, onboarding_completed
        FROM users
        WHERE id = $1`,
       [req.user.id]
@@ -386,6 +390,7 @@ export const getMe = async (req, res) => {
     const user = result.rows[0];
     user.childId = user.child_id;
     user.onboardingCompleted = user.onboarding_completed;
+    user.googleId = user.google_id;
 
     // Generate a fresh token with the current database information
     const token = generateToken(user);
