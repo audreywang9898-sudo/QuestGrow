@@ -445,7 +445,14 @@ function App() {
 
   const handleLinkGoogleAccount = async (idToken) => {
     try {
-      await api.linkGoogle(idToken);
+      const data = await api.linkGoogle(idToken);
+      if (data && data.user) {
+        const mappedUser = {
+          ...data.user,
+          childId: data.user.childId || data.user.child_id
+        };
+        setCurrentUser(mappedUser);
+      }
       showToast('🎉 成功連結 Google 帳戶！', 'success');
       fetchAllData();
       return true;

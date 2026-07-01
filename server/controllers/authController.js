@@ -358,7 +358,21 @@ export const linkGoogleAccount = async (req, res) => {
       [googleId, userId]
     );
 
-    res.json({ message: getMessage('LINK_GOOGLE_SUCCESS') });
+    // Get updated user data
+    const updatedUser = await pool.query(
+      'SELECT id, family_id, email, name, role, avatar, google_id, line_id, child_id, onboarding_completed FROM users WHERE id = $1',
+      [userId]
+    );
+
+    const user = updatedUser.rows[0];
+    user.childId = user.child_id;
+    user.onboardingCompleted = user.onboarding_completed;
+    user.googleId = user.google_id;
+
+    res.json({ 
+      message: getMessage('LINK_GOOGLE_SUCCESS'),
+      user
+    });
   } catch (error) {
     console.error('Link Google account error:', error);
     res.status(500).json({ message: getMessage('LINK_GOOGLE_ERROR') });
