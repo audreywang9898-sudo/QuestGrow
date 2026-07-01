@@ -552,3 +552,118 @@ export const lineLogin = async (req, res) => {
     res.status(500).json({ message: 'LINE 登入時伺服器發生意外錯誤。' });
   }
 };
+
+// 9. Link LINE Account (For authenticated users)
+export const linkLineAccount = async (req, res) => {
+  const { code, redirectUri } = req.body;
+  const userId = req.user.id;
+
+  if (!code) {
+    return res.status(400).json({ message: 'LINE authorization code is missing.' });
+  }
+
+  try {
+    // 1. Exchange code for Token
+    const params = new URLSearchParams();
+    params.append('grant_type', 'authorization_code');
+    params.append('code', code);
+    params.append('redirect_uri', redirectUri || process.env.LINE_CALLBACK_URL || 'http://localhost:5173/');
+    params.append('client_id', process.env.LINE_CHANNEL_ID);
+    params.append('client_secret', process.env.LINE_CHANNEL_SECRET);
+
+    const tokenRes = await fetch('https://api.line.me/oauth2/v2.1/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString()
+    });
+
+    if (!tokenRes.ok) {
+      const errBody = await tokenRes.text();
+      console.error('Failed token exchange for linking LINE:', errBody);
+      return res.status(400).json({ message: '與 LINE 伺服器進行綁定驗證失敗。' });
+    }
+
+    const tokenData = await tokenRes.json();
+    const { id_token } = tokenData;
+    if (!id_token) {
+      return res.status(400).json({ message: 'LINE OIDC ID Token is missing.' });
+    }
+
+    // 2. Decode ID Token
+    const decoded = jwt.decode(id_token);
+    if (!decoded) {
+      return res.status(400).json({ message: '解密 LINE ID Token 失敗。' });
+    }
+
+    const lineId = decoded.sub;
+    if (!lineId) {
+      return res.status(400).json({ message: '無法取得 LINE 用戶識別碼。' });
+    }
+
+    // 3. Check if this lineId is already linked to ANOTHER user
+    const checkLinked = await pool.query(
+      'SELECT id, name FROM users WHERE line_id = $1 AND id <> $2',
+      [lineId, userId]
+    );
+
+    if (checkLinked.rows.length > 0) {
+      return res.status(400).json({ message: '❌ 此 LINE 帳號已被其他 QuestGrow 帳號綁定。' });
+    }
+
+    // 4. Link LINE Account to Current User
+    await pool.query(
+      'UPDATE users SET line_id = $1 WHERE id = $2',
+      [lineId, userId]
+    );
+
+    // Get updated user data
+    const updatedUser = await pool.query(
+      'SELECT id, family_id, email, name, role, avatar, line_id, child_id, onboarding_completed FROM users WHERE id = $1',
+      [userId]
+    );
+
+    const user = updatedUser.rows[0];
+    user.childId = user.child_id;
+    user.onboardingCompleted = user.onboarding_completed;
+
+    res.json({
+      message: '🎉 LINE 帳號綁定成功！',
+      user
+    });
+
+  } catch (error) {
+    console.error('Link LINE account error:', error);
+    res.status(500).json({ message: '綁定 LINE 帳號時伺服器發生意外錯誤。' });
+  }
+};
+
+// 10. Unlink LINE Account
+export const unlinkLineAccount = async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    await pool.query(
+      'UPDATE users SET line_id = NULL WHERE id = $1',
+      [userId]
+    );
+
+    // Get updated user data
+    const updatedUser = await pool.query(
+      'SELECT id, family_id, email, name, role, avatar, line_id, child_id, onboarding_completed FROM users WHERE id = $1',
+      [userId]
+    );
+
+    const user = updatedUser.rows[0];
+    user.childId = user.child_id;
+    user.onboardingCompleted = user.onboarding_completed;
+
+    res.json({
+      message: '🎉 LINE 帳號已成功解除連結！',
+      user
+    });
+
+  } catch (error) {
+    console.error('Unlink LINE account error:', error);
+    res.status(500).json({ message: '解除綁定 LINE 帳號時伺服器發生意外錯誤。' });
+  }
+};

@@ -98,6 +98,29 @@ function App() {
             setRole('kid');
           }
         }
+
+        // 3. Check for LINE account link callback (starts with state=bind)
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+        if (token && code && state && state.startsWith('bind')) {
+          try {
+            // Clear URL params immediately to avoid double calls during link process
+            window.history.replaceState({}, document.title, window.location.pathname);
+            
+            showToast('正在連結您的 LINE 帳號，請稍候...', 'info');
+            const data = await api.linkLine(code, window.location.origin + '/');
+            const updatedUser = {
+              ...data.user,
+              childId: data.user.childId || data.user.child_id
+            };
+            setCurrentUser(updatedUser);
+            showToast('🎉 LINE 帳號連結成功！已啟用 LINE 一鍵審核通知。', 'success');
+          } catch (error) {
+            console.error('Failed to link LINE account:', error);
+            showToast(error.message || '連結 LINE 帳號失敗。', 'error');
+          }
+        }
       } finally {
         setIsRestoringSession(false);
       }
@@ -423,6 +446,22 @@ function App() {
       return true;
     } catch (error) {
       showToast(error.message || '綁定 Google 帳戶失敗。', 'error');
+      return false;
+    }
+  };
+
+  const handleUnlinkLineAccount = async () => {
+    try {
+      const data = await api.unlinkLine();
+      const mappedUser = {
+        ...data.user,
+        childId: data.user.childId || data.user.child_id
+      };
+      setCurrentUser(mappedUser);
+      showToast('🎉 LINE 帳號解綁成功！已關閉一鍵審核通知。', 'success');
+      return true;
+    } catch (error) {
+      showToast(error.message || '解綁 LINE 帳號失敗。', 'error');
       return false;
     }
   };
@@ -1323,6 +1362,7 @@ function App() {
             onAddTask={handleAddTask}
             onEditTask={handleEditTask}
             onLinkGoogleAccount={handleLinkGoogleAccount}
+            onUnlinkLineAccount={handleUnlinkLineAccount}
             isReadOnly={(currentUser && currentUser.role === 'kid' && activeChildId !== currentUser.childId) || (currentUser && currentUser.role === 'parent' && role === 'kid')}
             googleClientId={googleClientId}
             onToggleEquip={handleToggleEquip}
@@ -1367,6 +1407,7 @@ function App() {
             onDeleteChild={handleDeleteChild}
             currentUser={currentUser}
             onLinkGoogleAccount={handleLinkGoogleAccount}
+            onUnlinkLineAccount={handleUnlinkLineAccount}
             usersDB={members}
             onAddParent={handleAddParent}
             onDeleteParent={handleDeleteParent}

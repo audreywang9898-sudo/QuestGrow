@@ -83,6 +83,23 @@ export const api = {
     return handleResponse(res);
   },
 
+  linkLine: async (code, redirectUri) => {
+    const res = await fetch(`${API_URL}/auth/link-line`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ code, redirectUri }),
+    });
+    return handleResponse(res);
+  },
+
+  unlinkLine: async () => {
+    const res = await fetch(`${API_URL}/auth/unlink-line`, {
+      method: 'POST',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
   logout: () => {
     localStorage.removeItem('questgrow_jwt_token');
   },

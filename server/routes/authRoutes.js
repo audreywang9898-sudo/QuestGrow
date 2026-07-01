@@ -1,5 +1,5 @@
 import express from 'express';
-import { registerParent, login, googleLogin, lineLogin, linkGoogleAccount, getAuthConfig, getMe, completeOnboarding } from '../controllers/authController.js';
+import { registerParent, login, googleLogin, lineLogin, linkGoogleAccount, getAuthConfig, getMe, completeOnboarding, linkLineAccount, unlinkLineAccount } from '../controllers/authController.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -11,6 +11,8 @@ router.post('/login', login);
 router.post('/google', googleLogin);
 router.post('/line', lineLogin);
 router.post('/link-google', authenticateToken, linkGoogleAccount);
+router.post('/link-line', authenticateToken, linkLineAccount);
+router.post('/unlink-line', authenticateToken, unlinkLineAccount);
 router.post('/complete-onboarding', authenticateToken, completeOnboarding);
 
 export default router;

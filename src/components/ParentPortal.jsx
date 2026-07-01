@@ -86,6 +86,7 @@ function ParentPortal({
   onDeleteChild,
   currentUser,
   onLinkGoogleAccount,
+  onUnlinkLineAccount,
   usersDB = [],
   onAddParent,
   onDeleteParent,
@@ -103,6 +104,14 @@ function ParentPortal({
   onClaimWishlistItem
 }) {
   const { t, language } = useLanguage();
+  const triggerLineLink = () => {
+    const channelId = import.meta.env.VITE_LINE_CHANNEL_ID || '2006240212';
+    const redirectUri = window.location.origin + '/';
+    const state = 'bind-' + Math.random().toString(36).substring(2, 15);
+    localStorage.setItem('questgrow_line_state', state);
+    window.location.href = `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${channelId}&redirect_uri=${redirectUri}&state=${state}&scope=profile%20openid%20email`;
+  };
+
   const [activeTab, setActiveTab] = useState('audit');
   const [showHistoryLogs, setShowHistoryLogs] = useState(false);
   const [showLineBanner, setShowLineBanner] = useState(() => localStorage.getItem('questgrow_show_line_banner') !== 'false');
@@ -3195,6 +3204,61 @@ function ParentPortal({
                     className="w-full py-2 bg-indigo-600/20 hover:bg-indigo-600/35 text-indigo-400 text-xs font-black rounded-[4px] border border-indigo-500/30 transition-all flex items-center justify-center gap-1.5"
                   >
                     {t('googleLinkLabel')}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* LINE Integration & Review Notification Linking */}
+            <div className="glass-panel p-6 border border-emerald-500/20 bg-white/5 space-y-4">
+              <h3 className="text-md font-bold text-emerald-400 flex items-center gap-2">
+                <svg className="h-5 w-5 fill-current text-emerald-400" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M24 10.304c0-5.369-5.383-9.738-12-9.738-6.616 0-12 4.369-12 9.738 0 4.814 4.269 8.846 10.036 9.564.39.084.922.258 1.058.592.12.296.08.759.04 1.058l-.173 1.04c-.052.314-.251 1.229 1.084.67 1.333-.559 7.185-4.229 9.805-7.236 1.91-2.036 3.15-4.321 3.15-6.988z"/>
+                </svg>
+                {language === 'zh' ? 'LINE 審核通知設定' : 'LINE Review Notification Settings'}
+              </h3>
+              <div className="text-xs text-slate-400 space-y-1">
+                <p>
+                  {language === 'zh' ? 'LINE 綁定狀態：' : 'LINE Link Status: '}
+                  <span className={`font-bold ${currentUser?.line_id ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {currentUser?.line_id 
+                      ? (language === 'zh' ? '已連結 ✅' : 'Linked ✅') 
+                      : (language === 'zh' ? '未連結 ❌' : 'Not Linked ❌')}
+                  </span>
+                </p>
+                <p className="text-[11px] text-slate-500">
+                  {language === 'zh' 
+                    ? '連結您的 LINE 帳號後，每當小孩提交任務或申請兌換獎勵時，您將在 LINE 上即時收到「一鍵審核」的對話通知。' 
+                    : 'After linking your LINE account, you will receive instant push notifications on LINE with single-tap buttons to approve/reject tasks or rewards.'}
+                </p>
+              </div>
+
+              {currentUser?.line_id ? (
+                <div className="space-y-3">
+                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold rounded-xl flex items-center justify-between">
+                    <span>{language === 'zh' ? '已成功啟用 LINE 一鍵審核通知' : 'LINE One-tap notifications active'}</span>
+                    <span className="text-[10px] text-emerald-500/70 font-mono">ID: {currentUser.line_id.substring(0, 10)}...</span>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      if (confirm(language === 'zh' ? '確定要解除 LINE 帳號的連結嗎？您將無法再收到 LINE 審核通知。' : 'Are you sure you want to unlink your LINE account? You will stop receiving notifications.')) {
+                        await onUnlinkLineAccount();
+                      }
+                    }}
+                    type="button"
+                    className="w-full py-2 bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 text-xs font-black rounded-[4px] border border-rose-500/30 transition-all flex items-center justify-center gap-1.5"
+                  >
+                    {language === 'zh' ? '解除 LINE 帳號連結' : 'Unlink LINE Account'}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <button
+                    onClick={triggerLineLink}
+                    type="button"
+                    className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-slate-900 text-xs font-black rounded-[4px] border border-emerald-500/30 transition-all flex items-center justify-center gap-1.5"
+                  >
+                    {language === 'zh' ? '🔗 連結您的 LINE 帳號' : '🔗 Link Your LINE Account'}
                   </button>
                 </div>
               )}
