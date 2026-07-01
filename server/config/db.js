@@ -15,7 +15,7 @@ const isProductionDb = process.env.DATABASE_URL && (
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: isProductionDb ? { rejectUnauthorized: false } : false,
-  max: 15, // Increased from 5 to 15 to handle concurrent users safely
+  max: 30, // Optimized to 30 as a sweet spot (handles concurrency while preventing Neon OOM/CPU context switch overhead)
   idleTimeoutMillis: 3000, // Recycle idle connections quickly to prevent leaks
   connectionTimeoutMillis: 5000 // Increased from 2000ms to 5000ms to allow queue breathing room
 });
