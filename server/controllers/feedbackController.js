@@ -88,8 +88,13 @@ export const submitFeedback = async (req, res) => {
     'fuck', 'shit', 'bitch', 'asshole', 'bastard', 'crap'
   ];
 
-  const lowerContent = content.toLowerCase();
-  const containsSensitive = SENSITIVE_WORDS.some(word => lowerContent.includes(word));
+  // Preprocess text to strip all spaces, tabs, newlines, punctuation and symbols
+  const processedContent = content
+    .toLowerCase()
+    .replace(/\s+/g, '')
+    .replace(/[^\p{L}\p{N}]/gu, ''); // Keep only letters and numbers
+
+  const containsSensitive = SENSITIVE_WORDS.some(word => processedContent.includes(word));
   if (containsSensitive) {
     return res.status(400).json({
       message: '提交失敗：您的意見回饋中包含不當字詞，請修正後再試。'

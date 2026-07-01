@@ -24,8 +24,12 @@ function FeedbackModal({ onClose, currentUser, showToast }) {
       '幹', '操你', '機掰', '屁股', '垃圾系統', '三小', '強姦', '智障', '白痴', '王八蛋',
       'fuck', 'shit', 'bitch', 'asshole', 'bastard', 'crap'
     ];
-    const lowerContent = content.toLowerCase();
-    if (SENSITIVE_WORDS.some(word => lowerContent.includes(word))) {
+    const processedContent = content
+      .toLowerCase()
+      .replace(/\s+/g, '')
+      .replace(/[^\p{L}\p{N}]/gu, ''); // Keep only letters and numbers
+
+    if (SENSITIVE_WORDS.some(word => processedContent.includes(word))) {
       setErrorMsg('您的意見回饋中包含不當字詞，請修正後再試。');
       return;
     }
