@@ -82,6 +82,31 @@ export const submitFeedback = async (req, res) => {
     }
   }
 
+  // --- Sensitive Words & Meaningless Content (Spam) Filtering ---
+  const SENSITIVE_WORDS = [
+    '幹', '操你', '機掰', '屁股', '垃圾系統', '三小', '強姦', '智障', '白痴', '王八蛋',
+    'fuck', 'shit', 'bitch', 'asshole', 'bastard', 'crap'
+  ];
+
+  const lowerContent = content.toLowerCase();
+  const containsSensitive = SENSITIVE_WORDS.some(word => lowerContent.includes(word));
+  if (containsSensitive) {
+    return res.status(400).json({
+      message: '提交失敗：您的意見回饋中包含不當字詞，請修正後再試。'
+    });
+  }
+
+  // Unicode Emoji property escapes to remove all presentation & pictographic emojis
+  const cleanedContent = content
+    .replace(/\p{Emoji_Presentation}|\p{Extended_Pictographic}/gu, '')
+    .replace(/[^\p{L}\p{N}]/gu, ''); // Remove spaces, punctuation and special signs
+
+  if (cleanedContent.trim().length < 2) {
+    return res.status(400).json({
+      message: '提交失敗：請提供更具體的文字意見說明（不可僅包含 Emoji 或標點符號）。'
+    });
+  }
+
   try {
     let familyId = null;
     let userId = null;
