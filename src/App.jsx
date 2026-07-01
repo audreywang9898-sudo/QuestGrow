@@ -118,7 +118,12 @@ function App() {
             showToast('🎉 LINE 帳號連結成功！已啟用 LINE 一鍵審核通知。', 'success');
           } catch (error) {
             console.error('Failed to link LINE account:', error);
-            showToast(error.message || '連結 LINE 帳號失敗。', 'error');
+            const errMsg = error.message || '連結 LINE 帳號失敗。';
+            if (errMsg.includes('已被其他') || errMsg.includes('已綁定') || errMsg.includes('已存在') || errMsg.includes('already linked')) {
+              alert(`⚠️ LINE 綁定失敗：\n\n${errMsg}`);
+            } else {
+              showToast(errMsg, 'error');
+            }
           }
         }
       } finally {
@@ -445,7 +450,12 @@ function App() {
       fetchAllData();
       return true;
     } catch (error) {
-      showToast(error.message || '綁定 Google 帳戶失敗。', 'error');
+      const errMsg = error.message || '綁定 Google 帳戶失敗。';
+      if (errMsg.includes('已被其他') || errMsg.includes('已綁定') || errMsg.includes('已存在') || errMsg.includes('already linked')) {
+        alert(`⚠️ Google 綁定失敗：\n\n${errMsg}`);
+      } else {
+        showToast(errMsg, 'error');
+      }
       return false;
     }
   };

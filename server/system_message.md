@@ -29,7 +29,7 @@ Bilingual translations are defined in `Chinese Message | English Message` format
 - **LINK_GOOGLE_TOKEN_INVALID**: Google 驗證憑證無效或已過期。 | Google verification credential is invalid or expired.
 - **LINK_GOOGLE_SUCCESS**: 成功連結 Google 帳戶！今後可使用 Google 快速登入。 | Google account linked successfully! You can now use Google to quick login.
 - **LINK_GOOGLE_ERROR**: 伺服器錯誤，連結 Google 帳戶失敗。 | Server error, failed to link Google account.
-- **GOOGLE_ALREADY_LINKED**: 此 Google 帳戶已被其他 QuestGrow 帳號綁定！ | This Google account is already linked to another QuestGrow account!
+- **GOOGLE_ALREADY_LINKED**: 此 Google 帳戶已被其他 QuestGrow 帳號綁定！該帳戶已存在，請使用其他 Gmail 重新綁定。 | This Google account is already linked to another QuestGrow account! The account already exists, please link another Google account.
 
 ## User Controller Messages
 - **FETCH_MEMBERS_ERROR**: 無法獲取家庭成員資料。 | Failed to fetch family member data.

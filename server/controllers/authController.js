@@ -612,7 +612,7 @@ export const linkLineAccount = async (req, res) => {
     );
 
     if (checkLinked.rows.length > 0) {
-      return res.status(400).json({ message: '❌ 此 LINE 帳號已被其他 QuestGrow 帳號綁定。' });
+      return res.status(400).json({ message: '❌ 此 LINE 帳號已被其他 QuestGrow 帳號綁定。該帳戶已存在，請使用其他 LINE 帳號重新綁定！' });
     }
 
     // 4. Link LINE Account to Current User
