@@ -2979,7 +2979,7 @@ function ParentPortal({
                       {parent.email.toLowerCase() === currentUser.email.toLowerCase() && (
                         <div className="border-t border-white/5 pt-4 mt-3 space-y-4">
                           <h5 className="text-xs font-black text-[#3661FF] uppercase tracking-wider flex items-center gap-1.5 text-left">
-                            <Shield className="h-4 w-4 text-[#3661FF]" />
+                            <ShieldCheck className="h-4 w-4 text-[#3661FF]" />
                             {language === 'zh' ? '帳號安全與聯動設定' : 'Security & Account Integrations'}
                           </h5>
 
