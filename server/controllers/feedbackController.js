@@ -1,12 +1,85 @@
 import pool from '../config/db.js';
 import { sendPushNotificationToUser } from '../utils/pushNotifier.js';
 
+// In-memory Rate Limiting Storage
+const ipLimits = new Map();   // ip -> Array of timestamps
+const userLimits = new Map(); // userId -> Array of timestamps
+
+// Cleanup expired timestamps periodically to prevent memory leaks
+setInterval(() => {
+  const now = Date.now();
+  const ONE_HOUR = 60 * 60 * 1000;
+  
+  for (const [ip, tsList] of ipLimits.entries()) {
+    const valid = tsList.filter(ts => now - ts < ONE_HOUR);
+    if (valid.length === 0) ipLimits.delete(ip);
+    else ipLimits.set(ip, valid);
+  }
+  for (const [userId, tsList] of userLimits.entries()) {
+    const valid = tsList.filter(ts => now - ts < ONE_HOUR);
+    if (valid.length === 0) userLimits.delete(userId);
+    else userLimits.set(userId, valid);
+  }
+}, 10 * 60 * 1000); // Run cleanup every 10 minutes
+
+const getClientIp = (req) => {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) {
+    return forwarded.split(',')[0].trim();
+  }
+  return req.socket.remoteAddress || req.ip;
+};
+
+const isRateLimited = (key, limitMap, windowMs, maxRequests) => {
+  const now = Date.now();
+  if (!limitMap.has(key)) {
+    limitMap.set(key, [now]);
+    return false; // Not limited
+  }
+
+  let timestamps = limitMap.get(key);
+  // Keep only timestamps within the sliding window
+  timestamps = timestamps.filter(ts => now - ts < windowMs);
+
+  if (timestamps.length >= maxRequests) {
+    return true; // Limited!
+  }
+
+  timestamps.push(now);
+  limitMap.set(key, timestamps);
+  return false; // Not limited
+};
+
 // 1. Submit feedback (Public or Optional Auth)
 export const submitFeedback = async (req, res) => {
   const { name, email, category, content } = req.body;
   
   if (!category || !content) {
     return res.status(400).json({ message: '類別與內容為必填欄位。' });
+  }
+
+  // --- Rate Limiting Checks ---
+  const clientIp = getClientIp(req);
+
+  // 1. IP Level Limit: Max 2 feedback submissions per 1 minute (60,000 ms)
+  const IP_WINDOW_MS = 60 * 1000;
+  const IP_MAX_REQUESTS = 2;
+  if (isRateLimited(clientIp, ipLimits, IP_WINDOW_MS, IP_MAX_REQUESTS)) {
+    return res.status(429).json({
+      message: '您提交意見回饋的頻率過快。為了防止惡意灌水，同一 IP 每分鐘最多只能提交 2 次，請稍候再試。'
+    });
+  }
+
+  // 2. User Level Limit (if logged in): Max 3 feedback submissions per 5 minutes (300,000 ms)
+  if (req.user && req.user.id) {
+    const userId = req.user.id;
+    const USER_WINDOW_MS = 5 * 60 * 1000;
+    const USER_MAX_REQUESTS = 3;
+    if (isRateLimited(userId, userLimits, USER_WINDOW_MS, USER_MAX_REQUESTS)) {
+      return res.status(429).json({
+        message: '您提交意見回饋的頻率過快。登入帳號每 5 分鐘最多只能提交 3 次，請稍候再試。'
+      });
+    }
   }
 
   try {
