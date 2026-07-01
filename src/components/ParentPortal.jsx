@@ -2999,6 +2999,14 @@ function ParentPortal({
                                 <div className="text-[10px] text-slate-400 space-y-1">
                                   <p>{t('currentUserLabel')}<span className="text-slate-200 font-bold ml-1">{currentUser?.email}</span></p>
                                   <p>{t('accountTypeLabel')}<span className="text-slate-200 font-bold ml-1">{currentUser?.googleId ? t('googleLinkedType') : t('passwordAccountType')}</span></p>
+                                  <p>
+                                    {language === 'zh' ? 'Google 綁定狀態：' : 'Google Link Status: '}
+                                    <span className={`font-bold ${currentUser?.googleId ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                      {currentUser?.googleId 
+                                        ? (language === 'zh' ? '已連結 ✅' : 'Linked ✅') 
+                                        : (language === 'zh' ? '未連結 ❌' : 'Not Linked ❌')}
+                                    </span>
+                                  </p>
                                 </div>
                               </div>
                               
