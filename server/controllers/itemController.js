@@ -3,15 +3,53 @@ import { getMessage } from '../utils/messageManager.js';
 import { GACHA_POOL } from '../../src/utils/mockData.js';
 import { sendRedeemReviewRequest } from '../utils/lineBot.js';
 import { randomUUID } from 'crypto';
+import { decryptField } from '../utils/encryption.js';
 
 const getExpirationDate = (rarity) => {
   let days = 9999;
   if (rarity === 'Rare') days = 7;
   else if (rarity === 'Epic') days = 30;
-  
+
   const date = new Date();
   date.setDate(date.getDate() + days);
   return date.toISOString().split('T')[0];
+};
+
+// Rarity draw order, rarest first — matches the cumulative-threshold logic
+// previously implemented client-side (KidPortal.jsx), now the single source of truth.
+const RARITY_DRAW_ORDER = ['Mythic', 'Legendary', 'Epic', 'Rare', 'Common'];
+
+// Server-side weighted rarity + card selection. Never trust a client-supplied card.
+const pickGachaCard = (gachaPool, recentDrawnIds) => {
+  const rand = Math.random();
+  let cumulative = 0;
+  let raritySelected = 'Common';
+  for (const rarity of RARITY_DRAW_ORDER) {
+    const chance = gachaPool?.[rarity]?.chance;
+    if (typeof chance !== 'number') continue;
+    cumulative += chance;
+    if (rand < cumulative) {
+      raritySelected = rarity;
+      break;
+    }
+  }
+
+  let rarityPool = gachaPool?.[raritySelected]?.cards || [];
+  if (rarityPool.length === 0) {
+    // Fallback if the family misconfigured/emptied this rarity's pool
+    raritySelected = 'Common';
+    rarityPool = gachaPool?.Common?.cards || [];
+  }
+  if (rarityPool.length === 0) {
+    return null;
+  }
+
+  let filteredPool = rarityPool.filter(c => !recentDrawnIds.has(c.id));
+  if (filteredPool.length === 0) {
+    filteredPool = rarityPool;
+  }
+
+  return filteredPool[Math.floor(Math.random() * filteredPool.length)];
 };
 
 // 1. Get Inventory Items (For kids: get their own; for parents: get all in family)
@@ -23,13 +61,15 @@ export const getInventory = async (req, res) => {
     let query = '';
     const params = [];
 
+    // LIMIT is a safety net against unbounded growth — not real pagination.
     if (childId) {
       // Kid: query only their own backpack
       query = `
         SELECT id, child_id, card_template_id, name, type, rarity, description, status, date_acquired, expire_at
         FROM inventory
         WHERE child_id = $1
-        ORDER BY date_acquired DESC`;
+        ORDER BY date_acquired DESC
+        LIMIT 1000`;
       params.push(childId);
     } else {
       // Parent: query all children's backpacks in family
@@ -39,7 +79,8 @@ export const getInventory = async (req, res) => {
         JOIN children c ON i.child_id = c.id
         JOIN users u ON c.user_id = u.id
         WHERE u.family_id = $1
-        ORDER BY i.date_acquired DESC`;
+        ORDER BY i.date_acquired DESC
+        LIMIT 1000`;
       params.push(familyId);
     }
 
@@ -76,7 +117,8 @@ export const getRedeemLogs = async (req, res) => {
       `SELECT id, family_id, card_name, kid_name, date_redeemed, status, reviewer
        FROM redeem_logs
        WHERE family_id = $1
-       ORDER BY date_redeemed DESC`,
+       ORDER BY date_redeemed DESC
+       LIMIT 500`,
       [familyId]
     );
 
@@ -97,144 +139,113 @@ export const getRedeemLogs = async (req, res) => {
 };
 
 // 3. Gacha Draw (Atomic Transaction)
+// SECURITY: the drawn card is always chosen by the server from the family's
+// (or default) gacha pool — the client never supplies the card, only the ticket cost.
 export const drawGachaCard = async (req, res) => {
   const familyId = req.user.family_id;
   const childId = req.user.child_id;
-  const { card, costTickets } = req.body;
+  const { costTickets } = req.body;
 
   if (!childId) {
     return res.status(403).json({ message: getMessage('GACHA_DRAW_ROLE_ERROR') });
   }
-  if (!card || costTickets === undefined) {
-    return res.status(400).json({ message: getMessage('GACHA_DRAW_FIELDS_MISSING') });
-  }
 
-  // ── Server-side Gacha Validation ────────────────────────────────────
-  // 1. Enforce costTickets is a safe positive integer (prevents free draws)
-  const safeCost = Math.floor(Number(costTickets));
+  // Enforce costTickets is a safe positive integer (prevents free/negative-cost draws)
+  const safeCost = Number.isInteger(Math.floor(Number(costTickets))) ? Math.floor(Number(costTickets)) : 1;
   if (!Number.isInteger(safeCost) || safeCost < 1 || safeCost > 20) {
     return res.status(400).json({ message: '無效的抽卡費用。' });
   }
 
-  // 2. Validate card type and rarity against server-side allowlists
-  const ALLOWED_TYPES = ['裝備卡', '收藏卡', '技能卡', '資源卡', '特權卡', '體驗卡'];
-  const ALLOWED_RARITIES = ['Common', 'Rare', 'Epic', 'Legendary', 'Mythic'];
-  if (!ALLOWED_TYPES.includes(card.type)) {
-    return res.status(400).json({ message: '無效的卡片類型。' });
-  }
-  if (card.rarity && !ALLOWED_RARITIES.includes(card.rarity)) {
-    return res.status(400).json({ message: '無效的稀有度。' });
-  }
-
-  // 3. For resource cards: cap reward values to prevent economy manipulation
-  if (card.type === '資源卡' && card.value) {
-    const MAX_GOLD_REWARD      = 200;
-    const MAX_TICKETS_REWARD   = 10;
-    const MAX_EXP_REWARD       = 500;
-    const MAX_GROWTH_REWARD    = 200;
-
-    if (card.value.gold !== undefined) {
-      card.value.gold = Math.min(Math.max(0, Math.floor(Number(card.value.gold) || 0)), MAX_GOLD_REWARD);
-    }
-    if (card.value.tickets !== undefined) {
-      card.value.tickets = Math.min(Math.max(0, Math.floor(Number(card.value.tickets) || 0)), MAX_TICKETS_REWARD);
-    }
-    if (card.value.exp !== undefined) {
-      card.value.exp = Math.min(Math.max(0, Math.floor(Number(card.value.exp) || 0)), MAX_EXP_REWARD);
-    }
-    if (card.value.growthScore !== undefined) {
-      card.value.growthScore = Math.min(Math.max(0, Math.floor(Number(card.value.growthScore) || 0)), MAX_GROWTH_REWARD);
-    }
-  }
-  // ── End Validation ───────────────────────────────────────────────────
+  // Resource-card reward caps (defense-in-depth even though values now come
+  // from the server-held pool, not the client).
+  const MAX_GOLD_REWARD    = 200;
+  const MAX_TICKETS_REWARD = 10;
+  const MAX_EXP_REWARD     = 500;
+  const MAX_GROWTH_REWARD  = 200;
+  const clamp = (n, max) => Math.min(Math.max(0, Math.floor(Number(n) || 0)), max);
 
   const gachaClient = await pool.connect();
   try {
     await gachaClient.query('BEGIN');
 
-    // 1. Verify child has enough tickets
-    const childResult = await gachaClient.query(
-      'SELECT id, name, tickets, gold, level, exp, exp_needed FROM children WHERE id = $1',
-      [childId]
+    // 1. Atomically verify + deduct tickets in one statement. The UPDATE takes
+    // a row lock on this child for the rest of the transaction, so subsequent
+    // reads/writes to the same row within this transaction are race-free —
+    // this closes the concurrent-draw ticket-farming race condition.
+    const deductResult = await gachaClient.query(
+      `UPDATE children SET tickets = tickets - $1
+       WHERE id = $2 AND tickets >= $1
+       RETURNING id, name, tickets, gold, level, exp, exp_needed`,
+      [safeCost, childId]
     );
-    if (childResult.rows.length === 0) {
-      throw new Error(getMessage('CHILD_STATS_NOT_FOUND'));
+    if (deductResult.rows.length === 0) {
+      // Either the child doesn't exist, or (far more likely) insufficient tickets
+      const existsResult = await gachaClient.query('SELECT id FROM children WHERE id = $1', [childId]);
+      throw new Error(existsResult.rows.length === 0 ? getMessage('CHILD_STATS_NOT_FOUND') : getMessage('GACHA_INSUFFICIENT_TICKETS'));
     }
-    const child = childResult.rows[0];
+    const child = deductResult.rows[0];
 
-    if (child.tickets < safeCost) {
-      throw new Error(getMessage('GACHA_INSUFFICIENT_TICKETS'));
-    }
-
-    // 1.5. Server-side 7-day cooldown validation with downgrade fallback
+    // 2. Load the family's gacha pool (or the default pool)
     const familyResult = await gachaClient.query('SELECT gacha_pool FROM families WHERE id = $1', [familyId]);
     const familyGachaPool = (familyResult.rows.length > 0 && familyResult.rows[0].gacha_pool)
       ? familyResult.rows[0].gacha_pool
       : GACHA_POOL;
 
-    // Get all cards of the drawn rarity
-    const rarityPool = familyGachaPool[card.rarity]?.cards || [];
-    const rarityCardIds = rarityPool.map(c => c.id);
-
-    // Find which of these card IDs have been acquired by this child in the last 7 days
+    // 3. Find cards drawn by this child in the last 7 days (across all rarities,
+    // since we don't know the rarity we'll land on yet)
     const recentDrawsResult = await gachaClient.query(
-      `SELECT DISTINCT card_template_id 
-       FROM inventory 
-       WHERE child_id = $1 AND card_template_id = ANY($2) AND date_acquired >= CURRENT_DATE - 7`,
-      [childId, rarityCardIds]
+      `SELECT DISTINCT card_template_id
+       FROM inventory
+       WHERE child_id = $1 AND date_acquired >= CURRENT_DATE - 7`,
+      [childId]
     );
     const recentDrawnIds = new Set(recentDrawsResult.rows.map(r => r.card_template_id));
 
-    // If the drawn card is in the recent draws set
-    if (recentDrawnIds.has(card.id)) {
-      // Check if there is at least one card in this rarity that is NOT on cooldown
-      const hasAvailableCards = rarityCardIds.some(id => !recentDrawnIds.has(id));
-      if (hasAvailableCards) {
-        throw new Error('該獎勵卡片在7 天內已獲得過，不能重複獲得。 | This reward card is on cooldown and cannot be drawn again.');
-      }
+    // 4. Server picks the rarity + card — the client has no influence over this.
+    const card = pickGachaCard(familyGachaPool, recentDrawnIds);
+    if (!card) {
+      throw new Error('轉蛋獎池尚未設定，請聯絡家長。 | Gacha pool is not configured.');
     }
 
-    // Deduct tickets (using server-validated cost)
-    let newTickets = Math.max(0, child.tickets - safeCost);
+    // 5. Handle Resource Cards (applied immediately, reward values clamped)
     let newGold = child.gold;
+    let newTickets = child.tickets;
     let newExp = child.exp;
     let newLevel = child.level;
     let expNeeded = child.exp_needed;
 
-    // 2. Handle Resource Cards (applied immediately)
-    if (card.type === "資源卡") {
-      if (card.value?.gold) {
-        newGold += card.value.gold;
+    if (card.type === "資源卡" && card.value) {
+      if (card.value.gold) {
+        newGold += clamp(card.value.gold, MAX_GOLD_REWARD);
       }
-      if (card.value?.tickets) {
-        newTickets += card.value.tickets;
+      if (card.value.tickets) {
+        newTickets += clamp(card.value.tickets, MAX_TICKETS_REWARD);
       }
-      if (card.value?.exp) {
-        newExp += card.value.exp;
+      if (card.value.exp) {
+        newExp += clamp(card.value.exp, MAX_EXP_REWARD);
         while (newExp >= expNeeded) {
           newExp -= expNeeded;
           newLevel += 1;
           expNeeded = newLevel * 300 + 400;
         }
       }
-      if (card.value?.growthScore) {
+      if (card.value.growthScore) {
         await gachaClient.query(
           'UPDATE families SET growth_score = growth_score + $1 WHERE id = $2',
-          [card.value.growthScore, familyId]
+          [clamp(card.value.growthScore, MAX_GROWTH_REWARD), familyId]
         );
       }
+
+      // Persist resource-card gains (tickets already reflects the draw-cost deduction above)
+      await gachaClient.query(
+        `UPDATE children
+         SET tickets = $1, gold = $2, exp = $3, level = $4, exp_needed = $5
+         WHERE id = $6`,
+        [newTickets, newGold, newExp, newLevel, expNeeded, childId]
+      );
     }
 
-    // Update child stats in database
-    await gachaClient.query(
-      `UPDATE children 
-       SET tickets = $1, gold = $2, exp = $3, level = $4, exp_needed = $5 
-       WHERE id = $6`,
-      [newTickets, newGold, newExp, newLevel, expNeeded, childId]
-    );
-
-    // 3. For all cards, insert into inventory (resource cards are inserted with status '已使用')
-    let newItem = null;
+    // 6. Insert into inventory (resource cards are inserted with status '已使用')
     const status = card.type === "資源卡" ? "已使用" : "未使用";
     const expireAt = card.type === "資源卡" ? null : getExpirationDate(card.rarity);
     const insertResult = await gachaClient.query(
@@ -244,7 +255,7 @@ export const drawGachaCard = async (req, res) => {
       [childId, card.id, card.name, card.type, card.rarity, card.desc, status, expireAt]
     );
     const row = insertResult.rows[0];
-    newItem = {
+    const newItem = {
       inventoryId: row.id,
       childId: row.child_id,
       id: row.card_template_id,
@@ -264,10 +275,12 @@ export const drawGachaCard = async (req, res) => {
       'SELECT id, name, age, birthday, avatar, level, exp, exp_needed, gold, tickets, job_class, attributes FROM children WHERE id = $1',
       [childId]
     );
+    const updatedChild = updatedChildResult.rows[0];
+    if (updatedChild) updatedChild.birthday = decryptField(updatedChild.birthday);
 
     res.json({
       message: getMessage('GACHA_DRAW_SUCCESS', { name: card.name }),
-      child: updatedChildResult.rows[0],
+      child: updatedChild,
       item: newItem
     });
   } catch (error) {
@@ -534,31 +547,27 @@ export const buyTicketWithGold = async (req, res) => {
   try {
     await ticketClient.query('BEGIN');
 
-    // 1. Fetch child status
-    const childResult = await ticketClient.query(
-      'SELECT id, name, tickets, gold FROM children WHERE id = $1',
-      [childId]
-    );
-    if (childResult.rows.length === 0) {
-      throw new Error('找不到小孩角色狀態。 | Child profile not found.');
-    }
-    const child = childResult.rows[0];
-
     const COST_GOLD = 300;
-    if (child.gold < COST_GOLD) {
-      throw new Error('金幣不足，無法兌換抽卡券。 | Insufficient gold to buy ticket.');
-    }
 
-    const newGold = child.gold - COST_GOLD;
-    const newTickets = child.tickets + 1;
-
-    // 2. Update child status in DB
-    await ticketClient.query(
-      'UPDATE children SET gold = $1, tickets = $2 WHERE id = $3',
-      [newGold, newTickets, childId]
+    // 1. Atomically verify + spend gold / grant ticket in one statement.
+    // Using a WHERE-clause balance check instead of read-then-write closes the
+    // race condition where concurrent requests could each read the same stale
+    // balance and all pass the check (double/triple-spend farming).
+    const updateResult = await ticketClient.query(
+      `UPDATE children SET gold = gold - $1, tickets = tickets + 1
+       WHERE id = $2 AND gold >= $1
+       RETURNING id, name, tickets, gold`,
+      [COST_GOLD, childId]
     );
+    if (updateResult.rows.length === 0) {
+      const existsResult = await ticketClient.query('SELECT id FROM children WHERE id = $1', [childId]);
+      throw new Error(existsResult.rows.length === 0
+        ? '找不到小孩角色狀態。 | Child profile not found.'
+        : '金幣不足，無法兌換抽卡券。 | Insufficient gold to buy ticket.');
+    }
+    const child = updateResult.rows[0];
 
-    // 3. Write event log for telemetry
+    // 2. Write event log for telemetry
     await ticketClient.query(
       `INSERT INTO event_logs (family_id, user_id, event_type, metadata)
        VALUES ($1, $2, $3, $4)`,
@@ -581,10 +590,12 @@ export const buyTicketWithGold = async (req, res) => {
       'SELECT id, name, age, birthday, avatar, level, exp, exp_needed, gold, tickets, job_class, attributes FROM children WHERE id = $1',
       [childId]
     );
+    const updatedChild = updatedChildResult.rows[0];
+    if (updatedChild) updatedChild.birthday = decryptField(updatedChild.birthday);
 
     res.json({
       message: '成功使用 300 金幣兌換 1 張抽卡券！ | Successfully exchanged 300 gold for 1 summon ticket!',
-      child: updatedChildResult.rows[0]
+      child: updatedChild
     });
   } catch (error) {
     await ticketClient.query('ROLLBACK');

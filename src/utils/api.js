@@ -101,6 +101,13 @@ export const api = {
   },
 
   logout: () => {
+    // Best-effort, fire-and-forget: invalidate this user's token server-side
+    // (and every other token issued to them) so a stolen/XSS'd token can't
+    // keep working after the user believes they've logged out. Local
+    // cleanup below must not wait on this — it should never delay logging
+    // the user out of the current device even if the network call fails.
+    const headers = getHeaders();
+    fetch(`${API_URL}/auth/logout`, { method: 'POST', headers }).catch(() => {});
     localStorage.removeItem('questgrow_jwt_token');
   },
 
@@ -191,13 +198,21 @@ export const api = {
       headers: getHeaders(),
       body: JSON.stringify(parentData),
     });
-    return handleResponse(res);
+    const data = await handleResponse(res);
+    // Changing your own password bumps token_version server-side, which
+    // invalidates the token used to make this very request — the server
+    // sends back a fresh one in that case so the session isn't dropped.
+    if (data.token) {
+      localStorage.setItem('questgrow_jwt_token', data.token);
+    }
+    return data;
   },
 
-  clearAllFamilyData: async () => {
+  clearAllFamilyData: async (confirmEmail) => {
     const res = await fetch(`${API_URL}/users/family/clear`, {
       method: 'DELETE',
       headers: getHeaders(),
+      body: JSON.stringify({ confirmEmail }),
     });
     return handleResponse(res);
   },
@@ -280,11 +295,13 @@ export const api = {
     return handleResponse(res);
   },
 
-  drawGachaCard: async (card, costTickets) => {
+  // The server chooses the drawn card — the client only requests a draw and
+  // pays the ticket cost; it never supplies the resulting card.
+  drawGachaCard: async (costTickets = 1) => {
     const res = await fetch(`${API_URL}/items/gacha`, {
       method: 'POST',
       headers: getHeaders(),
-      body: JSON.stringify({ card, costTickets }),
+      body: JSON.stringify({ costTickets }),
     });
     return handleResponse(res);
   },
@@ -396,6 +413,16 @@ export const api = {
     const res = await fetch(`${API_URL}/family/wishlist/${id}/redeem`, {
       method: 'POST',
       headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  // Parent-only: approve or reject a kid's pending wishlist redemption request
+  reviewWishlistRedeem: async (id, action) => {
+    const res = await fetch(`${API_URL}/family/wishlist/${id}/redeem-review`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ action }),
     });
     return handleResponse(res);
   },

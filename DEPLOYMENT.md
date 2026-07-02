@@ -57,7 +57,11 @@ npm run dev
    * `JWT_SECRET`: *(填入一組隨機複雜的密鑰字串，例如 `my_questgrow_super_secret_jwt_key_2026`)*
    * `PORT`: `5000`
    * `GOOGLE_CLIENT_ID`: *(填入您的 Google Client ID，例如 `723480361066-5v0ujs9tm810ncqu9cne1s0raoleup05.apps.googleusercontent.com`)*
+   * `NODE_ENV`: `production` (⚠️ **必填！否則正式站的錯誤訊息會外洩堆疊細節給使用者，見 `server/utils/validation.js` 的 `safeErrorMessage`**)
+   * `ALLOWED_ORIGINS`: *(填入前端網域，例如 `https://questgrow.onrender.com`，多個網域以逗號分隔；**強烈建議設定**，否則 CORS 會開放給任意來源存取 API)*
+   * `PII_ENCRYPTION_KEY`: *(⚠️ **必填！**用來加密兒童生日欄位的 AES-256 金鑰，須為 base64 編碼的 32 bytes 隨機值。可用 `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` 產生。**遺失此金鑰將導致所有已加密的生日資料無法復原，請務必安全備份**，且正式站與本機開發不應共用同一把金鑰)*
 5. 點選 **Create Web Service** 進行部署。
+6. 若資料庫中已有既有的兒童資料（例如從舊版遷移過來），部署後需手動執行一次 `node server/encrypt_birthday_migration.js`（連線到正式資料庫）以加密既有的明碼生日資料。此腳本可重複執行、不會重複加密已加密的欄位。
 6. 部署成功後，複製該 Web Service 的網址 (例如 `https://questgrow-backend.onrender.com`)。
 
 ---

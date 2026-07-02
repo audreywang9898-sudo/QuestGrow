@@ -219,7 +219,41 @@ function App() {
   const fetchAllData = async () => {
     if (!currentUser) return;
     try {
-      const familyData = await api.getFamilyData();
+      // These calls are all independent of each other, so fire them
+      // concurrently instead of awaiting one at a time — total load time
+      // becomes max(all calls) instead of sum(all calls). The three
+      // "soft-fail" calls (leaderboard, proverbs) keep their own try/catch
+      // so a failure there doesn't block the rest of the page from loading.
+      const [
+        familyData,
+        childrenData,
+        tasksData,
+        invData,
+        goalsData,
+        wishData,
+        logsData,
+        compData,
+        eventsData,
+        membersData,
+        leaderboardData,
+        proverbData,
+        adultProverbData,
+      ] = await Promise.all([
+        api.getFamilyData(),
+        api.getChildren(),
+        api.getTasks(),
+        api.getInventory(),
+        api.getParentGoals(),
+        api.getWishlist(),
+        api.getRedeemLogs(),
+        api.getWeeklyComp(),
+        api.getEventLogs(),
+        api.getMembers(),
+        api.getFamilyLeaderboard().catch(e => { console.error("Leaderboard fetch error:", e); return null; }),
+        api.getDailyProverb(getSimulatedDateString(), 'kid').catch(e => { console.error("Proverb fetch error:", e); return null; }),
+        api.getDailyProverb(getSimulatedDateString(), 'parent').catch(e => { console.error("Adult Proverb fetch error:", e); return null; }),
+      ]);
+
       if (familyData) {
         setFamilyScore(familyData.growthScore);
         setFamilyNickname(familyData.familyNickname || '');
@@ -244,14 +278,13 @@ function App() {
         }
       }
 
-      const childrenData = await api.getChildren();
       // Normalize: ensure each child's attributes is always a valid object (never null)
       const normalizedChildren = childrenData.map(c => ({
         ...c,
         attributes: c.attributes || { Wisdom: 0, Responsibility: 0, Courage: 0, Empathy: 0, Creativity: 0 }
       }));
       setChildren(normalizedChildren);
-      
+
       // Restore or set active child
       if (currentUser.role === 'kid' && currentUser.childId) {
         setActiveChildId(currentUser.childId);
@@ -264,54 +297,17 @@ function App() {
         }
       }
 
-      const tasksData = await api.getTasks();
       setTasks(tasksData);
-
-      const invData = await api.getInventory();
       setInventory(invData);
-
-      const goalsData = await api.getParentGoals();
       setParentGoals(goalsData);
-
-      const wishData = await api.getWishlist();
       setWishlist(wishData);
-
-      const logsData = await api.getRedeemLogs();
       setRedeemLogs(logsData);
-
-      const compData = await api.getWeeklyComp();
       if (compData) setWeeklyComp(compData);
-
-      const eventsData = await api.getEventLogs();
       setEventLogs(eventsData);
-
-      const membersData = await api.getMembers();
       setMembers(membersData);
-
-      try {
-        const leaderboard = await api.getFamilyLeaderboard();
-        setLeaderboardData(leaderboard);
-      } catch (e) {
-        console.error("Leaderboard fetch error:", e);
-      }
-
-      try {
-        const proverbData = await api.getDailyProverb(getSimulatedDateString(), 'kid');
-        if (proverbData) {
-          setDailyProverb(proverbData);
-        }
-      } catch (e) {
-        console.error("Proverb fetch error:", e);
-      }
-
-      try {
-        const adultProverbData = await api.getDailyProverb(getSimulatedDateString(), 'parent');
-        if (adultProverbData) {
-          setDailyAdultProverb(adultProverbData);
-        }
-      } catch (e) {
-        console.error("Adult Proverb fetch error:", e);
-      }
+      if (leaderboardData) setLeaderboardData(leaderboardData);
+      if (proverbData) setDailyProverb(proverbData);
+      if (adultProverbData) setDailyAdultProverb(adultProverbData);
     } catch (error) {
       console.error('Fetch all data error:', error);
       showToast(error.message || '載入雲端資料失敗！', 'error');
@@ -969,13 +965,17 @@ function App() {
   };
 
   // --- Gacha / Card Draw ---
-  const handleAwardGachaCard = async (card, costTickets = 1) => {
+  // The server decides which card is drawn; this returns the result so the
+  // caller (KidPortal's draw animation) can reveal the actual awarded card.
+  const handleAwardGachaCard = async (costTickets = 1) => {
     try {
-      await api.drawGachaCard(card, costTickets);
-      showToast(`召喚成功！獲得 ${card.name}`, 'success');
+      const result = await api.drawGachaCard(costTickets);
+      showToast(`召喚成功！獲得 ${result.item.name}`, 'success');
       fetchAllData();
+      return result;
     } catch (error) {
       showToast(error.message || '召喚失敗。', 'error');
+      throw error;
     }
   };
 
@@ -1091,24 +1091,39 @@ function App() {
 
   const handleRedeemWishlist = async (wishlistId) => {
     try {
-      await api.redeemWishlist(wishlistId);
-      showToast('共同願望已兌換成功！', 'success');
+      // Server message differs for kid (request submitted, pending approval)
+      // vs. parent (redeemed instantly) — always show what actually happened.
+      const data = await api.redeemWishlist(wishlistId);
+      showToast(data.message || '共同願望已兌換成功！', 'success');
       fetchAllData();
     } catch (error) {
       showToast(error.message || '兌換失敗。', 'error');
     }
   };
 
+  const handleReviewWishlistRedeem = async (wishlistId, action) => {
+    try {
+      const data = await api.reviewWishlistRedeem(wishlistId, action);
+      showToast(data.message || (action === 'approve' ? '已核准願望兌換！' : '已駁回願望兌換申請。'), 'success');
+      fetchAllData();
+    } catch (error) {
+      showToast(error.message || '審核願望兌換失敗。', 'error');
+    }
+  };
+
   // --- Telemetry &合規安全銷毀 ---
   const handleClearAllData = async () => {
-    if (window.confirm('❗ 隱私與兒童個資保護提醒：這會永久刪除此家庭與孩子的所有個人資料、任務及數據。確定要繼續嗎？')) {
-      try {
-        await api.clearAllFamilyData();
-        showToast('所有個資已完全銷毀！將自動登出。', 'success');
-        setCurrentUser(null);
-      } catch (error) {
-        showToast(error.message || '銷毀失敗。', 'error');
-      }
+    if (!window.confirm('❗ 隱私與兒童個資保護提醒：這會永久刪除此家庭與孩子的所有個人資料、任務及數據。確定要繼續嗎？')) {
+      return;
+    }
+    const confirmEmail = window.prompt(`此操作無法復原。請輸入您目前登入的帳號信箱（${currentUser?.email || ''}）以確認刪除：`);
+    if (!confirmEmail) return;
+    try {
+      await api.clearAllFamilyData(confirmEmail);
+      showToast('所有個資已完全銷毀！將自動登出。', 'success');
+      setCurrentUser(null);
+    } catch (error) {
+      showToast(error.message || '銷毀失敗。', 'error');
     }
   };
 
@@ -1435,6 +1450,7 @@ function App() {
             onUpdateFamilySettings={handleUpdateFamilySettings}
             dailyProverb={dailyAdultProverb}
             onClaimWishlistItem={handleRedeemWishlist}
+            onReviewWishlistRedeem={handleReviewWishlistRedeem}
           />
         )}
       </main>

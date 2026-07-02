@@ -101,7 +101,8 @@ function ParentPortal({
   onCompleteOnboarding,
   onOpenFeedback,
   dailyProverb,
-  onClaimWishlistItem
+  onClaimWishlistItem,
+  onReviewWishlistRedeem
 }) {
   const { t, language } = useLanguage();
   const triggerLineLink = () => {
@@ -974,6 +975,7 @@ function ParentPortal({
 
   const pendingTasks = tasks.filter(t => t.status === '待覆核');
   const pendingRedemptions = inventory.filter(i => i.status === '待核銷');
+  const pendingWishlistRedemptions = (wishlist || []).filter(w => w.pendingApproval);
 
   // Push notifications generator (mocking FCM messages for parent)
   const getFCMNotifications = () => {
@@ -1213,9 +1215,9 @@ function ParentPortal({
         >
           <ClipboardCheck className={`h-4 w-4 ${activeTab === 'audit' ? 'text-white' : 'text-[#3661FF]'}`} />
           {t('tabAudit')}
-          {(pendingTasks.length + pendingRedemptions.length) > 0 && (
+          {(pendingTasks.length + pendingRedemptions.length + pendingWishlistRedemptions.length) > 0 && (
             <span className="bg-[#FF4747] text-white px-1.5 py-0.5 rounded-full text-[10px] font-black shadow-sm">
-              {pendingTasks.length + pendingRedemptions.length}
+              {pendingTasks.length + pendingRedemptions.length + pendingWishlistRedemptions.length}
             </span>
           )}
         </button>
@@ -2183,8 +2185,56 @@ function ParentPortal({
                   </div>
                 )}
               </div>
+
+              {/* Pending Wishlist Redemption Requests (kid-triggered redemptions need parent approval) */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-black text-slate-100 flex items-center gap-2 tracking-wider">
+                  <ClipboardCheck className="h-5 w-5 text-indigo-400" />
+                  {t('auditTitleWishlist')} ({pendingWishlistRedemptions.length})
+                </h3>
+
+                {pendingWishlistRedemptions.length === 0 ? (
+                  <div className="bg-slate-955/40 border border-white/5 rounded-xl p-8 text-center text-slate-400 text-sm shadow-inner">
+                    {t('noPendingWishlist')}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {pendingWishlistRedemptions.map((wish) => (
+                      <div key={wish.id} className="p-5 border bg-slate-900/60 border border-white/5 text-slate-100 shadow-sm flex flex-col justify-between gap-4 rounded-2xl">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="px-2 py-0.5 text-[9px] font-black rounded-md uppercase tracking-wider bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
+                              {wish.pointsNeeded} {t('wishlistPointsLabel')}
+                            </span>
+                            {wish.requestedByName && (
+                              <span className="text-[10px] font-bold text-slate-400">
+                                {t('applicantLabel', { name: wish.requestedByName })}
+                              </span>
+                            )}
+                          </div>
+                          <h4 className="text-md font-bold text-slate-100">{wish.title}</h4>
+                        </div>
+                        <div className="flex gap-2 border-t border-black/5 pt-3 mt-1">
+                          <button
+                            onClick={() => onReviewWishlistRedeem(wish.id, 'approve')}
+                            className="flex-1 py-2 rounded-[4px] text-xs font-black transition-all bg-[#00E676] text-[#111216] hover:bg-[#00c867] shadow-sm"
+                          >
+                            {t('approveWishlistBtn')}
+                          </button>
+                          <button
+                            onClick={() => onReviewWishlistRedeem(wish.id, 'reject')}
+                            className="px-3 py-2 rounded-[4px] text-xs font-bold bg-[#252529] border border-[#35363A] text-[#b5b7bc] hover:text-white transition-colors shadow-sm"
+                          >
+                            {t('rejectWishlistBtn')}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-            
+
             {/* Collapsible History Section */}
             <div className="border-t border-white/10 pt-6 space-y-4">
               <div className="flex items-center justify-between">

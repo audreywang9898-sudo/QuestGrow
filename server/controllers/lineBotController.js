@@ -11,15 +11,6 @@ export const handleWebhook = async (req, res) => {
   const signature = req.headers['x-line-signature'] || req.headers['X-Line-Signature'];
   const rawBody = req.rawBody;
 
-  const botSecret = process.env.LINE_BOT_CHANNEL_SECRET || '';
-  const loginSecret = process.env.LINE_CHANNEL_SECRET || '';
-
-  console.log(`[lineBotWebhook] Received header keys:`, Object.keys(req.headers));
-  console.log(`[lineBotWebhook] Signature: ${signature}`);
-  console.log(`[lineBotWebhook] rawBody length: ${rawBody ? rawBody.length : 0}`);
-  console.log(`[lineBotWebhook] rawBody snippet:`, rawBody ? rawBody.substring(0, 200) : 'empty');
-  console.log(`[lineBotWebhook] Secrets status: LINE_BOT_CHANNEL_SECRET len=${botSecret.length}, LINE_CHANNEL_SECRET len=${loginSecret.length}`);
-
   if (!validateSignature(rawBody, signature)) {
     console.warn('[lineBotController] Invalid LINE signature — request rejected.');
     return res.status(403).json({ message: 'Invalid signature' });
@@ -87,44 +78,23 @@ async function approveTask(taskId, token, parentLineId) {
   try {
     await client.query('BEGIN');
 
-    // Verify token, task state, and that the parent belongs to the same family
+    // Verify token, task state, and that the LINE-linked parent belongs to
+    // the same family as the task's assigned child.
     const taskRes = await client.query(
       `SELECT t.id, t.status, t.exp_reward, t.gold_reward, t.ticket_reward,
               t.assigned_to AS child_id, t.name AS task_name, t.type AS task_type,
               t.difficulty, t.attribute_reward, t.line_review_token,
               c.name AS child_name, c.level, c.exp, c.exp_needed,
-              c.gold, c.tickets, c.attributes,
-              u.family_id
+              c.gold, c.tickets, c.attributes
        FROM tasks t
        JOIN children c ON c.id = t.assigned_to
-       JOIN users u ON u.family_id = c.user_id
-       WHERE t.id = $1 AND u.line_id = $2 AND u.role = 'parent'`,
+       JOIN users cu ON cu.id = c.user_id
+       JOIN users pu ON pu.family_id = cu.family_id AND pu.role = 'parent' AND pu.line_id = $2
+       WHERE t.id = $1`,
       [taskId, parentLineId]
     );
 
-    // Fallback join via users.family_id
-    let task = null;
-    if (taskRes.rows.length > 0) {
-      task = taskRes.rows[0];
-    } else {
-      // Try alternative join: parent's family_id matches child's user family
-      const altRes = await client.query(
-        `SELECT t.id, t.status, t.exp_reward, t.gold_reward, t.ticket_reward,
-                t.assigned_to AS child_id, t.name AS task_name, t.type AS task_type,
-                t.difficulty, t.attribute_reward, t.line_review_token,
-                c.name AS child_name, c.level, c.exp, c.exp_needed,
-                c.gold, c.tickets, c.attributes
-         FROM tasks t
-         JOIN children c ON c.id = t.assigned_to
-         JOIN users cu ON cu.id = c.user_id
-         JOIN users pu ON pu.family_id = cu.family_id AND pu.role = 'parent' AND pu.line_id = $2
-         WHERE t.id = $1`,
-        [taskId, parentLineId]
-      );
-      if (altRes.rows.length > 0) {
-        task = altRes.rows[0];
-      }
-    }
+    const task = taskRes.rows.length > 0 ? taskRes.rows[0] : null;
 
     if (!task) {
       console.warn(`[lineBotController] approveTask: task ${taskId} not found or parent mismatch`);

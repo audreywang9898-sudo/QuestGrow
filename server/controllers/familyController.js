@@ -2,6 +2,11 @@ import pool from '../config/db.js';
 import { getMessage } from '../utils/messageManager.js';
 import { validateTextField, safeErrorMessage } from '../utils/validation.js';
 
+// Simple in-process cache for the cross-family leaderboard — it's read on
+// every login by every family but doesn't need per-request freshness.
+let leaderboardCache = { data: null, expiresAt: 0 };
+const LEADERBOARD_CACHE_TTL_MS = 60 * 1000;
+
 // 1. Get Family Info (Name, Growth Score, Nickname)
 export const getFamilyData = async (req, res) => {
   const familyId = req.user.family_id;
@@ -37,7 +42,12 @@ export const getWishlist = async (req, res) => {
 
   try {
     const result = await pool.query(
-      'SELECT id, title, points_needed, points_current, is_ultimate, is_redeemed FROM wishlist WHERE family_id = $1 ORDER BY created_at ASC',
+      `SELECT w.id, w.title, w.points_needed, w.points_current, w.is_ultimate, w.is_redeemed,
+              w.redeem_requested_at, c.name AS requested_by_name
+       FROM wishlist w
+       LEFT JOIN children c ON c.id = w.redeem_requested_by
+       WHERE w.family_id = $1
+       ORDER BY w.created_at ASC`,
       [familyId]
     );
 
@@ -47,7 +57,10 @@ export const getWishlist = async (req, res) => {
       pointsNeeded: row.points_needed,
       pointsCurrent: row.points_current,
       isUltimate: row.is_ultimate,
-      isRedeemed: row.is_redeemed
+      isRedeemed: row.is_redeemed,
+      // A kid's redemption request is pending parent approval — see redeemWishlist/reviewWishlistRedeem.
+      pendingApproval: !row.is_redeemed && !!row.redeem_requested_at,
+      requestedByName: row.requested_by_name || null
     }));
 
     res.json(mapped);
@@ -142,10 +155,14 @@ export const deleteWishlistItem = async (req, res) => {
   }
 };
 
-// 6. Redeem Wishlist Item (Deducts score)
+// 6. Redeem Wishlist Item — Parent: instant (they already have redemption
+// authority). Kid: request-only, no points deducted yet — a parent must
+// approve via reviewWishlistRedeem before points are spent.
 export const redeemWishlist = async (req, res) => {
   const familyId = req.user.family_id;
   const { id } = req.params;
+  const isKid = req.user.role === 'kid';
+  const childId = req.user.child_id;
 
   const redeemClient = await pool.connect();
   try {
@@ -153,7 +170,10 @@ export const redeemWishlist = async (req, res) => {
 
     // Fetch family score and wishlist cost
     const familyResult = await redeemClient.query('SELECT growth_score FROM families WHERE id = $1', [familyId]);
-    const wishResult = await redeemClient.query('SELECT points_needed, is_redeemed, title FROM wishlist WHERE id = $1 AND family_id = $2', [id, familyId]);
+    const wishResult = await redeemClient.query(
+      'SELECT points_needed, is_redeemed, title, redeem_requested_at FROM wishlist WHERE id = $1 AND family_id = $2',
+      [id, familyId]
+    );
 
     if (familyResult.rows.length === 0 || wishResult.rows.length === 0) {
       throw new Error('找不到對應的家庭或願望項目。');
@@ -170,15 +190,29 @@ export const redeemWishlist = async (req, res) => {
       throw new Error('家庭積分不足！無法兌換。');
     }
 
-    // Deduct points from family
+    if (isKid) {
+      if (!childId) {
+        throw new Error('只有小孩帳號可以提出兌換申請。');
+      }
+      if (wish.redeem_requested_at) {
+        throw new Error('此願望已提出兌換申請，正在等待家長確認。');
+      }
+
+      await redeemClient.query(
+        'UPDATE wishlist SET redeem_requested_by = $1, redeem_requested_at = CURRENT_TIMESTAMP WHERE id = $2',
+        [childId, id]
+      );
+      await redeemClient.query('COMMIT');
+      return res.json({ message: `已提出兌換申請：「${wish.title}」，請等待家長確認。 | Redemption request for "${wish.title}" submitted, waiting for parent approval.` });
+    }
+
+    // Parent: redeem immediately.
     await redeemClient.query(
       'UPDATE families SET growth_score = growth_score - $1 WHERE id = $2',
       [wish.points_needed, familyId]
     );
-
-    // Set wishlist to redeemed
     await redeemClient.query(
-      'UPDATE wishlist SET is_redeemed = true WHERE id = $1',
+      'UPDATE wishlist SET is_redeemed = true, redeem_requested_by = NULL, redeem_requested_at = NULL WHERE id = $1',
       [id]
     );
 
@@ -190,6 +224,71 @@ export const redeemWishlist = async (req, res) => {
     res.status(500).json({ message: safeErrorMessage(error, getMessage('REDEEM_WISH_ERROR')) });
   } finally {
     redeemClient.release();
+  }
+};
+
+// 6.5. Review a Kid's Pending Wishlist Redemption Request (Parent only)
+export const reviewWishlistRedeem = async (req, res) => {
+  const familyId = req.user.family_id;
+  const { id } = req.params;
+  const { action } = req.body; // 'approve' | 'reject'
+
+  if (!action) {
+    return res.status(400).json({ message: getMessage('REVIEW_ACTION_MISSING') });
+  }
+
+  const reviewClient = await pool.connect();
+  try {
+    await reviewClient.query('BEGIN');
+
+    const wishResult = await reviewClient.query(
+      'SELECT id, title, points_needed, is_redeemed, redeem_requested_at FROM wishlist WHERE id = $1 AND family_id = $2',
+      [id, familyId]
+    );
+    if (wishResult.rows.length === 0) {
+      throw new Error('找不到該願望項目，或無權限操作。');
+    }
+    const wish = wishResult.rows[0];
+
+    if (wish.is_redeemed || !wish.redeem_requested_at) {
+      throw new Error('此願望目前沒有待審核的兌換申請。');
+    }
+
+    if (action === 'reject') {
+      await reviewClient.query(
+        'UPDATE wishlist SET redeem_requested_by = NULL, redeem_requested_at = NULL WHERE id = $1',
+        [id]
+      );
+      await reviewClient.query('COMMIT');
+      return res.json({ message: `已駁回「${wish.title}」的兌換申請。 | Redemption request for "${wish.title}" rejected.` });
+    }
+
+    if (action === 'approve') {
+      const familyResult = await reviewClient.query('SELECT growth_score FROM families WHERE id = $1', [familyId]);
+      const family = familyResult.rows[0];
+      if (!family || family.growth_score < wish.points_needed) {
+        throw new Error('家庭積分不足！無法核准兌換。');
+      }
+
+      await reviewClient.query(
+        'UPDATE families SET growth_score = growth_score - $1 WHERE id = $2',
+        [wish.points_needed, familyId]
+      );
+      await reviewClient.query(
+        'UPDATE wishlist SET is_redeemed = true, redeem_requested_by = NULL, redeem_requested_at = NULL WHERE id = $1',
+        [id]
+      );
+      await reviewClient.query('COMMIT');
+      return res.json({ message: getMessage('REDEEM_WISH_SUCCESS', { title: wish.title }) });
+    }
+
+    throw new Error('無效的審核動作。');
+  } catch (error) {
+    await reviewClient.query('ROLLBACK');
+    console.error('reviewWishlistRedeem error:', error);
+    res.status(500).json({ message: safeErrorMessage(error, '審核願望兌換失敗。') });
+  } finally {
+    reviewClient.release();
   }
 };
 
@@ -470,17 +569,27 @@ export const updateFamilyNickname = async (req, res) => {
 };
 
 // 17. Get Family Leaderboard
+// PRIVACY: this is intentionally cross-family (families compete against each
+// other), but must never expose `families.name` — it defaults to
+// "<parent's real name>的家庭" at registration, so returning it here would
+// leak other parents' real names to strangers. Only the opt-in nickname
+// (or an anonymized placeholder, if not set) is ever returned.
 export const getFamilyLeaderboard = async (req, res) => {
   try {
+    if (leaderboardCache.data && leaderboardCache.expiresAt > Date.now()) {
+      return res.json(leaderboardCache.data);
+    }
+
     const result = await pool.query(
-      'SELECT id, name, family_nickname, growth_score FROM families ORDER BY growth_score DESC LIMIT 10'
+      'SELECT id, family_nickname, growth_score FROM families ORDER BY growth_score DESC LIMIT 10'
     );
-    const mapped = result.rows.map(row => ({
+    const mapped = result.rows.map((row, index) => ({
       id: row.id,
-      name: row.name,
-      familyNickname: row.family_nickname,
+      familyNickname: row.family_nickname || `神秘家庭 #${index + 1}`,
       growthScore: row.growth_score
     }));
+
+    leaderboardCache = { data: mapped, expiresAt: Date.now() + LEADERBOARD_CACHE_TTL_MS };
     res.json(mapped);
   } catch (error) {
     console.error('getFamilyLeaderboard error:', error);

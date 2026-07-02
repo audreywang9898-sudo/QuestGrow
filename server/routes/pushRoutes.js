@@ -33,15 +33,18 @@ router.post('/subscribe', authenticateToken, async (req, res) => {
 // 2. Unsubscribe
 router.post('/unsubscribe', authenticateToken, async (req, res) => {
   const { endpoint } = req.body;
+  const userId = req.user.id;
 
   if (!endpoint) {
     return res.status(400).json({ message: '缺少訂閱終端 (endpoint) 資訊。' });
   }
 
   try {
+    // Scoped to the caller's own subscription so one account can never
+    // remove another account's push subscription.
     await pool.query(
-      'DELETE FROM push_subscriptions WHERE endpoint = $1',
-      [endpoint]
+      'DELETE FROM push_subscriptions WHERE endpoint = $1 AND user_id = $2',
+      [endpoint, userId]
     );
     res.json({ message: '已成功取消訂閱。' });
   } catch (error) {

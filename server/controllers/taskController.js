@@ -4,6 +4,35 @@ import { validateTextField, safeErrorMessage } from '../utils/validation.js';
 import { sendTaskReviewRequest } from '../utils/lineBot.js';
 import { randomUUID } from 'crypto';
 
+// Reward value caps — mirrors the caps already enforced for gacha resource
+// cards. Prevents a kid (who may self-assign tasks to their own child_id) or
+// a compromised client from setting arbitrary reward values via a direct API
+// call, since the UI only ever offers a fixed set of template values.
+const MAX_TASK_EXP_REWARD = 1000;
+const MAX_TASK_GOLD_REWARD = 500;
+const MAX_TASK_TICKET_REWARD = 10;
+const clampReward = (value, fallback, max) => {
+  const num = Math.floor(Number(value));
+  if (!Number.isFinite(num) || num < 0) return fallback;
+  return Math.min(num, max);
+};
+
+// Shared photo validation for both the kid-facing submit endpoint and the
+// parent-facing edit endpoint — a submission's photo must always be a valid
+// base64-encoded PNG/JPEG under 5MB, never an arbitrary string/URL.
+const validateSubmissionPhoto = (photo) => {
+  if (!photo || photo === '') return null;
+  const isValidBase64Image = /^data:image\/(png|jpeg|jpg);base64,/.test(photo);
+  if (!isValidBase64Image) {
+    return '不支援的圖片格式，請上傳 PNG 或 JPEG。';
+  }
+  const maxBase64Length = 7 * 1024 * 1024; // ~5MB image
+  if (photo.length > maxBase64Length) {
+    return '圖片檔案過大，請限制在 5MB 以內。';
+  }
+  return null;
+};
+
 const determineJobClass = (attrs) => {
   const mapping = {
     Courage: "Explorer (探索者) ⚔️",
@@ -28,11 +57,14 @@ export const getTasks = async (req, res) => {
   const familyId = req.user.family_id;
 
   try {
+    // LIMIT is a safety net against unbounded growth (no archiving exists
+    // yet for old completed/rejected tasks) — not real pagination.
     const result = await pool.query(
       `SELECT id, family_id, assigned_to, name, description, type, difficulty, exp_reward, gold_reward, ticket_reward, attribute_reward, period, status, rejection_reason, submission, date_created, created_at, completed_at, is_repeated, swap_count
-       FROM tasks 
-       WHERE family_id = $1 
-       ORDER BY created_at DESC`,
+       FROM tasks
+       WHERE family_id = $1
+       ORDER BY created_at DESC
+       LIMIT 1000`,
       [familyId]
     );
     
@@ -143,12 +175,17 @@ export const addTask = async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const createdTasks = [];
+
+    // Pass 1 (in memory, no DB calls): validate every task and compute its
+    // derived fields, collecting which assignees actually need a 30-day
+    // cooldown check.
+    const prepared = [];
+    const assigneesNeedingCooldownCheck = new Set();
 
     for (const task of tasksData) {
-      const { 
-        name, description, type, difficulty, 
-        expReward, goldReward, ticketReward, 
+      const {
+        name, description, type, difficulty,
+        expReward, goldReward, ticketReward,
         attributeReward, period, assignedTo, status,
         force, swapCount
       } = task;
@@ -166,63 +203,90 @@ export const addTask = async (req, res) => {
       const dbAssignedTo = (assignedTo === 'general' || !assignedTo) ? null : assignedTo;
       const initialStatus = status || (dbAssignedTo ? '進行中' : '未指派');
       const isForce = force === true || force === 'true';
-      let isRepeated = false;
 
       if (dbAssignedTo && !isForce) {
-        // This block is only reached for batch imports. Auto-flag repeat for batch templates.
-        const recentCompleted = await client.query(
-          `SELECT id FROM tasks 
-           WHERE assigned_to = $1 
-             AND LOWER(TRIM(name)) = LOWER(TRIM($2)) 
-             AND status = '已完成' 
-             AND COALESCE(completed_at, created_at) >= CURRENT_TIMESTAMP - INTERVAL '30 days'
-           LIMIT 1`,
-          [dbAssignedTo, name]
-        );
-        if (recentCompleted.rows.length > 0) {
-          isRepeated = true;
-        }
-      } else if (isForce) {
+        assigneesNeedingCooldownCheck.add(dbAssignedTo);
+      }
+
+      prepared.push({
+        name, description, type, difficulty, period, swapCount,
+        attributeReward: attributeReward || null,
+        dbAssignedTo, initialStatus, isForce,
+        normalizedName: name.trim().toLowerCase(),
+        safeExpReward: clampReward(expReward, 100, MAX_TASK_EXP_REWARD),
+        safeGoldReward: clampReward(goldReward, 50, MAX_TASK_GOLD_REWARD),
+        safeTicketReward: clampReward(ticketReward, 1, MAX_TASK_TICKET_REWARD),
+      });
+    }
+
+    // Pass 2: ONE query covering every assignee that needs a cooldown check
+    // (replaces one query per task). New tasks being inserted in this same
+    // batch can never match here since they're never inserted with
+    // status='已完成', so checking this once upfront is equivalent to
+    // re-checking after each insert.
+    let recentCompletedKeys = new Set();
+    if (assigneesNeedingCooldownCheck.size > 0) {
+      const recentRes = await client.query(
+        `SELECT assigned_to, LOWER(TRIM(name)) AS norm_name FROM tasks
+         WHERE assigned_to = ANY($1) AND status = '已完成'
+           AND COALESCE(completed_at, created_at) >= CURRENT_TIMESTAMP - INTERVAL '30 days'`,
+        [[...assigneesNeedingCooldownCheck]]
+      );
+      recentCompletedKeys = new Set(recentRes.rows.map(r => `${r.assigned_to}::${r.norm_name}`));
+    }
+
+    // Pass 3: a single multi-row INSERT for the whole batch instead of one
+    // INSERT per task.
+    const insertParams = [];
+    const insertValueGroups = tasksData.map((_, i) => {
+      const t = prepared[i];
+      let isRepeated = false;
+      if (t.dbAssignedTo && !t.isForce) {
+        isRepeated = recentCompletedKeys.has(`${t.dbAssignedTo}::${t.normalizedName}`);
+      } else if (t.isForce) {
         isRepeated = true;
       }
 
-      const result = await client.query(
-        `INSERT INTO tasks (
-           family_id, assigned_to, name, description, type, difficulty, 
-           exp_reward, gold_reward, ticket_reward, attribute_reward, period, status, is_repeated, swap_count
-         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
-         RETURNING *`,
-        [
-          familyId, dbAssignedTo, name, description || '', type, difficulty,
-          expReward || 100, goldReward || 50, ticketReward || 1, attributeReward || null,
-          period || '每日', initialStatus, isRepeated, swapCount || 0
-        ]
+      const base = insertParams.length;
+      insertParams.push(
+        familyId, t.dbAssignedTo, t.name, t.description || '', t.type, t.difficulty,
+        t.safeExpReward, t.safeGoldReward, t.safeTicketReward, t.attributeReward,
+        t.period || '每日', t.initialStatus, isRepeated, t.swapCount || 0
       );
+      return `(${Array.from({ length: 14 }, (_, j) => `$${base + j + 1}`).join(', ')})`;
+    });
 
-      const row = result.rows[0];
-      createdTasks.push({
-        id: row.id,
-        familyId: row.family_id,
-        assignedTo: row.assigned_to,
-        name: row.name,
-        description: row.description,
-        type: row.type,
-        difficulty: row.difficulty,
-        expReward: row.exp_reward,
-        goldReward: row.gold_reward,
-        ticketReward: row.ticket_reward,
-        attributeReward: row.attribute_reward,
-        period: row.period,
-        status: row.status,
-        rejectionReason: row.rejection_reason,
-        submission: row.submission,
-        dateCreated: row.date_created,
-        createdAt: row.created_at,
-        completedAt: row.completed_at,
-        isRepeated: row.is_repeated,
-        swapCount: row.swap_count
-      });
-    }
+    const result = await client.query(
+      `INSERT INTO tasks (
+         family_id, assigned_to, name, description, type, difficulty,
+         exp_reward, gold_reward, ticket_reward, attribute_reward, period, status, is_repeated, swap_count
+       ) VALUES ${insertValueGroups.join(', ')}
+       RETURNING *`,
+      insertParams
+    );
+
+    const createdTasks = result.rows.map(row => ({
+      id: row.id,
+      familyId: row.family_id,
+      assignedTo: row.assigned_to,
+      name: row.name,
+      description: row.description,
+      type: row.type,
+      difficulty: row.difficulty,
+      expReward: row.exp_reward,
+      goldReward: row.gold_reward,
+      ticketReward: row.ticket_reward,
+      attributeReward: row.attribute_reward,
+      period: row.period,
+      status: row.status,
+      rejectionReason: row.rejection_reason,
+      submission: row.submission,
+      dateCreated: row.date_created,
+      createdAt: row.created_at,
+      completedAt: row.completed_at,
+      isRepeated: row.is_repeated,
+      swapCount: row.swap_count
+    }));
 
     await client.query('COMMIT');
 
@@ -264,6 +328,16 @@ export const editTask = async (req, res) => {
       return res.status(404).json({ message: getMessage('TASK_NOT_FOUND') });
     }
     const currentTask = verifyTask.rows[0];
+
+    // If the submission (which contains the kid's photo proof) is being
+    // rewritten, it must pass the same format/size validation as the
+    // dedicated submit endpoint — this generic field-mapper had no check.
+    if (fields.submission !== undefined && fields.submission?.photo) {
+      const photoErr = validateSubmissionPhoto(fields.submission.photo);
+      if (photoErr) {
+        return res.status(400).json({ message: photoErr });
+      }
+    }
 
     const targetName = fields.name !== undefined ? fields.name : currentTask.name;
     let targetAssignedTo = fields.assignedTo !== undefined ? fields.assignedTo : currentTask.assigned_to;
@@ -418,25 +492,19 @@ export const submitTask = async (req, res) => {
   }
 
   // Backend validation for photo field
-  if (photo && photo !== '') {
-    // Must be a valid base64-encoded PNG or JPEG
-    const isValidBase64Image = /^data:image\/(png|jpeg|jpg);base64,/.test(photo);
-    if (!isValidBase64Image) {
-      return res.status(400).json({ message: '不支援的圖片格式，請上傳 PNG 或 JPEG。' });
-    }
-    // Limit: 5MB image ~ 6.8MB base64 string. Reject anything over 7MB.
-    const maxBase64Length = 7 * 1024 * 1024;
-    if (photo.length > maxBase64Length) {
-      return res.status(400).json({ message: '圖片檔案過大，請限制在 5MB 以內。' });
-    }
+  const photoErr = validateSubmissionPhoto(photo);
+  if (photoErr) {
+    return res.status(400).json({ message: photoErr });
   }
 
 
   try {
-    // Verify task belongs to this family
+    // Verify task belongs to this family AND is either assigned to this kid
+    // or is a general/unassigned task — prevents a kid from submitting a
+    // sibling's assigned task to steal the review/reward.
     const verifyTask = await pool.query(
-      'SELECT id FROM tasks WHERE id = $1 AND family_id = $2',
-      [taskId, familyId]
+      'SELECT id FROM tasks WHERE id = $1 AND family_id = $2 AND (assigned_to = $3 OR assigned_to IS NULL)',
+      [taskId, familyId, childId]
     );
     if (verifyTask.rows.length === 0) {
       return res.status(404).json({ message: getMessage('TASK_NOT_FOUND') });
@@ -528,7 +596,11 @@ export const reviewTask = async (req, res) => {
       return res.status(400).json({ message: getMessage('REVIEW_TASK_STATUS_INVALID') });
     }
 
-    const childId = task.submission?.childId || task.assigned_to;
+    // Reward must always go to the task's assigned child when one is set —
+    // submission.childId (attacker-suppliable via the submit endpoint) is only
+    // trusted as a fallback for general/unassigned tasks, where it records
+    // which kid actually claimed and completed the task.
+    const childId = task.assigned_to || task.submission?.childId;
     if (!childId) {
       return res.status(400).json({ message: getMessage('CHILD_STATS_NOT_FOUND') });
     }
@@ -591,15 +663,16 @@ export const reviewTask = async (req, res) => {
         const goldReward = task.gold_reward || 50;
         const ticketReward = task.ticket_reward || 1;
 
-        // 2. Update Child
-        await reviewClient.query(
-          `UPDATE children 
-           SET level = $1, exp = $2, exp_needed = $3, gold = gold + $4, tickets = tickets + $5, job_class = $6, attributes = $7 
-           WHERE id = $8`,
+        // 2. Update Child (RETURNING avoids a separate post-commit re-fetch)
+        const updateChildResult = await reviewClient.query(
+          `UPDATE children
+           SET level = $1, exp = $2, exp_needed = $3, gold = gold + $4, tickets = tickets + $5, job_class = $6, attributes = $7
+           WHERE id = $8
+           RETURNING id, name, level, exp, exp_needed, gold, tickets, job_class, attributes`,
           [
-            newLevel, newExp, expNeeded, 
-            goldReward, ticketReward, 
-            jobClass, JSON.stringify(attributes), 
+            newLevel, newExp, expNeeded,
+            goldReward, ticketReward,
+            jobClass, JSON.stringify(attributes),
             childId
           ]
         );
@@ -618,12 +691,7 @@ export const reviewTask = async (req, res) => {
 
         await reviewClient.query('COMMIT');
 
-        // Fetch the updated child details to return
-        const updatedChildResult = await pool.query(
-          'SELECT id, name, level, exp, exp_needed, gold, tickets, job_class, attributes FROM children WHERE id = $1',
-          [childId]
-        );
-        updatedChild = updatedChildResult.rows[0];
+        updatedChild = updateChildResult.rows[0];
       } catch (txError) {
         await reviewClient.query('ROLLBACK');
         throw txError;
