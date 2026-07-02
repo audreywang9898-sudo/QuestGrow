@@ -150,6 +150,11 @@ export const translations = {
     wishlistProgress: "進度",
     familyWishlistTitle: "家庭願望清單",
     noKidWishlistItems: "目前沒有設定任何家庭願望喔！請提示爸爸媽媽前往家長端的「願望許願池」來新增願望。",
+    wishlistPendingApproval: "待家長確認",
+    auditTitleWishlist: "待審核的願望兌換申請",
+    noPendingWishlist: "目前沒有待審核的願望兌換申請。",
+    approveWishlistBtn: "核准兌換",
+    rejectWishlistBtn: "駁回申請",
 
     // Common Settings
     commonSettingsTitle: "家庭共同設定",
@@ -613,6 +618,11 @@ export const translations = {
     wishlistProgress: "Progress",
     familyWishlistTitle: "Family Wishlist",
     noKidWishlistItems: "No family wishes have been set yet! Remind your parents to add wishes in the 'Wishlist Pool' on the parent portal.",
+    wishlistPendingApproval: "Pending Parent Approval",
+    auditTitleWishlist: "Pending Wishlist Redemption Requests",
+    noPendingWishlist: "No wishlist redemption requests pending review.",
+    approveWishlistBtn: "Approve Redemption",
+    rejectWishlistBtn: "Reject Request",
 
     // Common Settings
     commonSettingsTitle: "Common Family Settings",

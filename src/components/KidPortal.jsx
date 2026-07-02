@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { GACHA_POOL, TASK_TEMPLATES } from '../utils/mockData';
+import { TASK_TEMPLATES } from '../utils/mockData';
 import { playCoinSound, playGachaShakeSound, playGachaRevealSound, triggerConfetti, playBossBattleSound } from '../utils/sfx';
 import { useLanguage } from './LanguageContext';
 import Avatar from './Avatar';
@@ -1215,60 +1215,40 @@ function KidPortal({
     }
   };
 
-  // Run card drawing sequence with debounce and locked states
-  const startDrawCard = () => {
+  // Run card drawing sequence with debounce and locked states.
+  // The server (not this client) decides the rarity and the specific card —
+  // this function only plays the shake animation and reveals whatever the
+  // server actually awarded.
+  const startDrawCard = async () => {
     if (stats.tickets < 1) return;
     if (isDrawingGacha) return;
 
     setIsDrawingGacha(true);
     setGachaState('shaking');
     playGachaShakeSound();
-    
-    // Random select rarity based on PRD v2 weights
-    const rand = Math.random();
-    let raritySelected = 'Common';
-    if (rand < 0.01) raritySelected = 'Mythic';
-    else if (rand < 0.05) raritySelected = 'Legendary';
-    else if (rand < 0.15) raritySelected = 'Epic';
-    else if (rand < 0.40) raritySelected = 'Rare';
-    
-    const pool = (gachaPool || GACHA_POOL)[raritySelected].cards;
 
-    // Filter out cards drawn by the kid within the last 7 days.
-    // dateAcquired is in YYYY-MM-DD format.
-    const currentDateStr = simulatedDate || new Date().toISOString().split('T')[0];
-    const dateLimit = new Date(currentDateStr);
-    dateLimit.setDate(dateLimit.getDate() - 7);
-    const limitStr = dateLimit.toISOString().split('T')[0];
+    try {
+      // Run the shake animation and the server request concurrently, so the
+      // reveal never happens faster than the minimum animation time.
+      const [result] = await Promise.all([
+        onDrawCard(1),
+        new Promise(resolve => setTimeout(resolve, 1200)),
+      ]);
 
-    // Find template IDs that were acquired in the last 7 days
-    const recentDrawnIds = new Set(
-      (inventory || [])
-        .filter(item => item.dateAcquired && item.dateAcquired >= limitStr)
-        .map(item => item.id)
-    );
+      const cardSelected = result?.item;
+      if (!cardSelected) {
+        throw new Error('抽卡失敗，請稍後再試。');
+      }
 
-    // Filter the pool
-    let filteredPool = pool.filter(card => !recentDrawnIds.has(card.id));
-
-    // Fallback: if all cards of this rarity are on cooldown, fall back to the original pool
-    if (filteredPool.length === 0) {
-      filteredPool = pool;
-    }
-
-    const cardSelected = filteredPool[Math.floor(Math.random() * filteredPool.length)];
-
-    setTimeout(() => {
       setGachaState('revealing');
       setDrawnCard(cardSelected);
       playGachaRevealSound(cardSelected.rarity);
       if (cardSelected.rarity === 'Legendary' || cardSelected.rarity === 'Mythic') {
         triggerConfetti();
       }
-      
+
       setTimeout(() => {
         setGachaState('shown');
-        onDrawCard(cardSelected, 1);
         setIsDrawingGacha(false); // unlock drawing state
         if (cardSelected.type === '資源卡') {
           setTimeout(() => {
@@ -1276,7 +1256,11 @@ function KidPortal({
           }, 300);
         }
       }, 800);
-    }, 1200);
+    } catch (error) {
+      // onDrawCard already surfaces a toast on failure; just reset local state.
+      setGachaState('idle');
+      setIsDrawingGacha(false);
+    }
   };
 
   // Buy 1 Summon Ticket for 300 Gold
@@ -1539,8 +1523,8 @@ function KidPortal({
                   </span>
                 </div>
               </div>
-              {/* Claim button if unlocked */}
-              {familyScore >= maxPointsWish.pointsNeeded && !isReadOnly && (
+              {/* Claim button if unlocked (hidden while a request is already pending parent approval) */}
+              {familyScore >= maxPointsWish.pointsNeeded && !maxPointsWish.pendingApproval && !isReadOnly && (
                 <button
                   onClick={() => onClaimWishlistItem(maxPointsWish.id)}
                   className="flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-black transition-all active:scale-95 hover:scale-105"
@@ -1548,6 +1532,11 @@ function KidPortal({
                 >
                   {t('claimWishlistBtn')}
                 </button>
+              )}
+              {maxPointsWish.pendingApproval && (
+                <span className="flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-black text-amber-700 bg-amber-100 border border-amber-300">
+                  ⏳ {t('wishlistPendingApproval')}
+                </span>
               )}
             </div>
           )}
@@ -3266,7 +3255,7 @@ function KidPortal({
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {wishlist.filter(w => !w.isUltimate).map((wish, idx) => {
-                      const canRedeem = familyScore >= wish.pointsNeeded && !wish.isRedeemed;
+                      const canRedeem = familyScore >= wish.pointsNeeded && !wish.isRedeemed && !wish.pendingApproval;
                       const pct = Math.min(100, Math.round((familyScore / wish.pointsNeeded) * 100));
                       const wishEmojis = ['🌴', '🎡', '🎮', '🎪', '🎭', '🏖️', '⛷️', '🎨', '🚀', '🎯'];
                       const emoji = wishEmojis[idx % wishEmojis.length];
@@ -3298,6 +3287,11 @@ function KidPortal({
                                     ✅ {t('wishlistRedeemed')}
                                   </span>
                                 )}
+                                {!wish.isRedeemed && wish.pendingApproval && (
+                                  <span className="bg-amber-100 text-amber-700 border border-amber-300 px-2 py-0.5 rounded-full text-[10px] font-black">
+                                    ⏳ {t('wishlistPendingApproval')}
+                                  </span>
+                                )}
                               </div>
                               <div className="text-xs font-bold mt-0.5" style={{ color: c.accent }}>
                                 {t('pointsRequired')}：{(wish.pointsNeeded || 0).toLocaleString()} Pts
@@ -3324,6 +3318,8 @@ function KidPortal({
                             <span className="text-xs text-slate-500 font-semibold">
                               {wish.isRedeemed ? (
                                 <span className="text-emerald-600 font-black">🎊 {t('familyWishRealized')}</span>
+                              ) : wish.pendingApproval ? (
+                                <span className="font-black text-amber-600">⏳ {t('wishlistPendingApproval')}</span>
                               ) : canRedeem ? (
                                 <span className="font-black" style={{ color: c.accent }}>✨ {language === 'zh' ? '可以兌換了！' : 'Ready to redeem!'}</span>
                               ) : (
@@ -3331,7 +3327,7 @@ function KidPortal({
                               )}
                             </span>
 
-                            {!wish.isRedeemed && !isReadOnly && (
+                            {!wish.isRedeemed && !wish.pendingApproval && !isReadOnly && (
                               <button
                                 disabled={!canRedeem}
                                 onClick={() => onClaimWishlistItem(wish.id)}

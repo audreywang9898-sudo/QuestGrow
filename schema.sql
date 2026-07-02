@@ -4,6 +4,10 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Drop tables if they exist (clean setup)
+DROP TABLE IF EXISTS feedback_summaries CASCADE;
+DROP TABLE IF EXISTS feedbacks CASCADE;
+DROP TABLE IF EXISTS push_subscriptions CASCADE;
+DROP TABLE IF EXISTS admin_notifications CASCADE;
 DROP TABLE IF EXISTS event_logs CASCADE;
 DROP TABLE IF EXISTS weekly_competition CASCADE;
 DROP TABLE IF EXISTS redeem_logs CASCADE;
@@ -15,6 +19,7 @@ DROP TABLE IF EXISTS children CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS families CASCADE;
 DROP TABLE IF EXISTS daily_proverbs CASCADE;
+DROP TABLE IF EXISTS daily_adult_proverbs CASCADE;
 
 
 -- 1. Families Table
@@ -22,6 +27,9 @@ CREATE TABLE families (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
     growth_score INT DEFAULT 0,
+    family_nickname VARCHAR(255), -- opt-in display name for the cross-family leaderboard (never expose `name`, see familyController.js)
+    gacha_pool JSONB, -- per-family override of the default GACHA_POOL; NULL falls back to the default pool
+    settings JSONB DEFAULT '{"zhuyinUnder8": true}'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -35,7 +43,10 @@ CREATE TABLE users (
     role VARCHAR(50) NOT NULL CHECK (role IN ('parent', 'kid', 'admin')),
     avatar TEXT DEFAULT 'boy',
     google_id VARCHAR(255) UNIQUE,
+    line_id VARCHAR(255),
     login_count INT DEFAULT 0,
+    onboarding_completed BOOLEAN DEFAULT FALSE,
+    token_version INT DEFAULT 0, -- bumped on logout-everywhere / password change to invalidate existing JWTs
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -45,8 +56,12 @@ CREATE TABLE children (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     age INT DEFAULT 10,
-    birthday VARCHAR(50) DEFAULT '10/24',
+    -- Encrypted at the application layer (server/utils/encryption.js, AES-256-GCM)
+    -- before every write; TEXT because ciphertext is longer than the raw "MM/DD" value.
+    -- Never write a plaintext date here directly — always go through encryptField().
+    birthday TEXT DEFAULT '10/24',
     avatar TEXT DEFAULT 'boy',
+    gender TEXT DEFAULT 'boy',
     level INT DEFAULT 1,
     exp INT DEFAULT 0,
     exp_needed INT DEFAULT 400,
@@ -81,6 +96,8 @@ CREATE TABLE tasks (
     is_repeated BOOLEAN DEFAULT FALSE,
     swap_count INT DEFAULT 0,
     date_created DATE DEFAULT CURRENT_DATE,
+    line_review_token TEXT, -- one-time token for LINE Bot postback approval, cleared after use
+    reviewed_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -96,6 +113,8 @@ CREATE TABLE inventory (
     status VARCHAR(50) DEFAULT '未使用' CHECK (status IN ('未使用', '待核銷', '已使用', '已過期')),
     date_acquired DATE DEFAULT CURRENT_DATE,
     expire_at DATE,
+    line_review_token TEXT, -- one-time token for LINE Bot postback approval, cleared after use
+    redeemed_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -119,6 +138,12 @@ CREATE TABLE wishlist (
     points_current INT DEFAULT 0,
     is_ultimate BOOLEAN DEFAULT FALSE,
     is_redeemed BOOLEAN DEFAULT FALSE,
+    -- A kid-triggered redemption sets these two (pending parent approval)
+    -- without deducting points yet; a parent approving deducts points and
+    -- sets is_redeemed, rejecting clears these back to NULL. Parents
+    -- redeem instantly (no self-review needed), so these stay NULL for that path.
+    redeem_requested_by UUID REFERENCES children(id) ON DELETE SET NULL,
+    redeem_requested_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -173,6 +198,9 @@ VALUES
 ('aaaa4444-4444-4444-4444-444444444444', 'f1111111-1111-1111-1111-111111111111', 'daniel@questgrow.com', '$2a$10$euDgSzeDgGyC1pcs8sNo1evkYNQmLLOoipAvZWKa9Z3ZjhiFY5vTy', 'Daniel', 'kid', 'boy');
 
 -- 3. Create Children Profiles
+-- NOTE: birthday values below are seeded as plaintext (raw SQL can't call the
+-- app's AES encryption helper) — run `node server/encrypt_birthday_migration.js`
+-- after seeding to encrypt them, consistent with real app-created rows.
 INSERT INTO children (id, user_id, name, age, birthday, avatar, level, exp, exp_needed, gold, tickets, job_class, attributes)
 VALUES 
 ('cccc2222-2222-2222-2222-222222222222', 'aaaa3333-3333-3333-3333-333333333333', 'Michelle', 8, '05/12', 'girl', 2, 150, 700, 200, 3, 'Guardian (守護者) 🛡️', '{"Wisdom": 12, "Responsibility": 18, "Courage": 10, "Empathy": 16, "Creativity": 14}'),
@@ -226,8 +254,15 @@ INSERT INTO weekly_competition (id, family_id, week_range, champions, mvp_task, 
 VALUES
 ('00003333-3333-3333-3333-333333333333', 'f1111111-1111-1111-1111-111111111111', '05/25 ~ 05/31', '{"taskCount": "Michelle [14 個任務]", "growthRate": "Michelle [+150% EXP]", "courage": "Michelle [超慢跑挑戰成功]", "creativity": "Michelle [樂高飛船創作]"}', '自主整理房間與書桌 (完成度 92%)', '戶外超慢跑 1.5 公里 (完成度 40%)', '「超級探險小隊」✨');
 
--- 10. Daily Proverbs Table
+-- 10. Daily Proverbs Table (kid-facing)
 CREATE TABLE daily_proverbs (
+    id SERIAL PRIMARY KEY,
+    content_zh VARCHAR(500) NOT NULL,
+    content_en VARCHAR(500) NOT NULL
+);
+
+-- 11. Daily Proverbs Table (parent/admin-facing — see proverbController.js)
+CREATE TABLE daily_adult_proverbs (
     id SERIAL PRIMARY KEY,
     content_zh VARCHAR(500) NOT NULL,
     content_en VARCHAR(500) NOT NULL
@@ -241,5 +276,48 @@ CREATE TABLE admin_notifications (
     is_read BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 12. Web Push Subscriptions (browser push notifications, see server/utils/pushNotifier.js)
+CREATE TABLE push_subscriptions (
+    id SERIAL PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    endpoint TEXT NOT NULL UNIQUE,
+    p256dh TEXT NOT NULL,
+    auth TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 13. User Feedback Submissions (see server/controllers/feedbackController.js)
+CREATE TABLE feedbacks (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    family_id UUID REFERENCES families(id) ON DELETE SET NULL,
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    content TEXT NOT NULL,
+    status VARCHAR(50) DEFAULT '待處理' CHECK (status IN ('待處理', '處理中', '已解決')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 14. Admin-generated Feedback Summary Reports (see generate_feedback_report.js)
+CREATE TABLE feedback_summaries (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    report_date DATE DEFAULT CURRENT_DATE,
+    content TEXT NOT NULL,
+    analytics_data JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==========================================
+-- PERFORMANCE INDEXES
+-- ==========================================
+-- Most-hit foreign key / filter columns app-wide: task lists, inventory
+-- ("backpack"), family membership joins, and the cross-family leaderboard sort.
+CREATE INDEX IF NOT EXISTS idx_tasks_family_id_created ON tasks(family_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_inventory_child_id ON inventory(child_id, date_acquired DESC);
+CREATE INDEX IF NOT EXISTS idx_children_user_id ON children(user_id);
+CREATE INDEX IF NOT EXISTS idx_users_family_id ON users(family_id);
+CREATE INDEX IF NOT EXISTS idx_families_growth_score ON families(growth_score DESC);
 
 

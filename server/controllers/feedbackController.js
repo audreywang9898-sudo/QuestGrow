@@ -1,7 +1,11 @@
 import pool from '../config/db.js';
 import { sendPushNotificationToUser } from '../utils/pushNotifier.js';
 
-// In-memory Rate Limiting Storage
+// In-memory Rate Limiting Storage.
+// KNOWN LIMITATION: this only works correctly for a single server instance —
+// if this app is ever scaled to multiple Render instances, each instance
+// tracks its own counters, effectively multiplying these limits by the
+// instance count. Move to a shared store (e.g. Redis) before scaling out.
 const ipLimits = new Map();   // ip -> Array of timestamps
 const userLimits = new Map(); // userId -> Array of timestamps
 

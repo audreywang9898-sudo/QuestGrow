@@ -1,6 +1,8 @@
 import pool from '../config/db.js';
 import bcrypt from 'bcryptjs';
 import { getMessage } from '../utils/messageManager.js';
+import { generateToken } from './authController.js';
+import { encryptField, decryptField } from '../utils/encryption.js';
 
 // 1. Get all users in the family
 export const getFamilyUsers = async (req, res) => {
@@ -32,7 +34,8 @@ export const getChildren = async (req, res) => {
        WHERE u.family_id = $1`,
       [familyId]
     );
-    res.json(result.rows);
+    const children = result.rows.map(row => ({ ...row, birthday: decryptField(row.birthday) }));
+    res.json(children);
   } catch (error) {
     console.error('getChildren error:', error);
     res.status(500).json({ message: getMessage('FETCH_CHILDREN_ERROR') });
@@ -91,26 +94,22 @@ export const addChild = async (req, res) => {
         Creativity: 0
       });
       const newChild = await client.query(
-        `INSERT INTO children (user_id, name, age, birthday, avatar, level, exp, exp_needed, gold, tickets, job_class, attributes) 
-         VALUES ($1, $2, $3, $4, $5, 1, 0, 400, 0, 0, 'Explorer (探索者) ⚔️', $6) RETURNING id`,
-        [userId, name, age || 10, birthday || '10/24', avatar || 'boy', defaultAttributes]
+        `INSERT INTO children (user_id, name, age, birthday, avatar, level, exp, exp_needed, gold, tickets, job_class, attributes)
+         VALUES ($1, $2, $3, $4, $5, 1, 0, 400, 0, 0, 'Explorer (探索者) ⚔️', $6)
+         RETURNING id, user_id, name, age, birthday, avatar, level, exp, exp_needed, gold, tickets, job_class, attributes`,
+        [userId, name, age || 10, encryptField(birthday || '10/24'), avatar || 'boy', defaultAttributes]
       );
       const childId = newChild.rows[0].id;
+      const createdChild = { ...newChild.rows[0], birthday: decryptField(newChild.rows[0].birthday) };
 
       // Update user's backreference child_id
       await client.query('UPDATE users SET child_id = $1 WHERE id = $2', [childId, userId]);
 
       await client.query('COMMIT');
 
-      // Return the created child details
-      const childDetails = await pool.query(
-        'SELECT id, user_id, name, age, birthday, avatar, level, exp, exp_needed, gold, tickets, job_class, attributes FROM children WHERE id = $1',
-        [childId]
-      );
-
       res.status(201).json({
         message: getMessage('ADD_CHILD_SUCCESS', { name }),
-        child: childDetails.rows[0]
+        child: createdChild
       });
     } catch (txError) {
       await client.query('ROLLBACK');
@@ -226,7 +225,12 @@ export const updateChildProfile = async (req, res) => {
       childAllowedFields.forEach(field => {
         if (data[field] !== undefined) {
           updateChildFields.push(`${field} = $${childIndex}`);
-          childParams.push(field === 'attributes' ? JSON.stringify(data[field]) : data[field]);
+          const value = field === 'attributes'
+            ? JSON.stringify(data[field])
+            : field === 'birthday'
+              ? encryptField(data[field])
+              : data[field];
+          childParams.push(value);
           childIndex++;
         }
       });
@@ -265,6 +269,9 @@ export const updateChildProfile = async (req, res) => {
         updateUserFields.push(`password_hash = $${userIndex}`);
         userParams.push(passwordHash);
         userIndex++;
+        // Invalidate any existing JWTs for this account (e.g. a stolen
+        // session) the moment the password changes.
+        updateUserFields.push('token_version = COALESCE(token_version, 0) + 1');
       }
 
       if (updateUserFields.length > 0) {
@@ -288,10 +295,12 @@ export const updateChildProfile = async (req, res) => {
       'SELECT id, user_id, name, age, birthday, avatar, level, exp, exp_needed, gold, tickets, job_class, attributes FROM children WHERE id = $1',
       [childId]
     );
+    const updatedChild = updatedStats.rows[0];
+    if (updatedChild) updatedChild.birthday = decryptField(updatedChild.birthday);
 
     res.json({
       message: getMessage('UPDATE_CHILD_SUCCESS'),
-      child: updatedStats.rows[0]
+      child: updatedChild
     });
   } catch (error) {
     console.error('updateChildProfile error:', error);
@@ -425,6 +434,9 @@ export const updateParent = async (req, res) => {
       updateFields.push(`password_hash = $${index}`);
       params.push(passwordHash);
       index++;
+      // Invalidate any existing JWTs for this account (e.g. a stolen
+      // session) the moment the password changes.
+      updateFields.push('token_version = COALESCE(token_version, 0) + 1');
     }
 
     if (updateFields.length === 0) {
@@ -433,17 +445,31 @@ export const updateParent = async (req, res) => {
 
     params.push(userId);
     const result = await pool.query(
-      `UPDATE users 
-       SET ${updateFields.join(', ')} 
-       WHERE id = $${index} 
-       RETURNING id, email, name, role, avatar`,
+      `UPDATE users
+       SET ${updateFields.join(', ')}
+       WHERE id = $${index}
+       RETURNING id, email, name, role, avatar, token_version`,
       params
     );
 
-    res.json({
+    const updatedUser = result.rows[0];
+    const responseBody = {
       message: getMessage('UPDATE_PARENT_SUCCESS'),
-      user: result.rows[0]
-    });
+      user: updatedUser
+    };
+
+    // Changing the password just bumped token_version, which would
+    // otherwise invalidate the very session making this request — issue a
+    // fresh token reflecting the new version so the caller isn't logged out.
+    if (password) {
+      responseBody.token = generateToken({
+        ...updatedUser,
+        family_id: req.user.family_id,
+        child_id: req.user.child_id
+      });
+    }
+
+    res.json(responseBody);
   } catch (error) {
     console.error('updateParent error:', error);
     res.status(500).json({ message: getMessage('UPDATE_PARENT_ERROR') });
@@ -453,6 +479,17 @@ export const updateParent = async (req, res) => {
 // 9. Hard GDPR/COPPA Deletion of all Family Data (Parent only)
 export const clearAllFamilyData = async (req, res) => {
   const familyId = req.user.family_id;
+  const { confirmEmail } = req.body;
+
+  // Require the caller to actively re-type their own account email before
+  // this irreversible action proceeds. This is a deliberate speed bump
+  // against a stolen/XSS'd token or an accidental/misdirected click —
+  // works for password, Google, and LINE accounts alike since the email is
+  // always something the account owner knows, unlike their (possibly
+  // randomly-generated, for OAuth signups) password.
+  if (!confirmEmail || confirmEmail.trim().toLowerCase() !== req.user.email.toLowerCase()) {
+    return res.status(400).json({ message: '請輸入您的帳號信箱以確認刪除，此操作無法復原。' });
+  }
 
   const client = await pool.connect();
   try {

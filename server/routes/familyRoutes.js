@@ -1,6 +1,6 @@
 import express from 'express';
-import { 
-  getFamilyData, getWishlist, addWishlistItem, editWishlistItem, deleteWishlistItem, redeemWishlist,
+import {
+  getFamilyData, getWishlist, addWishlistItem, editWishlistItem, deleteWishlistItem, redeemWishlist, reviewWishlistRedeem,
   getParentGoals, addParentGoal, updateGoalProgress, deleteParentGoal, getWeeklyComp, getEventLogs, addEventLog,
   updateFamilyGachaPool, updateFamilySettings, updateFamilyNickname, getFamilyLeaderboard
 } from '../controllers/familyController.js';
@@ -20,6 +20,7 @@ router.post('/wishlist', authenticateToken, requireRole('parent'), addWishlistIt
 router.put('/wishlist/:id', authenticateToken, requireRole('parent'), editWishlistItem);
 router.delete('/wishlist/:id', authenticateToken, requireRole('parent'), deleteWishlistItem);
 router.post('/wishlist/:id/redeem', authenticateToken, redeemWishlist);
+router.post('/wishlist/:id/redeem-review', authenticateToken, requireRole('parent'), reviewWishlistRedeem);
 
 // Parent Goals
 router.get('/goals', authenticateToken, getParentGoals);

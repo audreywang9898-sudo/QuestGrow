@@ -4,10 +4,25 @@ import pool from '../config/db.js';
 import dotenv from 'dotenv';
 import { OAuth2Client } from 'google-auth-library';
 import { getMessage } from '../utils/messageManager.js';
+import { encryptField } from '../utils/encryption.js';
 
 dotenv.config();
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+// LINE's id_token is obtained server-to-server via the OAuth code exchange
+// (using LINE_CHANNEL_SECRET), not handed to us directly by the client, so
+// jwt.decode() without signature verification is lower-risk than it would be
+// for a client-supplied token. As defense-in-depth we still validate the
+// standard OIDC claims (issuer, audience, expiry) before trusting the payload.
+const decodeAndValidateLineIdToken = (idToken) => {
+  const decoded = jwt.decode(idToken);
+  if (!decoded) return null;
+  if (decoded.iss !== 'https://access.line.me') return null;
+  if (decoded.aud !== process.env.LINE_CHANNEL_ID) return null;
+  if (typeof decoded.exp !== 'number' || decoded.exp * 1000 < Date.now()) return null;
+  return decoded;
+};
 
 const verifyGoogleToken = async (idToken) => {
   const ticket = await googleClient.verifyIdToken({
@@ -17,14 +32,19 @@ const verifyGoogleToken = async (idToken) => {
   return ticket.getPayload();
 };
 
-const generateToken = (user) => {
+export const generateToken = (user) => {
   return jwt.sign(
-    { 
-      id: user.id, 
-      email: user.email, 
-      role: user.role, 
+    {
+      id: user.id,
+      email: user.email,
+      role: user.role,
       family_id: user.family_id,
-      child_id: user.child_id 
+      child_id: user.child_id,
+      // Embedded so authenticateToken can reject tokens issued before the
+      // user's last "logout everywhere" / password change. Callers must
+      // make sure `user.token_version` reflects the current DB value —
+      // never omit it from the query that produced this `user` object.
+      token_version: user.token_version ?? 0
     },
     process.env.JWT_SECRET,
     { expiresIn: '7d' }
@@ -93,8 +113,8 @@ export const registerParent = async (req, res) => {
 
       // Create the Parent Parent User
       const newUser = await client.query(
-        `INSERT INTO users (family_id, email, password_hash, name, role, avatar) 
-         VALUES ($1, $2, $3, $4, 'parent', $5) RETURNING id, email, name, role, avatar, family_id, child_id, onboarding_completed, google_id, line_id`,
+        `INSERT INTO users (family_id, email, password_hash, name, role, avatar)
+         VALUES ($1, $2, $3, $4, 'parent', $5) RETURNING id, email, name, role, avatar, family_id, child_id, onboarding_completed, google_id, line_id, token_version`,
         [familyId, dbEmail, passwordHash, name, avatar || 'girl']
       );
 
@@ -136,7 +156,7 @@ export const login = async (req, res) => {
   try {
     const dbEmail = email.toLowerCase();
     const result = await pool.query(
-      `SELECT u.id, u.family_id, u.email, u.password_hash, u.name, u.role, u.avatar, u.child_id, u.onboarding_completed, u.google_id, u.line_id
+      `SELECT u.id, u.family_id, u.email, u.password_hash, u.name, u.role, u.avatar, u.child_id, u.onboarding_completed, u.google_id, u.line_id, u.token_version
        FROM users u
        WHERE u.email = $1`,
       [dbEmail]
@@ -183,9 +203,11 @@ export const googleLogin = async (req, res) => {
   try {
     let email, googleId, name, avatar;
 
-    // Sandbox Mock Bypass — ONLY when ALLOW_GOOGLE_MOCK=true is explicitly set.
-    // This env var must NEVER be set in production. NODE_ENV alone is not a reliable gate.
-    const isMockAllowed = process.env.ALLOW_GOOGLE_MOCK === 'true';
+    // Sandbox Mock Bypass — ONLY when ALLOW_GOOGLE_MOCK=true is explicitly set
+    // AND NODE_ENV is not 'production'. Both conditions are required so that
+    // accidentally copying this env var into a production deployment can
+    // never enable passwordless login as an arbitrary allow-listed account.
+    const isMockAllowed = process.env.ALLOW_GOOGLE_MOCK === 'true' && process.env.NODE_ENV !== 'production';
     if (isMockAllowed && idToken.startsWith('google-mock-')) {
       // Allowlist: only specific test account names are permitted
       const ALLOWED_MOCK_ACCOUNTS = (process.env.GOOGLE_MOCK_ACCOUNTS || 'testuser').split(',').map(s => s.trim());
@@ -214,7 +236,7 @@ export const googleLogin = async (req, res) => {
     const dbEmail = email.toLowerCase();
     // 1. Search by Google ID or email
     const findUser = await pool.query(
-      'SELECT id, family_id, email, name, role, avatar, google_id, line_id, child_id, onboarding_completed FROM users WHERE google_id = $1 OR email = $2',
+      'SELECT id, family_id, email, name, role, avatar, google_id, line_id, child_id, onboarding_completed, token_version FROM users WHERE google_id = $1 OR email = $2',
       [googleId, dbEmail]
     );
 
@@ -224,7 +246,7 @@ export const googleLogin = async (req, res) => {
       // If email matched but google_id wasn't linked, link it now
       if (!user.google_id) {
         const updateResult = await pool.query(
-          'UPDATE users SET google_id = $1 WHERE id = $2 RETURNING id, family_id, email, name, role, avatar, google_id, line_id, child_id, onboarding_completed',
+          'UPDATE users SET google_id = $1 WHERE id = $2 RETURNING id, family_id, email, name, role, avatar, google_id, line_id, child_id, onboarding_completed, token_version',
           [googleId, user.id]
         );
         user = updateResult.rows[0];
@@ -276,9 +298,9 @@ export const googleLogin = async (req, res) => {
 
       if (targetRole === 'kid') {
         const newChild = await client.query(
-          `INSERT INTO children (user_id, name, age, birthday, avatar, level, exp, exp_needed, gold, tickets, job_class) 
-           VALUES ($1, $2, 10, '10/24', $3, 1, 0, 400, 0, 0, 'Explorer (探索者) ⚔️') RETURNING id`,
-          [userId, name, avatar || 'boy']
+          `INSERT INTO children (user_id, name, age, birthday, avatar, level, exp, exp_needed, gold, tickets, job_class)
+           VALUES ($1, $2, 10, $3, $4, 1, 0, 400, 0, 0, 'Explorer (探索者) ⚔️') RETURNING id`,
+          [userId, name, encryptField('10/24'), avatar || 'boy']
         );
         childId = newChild.rows[0].id;
         await client.query('UPDATE users SET child_id = $1 WHERE id = $2', [childId, userId]);
@@ -326,8 +348,9 @@ export const linkGoogleAccount = async (req, res) => {
   try {
     let googleId, googleEmail;
 
-    // Sandbox Mock Bypass — ONLY when ALLOW_GOOGLE_MOCK=true is explicitly set.
-    const isMockAllowed = process.env.ALLOW_GOOGLE_MOCK === 'true';
+    // Sandbox Mock Bypass — ONLY when ALLOW_GOOGLE_MOCK=true is explicitly set
+    // AND NODE_ENV is not 'production' (see googleLogin for rationale).
+    const isMockAllowed = process.env.ALLOW_GOOGLE_MOCK === 'true' && process.env.NODE_ENV !== 'production';
     if (isMockAllowed && idToken.startsWith('google-mock-')) {
       googleEmail = idToken.replace('google-mock-', '') + '@gmail.com';
       googleId = idToken;
@@ -377,7 +400,7 @@ export const getAuthConfig = async (req, res) => {
 export const getMe = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT id, family_id, email, name, role, avatar, child_id, google_id, line_id, onboarding_completed
+      `SELECT id, family_id, email, name, role, avatar, child_id, google_id, line_id, onboarding_completed, token_version
        FROM users
        WHERE id = $1`,
       [req.user.id]
@@ -402,6 +425,18 @@ export const getMe = async (req, res) => {
   } catch (error) {
     console.error('Get me error:', error);
     res.status(500).json({ message: '獲取使用者資訊失敗。' });
+  }
+};
+
+// 6.5. Logout Everywhere — invalidate all previously-issued JWTs for this user
+export const logout = async (req, res) => {
+  const userId = req.user.id;
+  try {
+    await pool.query('UPDATE users SET token_version = COALESCE(token_version, 0) + 1 WHERE id = $1', [userId]);
+    res.json({ message: '已成功登出，所有裝置上的登入狀態皆已失效。' });
+  } catch (error) {
+    console.error('logout error:', error);
+    res.status(500).json({ message: '登出時發生錯誤。' });
   }
 };
 
@@ -455,8 +490,8 @@ export const lineLogin = async (req, res) => {
       return res.status(400).json({ message: 'LINE OIDC ID Token is missing.' });
     }
 
-    // 2. Decode ID Token (JWT format containing user info)
-    const decoded = jwt.decode(id_token);
+    // 2. Decode + validate ID Token (JWT format containing user info)
+    const decoded = decodeAndValidateLineIdToken(id_token);
     if (!decoded) {
       return res.status(400).json({ message: '解密 LINE ID Token 失敗。' });
     }
@@ -474,7 +509,7 @@ export const lineLogin = async (req, res) => {
 
     // 3. Check if user already exists
     const findUser = await pool.query(
-      'SELECT id, family_id, email, name, role, avatar, line_id, child_id, onboarding_completed FROM users WHERE line_id = $1 OR email = $2',
+      'SELECT id, family_id, email, name, role, avatar, line_id, child_id, onboarding_completed, token_version FROM users WHERE line_id = $1 OR email = $2',
       [lineId, defaultEmail]
     );
 
@@ -484,7 +519,7 @@ export const lineLogin = async (req, res) => {
       // If email matched but line_id wasn't linked, link it now
       if (!user.line_id) {
         const updateResult = await pool.query(
-          'UPDATE users SET line_id = $1 WHERE id = $2 RETURNING id, family_id, email, name, role, avatar, child_id, onboarding_completed',
+          'UPDATE users SET line_id = $1 WHERE id = $2 RETURNING id, family_id, email, name, role, avatar, child_id, onboarding_completed, token_version',
           [lineId, user.id]
         );
         user = updateResult.rows[0];
@@ -594,8 +629,8 @@ export const linkLineAccount = async (req, res) => {
       return res.status(400).json({ message: 'LINE OIDC ID Token is missing.' });
     }
 
-    // 2. Decode ID Token
-    const decoded = jwt.decode(id_token);
+    // 2. Decode + validate ID Token
+    const decoded = decodeAndValidateLineIdToken(id_token);
     if (!decoded) {
       return res.status(400).json({ message: '解密 LINE ID Token 失敗。' });
     }

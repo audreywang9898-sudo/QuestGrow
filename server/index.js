@@ -42,26 +42,36 @@ app.use(helmet({
 
 // ── 2. CORS ───────────────────────────────────────────────────────────
 // If ALLOWED_ORIGINS env var is set (comma-separated), only those origins are allowed.
-// If NOT set, all origins are allowed (backward-compatible default).
-// To enable strict mode on Render: set ALLOWED_ORIGINS=https://your-frontend.onrender.com
+// If NOT set, we fall back to local-dev-only origins rather than allowing all
+// origins — an unset env var must never silently open the API to any website.
+// Set ALLOWED_ORIGINS=https://your-frontend.onrender.com on Render to allow your
+// deployed frontend (and any custom domain) to call this API.
+const DEFAULT_DEV_ORIGINS = ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:3000'];
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()).filter(Boolean)
-  : null; // null = allow all (open CORS)
+  : DEFAULT_DEV_ORIGINS;
+
+if (!process.env.ALLOWED_ORIGINS) {
+  console.warn('⚠️  ALLOWED_ORIGINS is not set — CORS defaults to localhost dev origins only. ' +
+    'Set ALLOWED_ORIGINS to your production frontend URL(s) in Render, or the deployed frontend will be blocked by CORS.');
+}
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins) {
-      if (allowedOrigins.includes(origin)) return callback(null, true);
-      console.warn(`CORS blocked origin: ${origin}`);
-      return callback(new Error('CORS policy violation'), false);
-    }
-    return callback(null, true);
+    if (!origin) return callback(null, true); // non-browser clients (server-to-server, curl, LINE webhook) send no Origin header
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    console.warn(`CORS blocked origin: ${origin}`);
+    return callback(new Error('CORS policy violation'), false);
   },
   credentials: true,
 }));
 
 // ── 3. Rate Limiting ──────────────────────────────────────────────────
+// Rate limiting is ON by default so a missing/misconfigured NODE_ENV on the
+// hosting platform can never silently disable it. Set DISABLE_RATE_LIMIT=true
+// (e.g. in local dev) to explicitly opt out.
+const isRateLimitDisabled = process.env.DISABLE_RATE_LIMIT === 'true';
+
 // Auth endpoints: 30 requests per 15 minutes per real IP (trust proxy enabled above)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -69,7 +79,7 @@ const authLimiter = rateLimit({
   message: { message: '登入嘗試次數過多，請 15 分鐘後再試。Too many requests, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: () => process.env.NODE_ENV !== 'production',
+  skip: () => isRateLimitDisabled,
 });
 
 // General API limiter: 500 requests per 15 minutes per real IP
@@ -79,12 +89,25 @@ const generalLimiter = rateLimit({
   message: { message: '請求過於頻繁，請稍後再試。Too many requests, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: () => process.env.NODE_ENV !== 'production',
+  skip: () => isRateLimitDisabled,
+});
+
+// Tighter limiter for currency-spending endpoints (gacha draws, gold->ticket
+// exchange) — these are the most attractive targets for scripted abuse.
+const economyLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 15,
+  message: { message: '操作過於頻繁，請稍後再試。Too many requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => isRateLimitDisabled,
 });
 
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 app.use('/api/auth/google', authLimiter);
+app.use('/api/items/gacha', economyLimiter);
+app.use('/api/items/buy-ticket', economyLimiter);
 app.use('/api', generalLimiter);
 
 
@@ -145,10 +168,6 @@ app.use((err, req, res, next) => {
 // ── 10. Start Server ──────────────────────────────────────────────────
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`QuestGrow Backend Server is running on port ${PORT}`);
-  if (allowedOrigins) {
-    console.log(`CORS strict mode — allowed origins: ${allowedOrigins.join(', ')}`);
-  } else {
-    console.log('CORS open mode — all origins allowed (set ALLOWED_ORIGINS env var to enable strict mode)');
-  }
+  console.log(`CORS allowed origins: ${allowedOrigins.join(', ')}`);
 });
 
